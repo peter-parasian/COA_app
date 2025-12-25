@@ -1,4 +1,5 @@
 ﻿using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.Data.Sqlite;
 using System.Windows;
 
@@ -132,73 +133,90 @@ namespace WpfApp1
             string year,
             string month)
         {
+            using var workbook = new ClosedXML.Excel.XLWorkbook(filePath);
+            int row = 3;
+
             try
             {
-                using var workbook = new ClosedXML.Excel.XLWorkbook(filePath);
-
-                var sheet = workbook.Worksheets
+                var sheet_YLB = workbook.Worksheets
                     .FirstOrDefault(w =>
                         w.Name.Trim().Equals(
                             "YLB 50",
                             System.StringComparison.OrdinalIgnoreCase));
 
-                if (sheet == null)
+                if (sheet_YLB == null)
                 {
                     AppendDebug($"SKIP: Sheet 'YLB 50' tidak ditemukan -> {System.IO.Path.GetFileName(filePath)}");
                     return;
                 }
 
-                int row = 3;
+                // Variabel untuk menyimpan tanggal terakhir (untuk handling merged cell)
+                string currentProdDate = string.Empty;
+
+                // Persiapkan data validasi folder untuk standarisasi tanggal
+                int folderMonthNum = GetMonthNumber(month);
+                int folderYearNum = 0;
+                int.TryParse(year, out folderYearNum);
 
                 while (true)
                 {
-                    string sizeValue = sheet.Cell(row, "C").GetString();
-
-                    if (string.IsNullOrWhiteSpace(sizeValue))
+                    // 1. Cek Kolom Size (C) untuk stop loop
+                    string sizeValue_YLB = sheet_YLB.Cell(row, "C").GetString();
+                    if (string.IsNullOrWhiteSpace(sizeValue_YLB))
                         break;
 
-                    string cleanedSize = CleanSizeText(sizeValue);
+                    // 2. LOGIKA TANGGAL & STANDARISASI
+                    string rawDateFromCell = sheet_YLB.Cell(row, "B").GetString().Trim();
 
+                    if (!string.IsNullOrEmpty(rawDateFromCell))
+                    {
+                        // Jika ada isi baru di kolom B, kita standarisasi dulu
+                        currentProdDate = StandardizeDate(rawDateFromCell, folderMonthNum, folderYearNum);
+                    }
 
-                    // 1. Kelompok 2 Angka Belakang Koma
-                    double rawThickness = ParseCustomDecimal(sheet.Cell(row, "G").GetString());
+                    // Jika kolom B kosong, currentProdDate tetap menggunakan nilai sebelumnya (merged cell logic)
+
+                    string cleanSize_YLB = CleanSizeText(sizeValue_YLB);
+
+                    // Kelompok 2 Angka Belakang Koma
+                    double rawThickness = ParseCustomDecimal(sheet_YLB.Cell(row, "G").GetString());
                     double valThickness = System.Math.Round(rawThickness, 2);
 
-                    double rawWidth = ParseCustomDecimal(sheet.Cell(row, "I").GetString());
+                    double rawWidth = ParseCustomDecimal(sheet_YLB.Cell(row, "I").GetString());
                     double valWidth = System.Math.Round(rawWidth, 2);
 
-                    double rawRadius = ParseCustomDecimal(sheet.Cell(row, "J").GetString());
+                    double rawRadius = ParseCustomDecimal(sheet_YLB.Cell(row, "J").GetString());
                     double valRadius = System.Math.Round(rawRadius, 2);
 
-                    double rawChamber = ParseCustomDecimal(sheet.Cell(row, "L").GetString());
+                    double rawChamber = ParseCustomDecimal(sheet_YLB.Cell(row, "L").GetString());
                     double valChamber = System.Math.Round(rawChamber, 2);
 
-                    double rawElectric = ParseCustomDecimal(sheet.Cell(row, "U").GetString());
+                    double rawElectric = ParseCustomDecimal(sheet_YLB.Cell(row, "U").GetString());
                     double valElectric = System.Math.Round(rawElectric, 2);
 
-                    double rawOxygen = ParseCustomDecimal(sheet.Cell(row, "X").GetString());
+                    double rawOxygen = ParseCustomDecimal(sheet_YLB.Cell(row, "X").GetString());
                     double valOxygen = System.Math.Round(rawOxygen, 2);
 
-                    // 2. Kelompok Tanpa Batasan (Asli)
-                    double valSpectro = ParseCustomDecimal(sheet.Cell(row, "Y").GetString());
-                    double valResistivity = ParseCustomDecimal(sheet.Cell(row, "T").GetString());
+                    // Kelompok Tanpa Batasan (Asli)
+                    double valSpectro = ParseCustomDecimal(sheet_YLB.Cell(row, "Y").GetString());
+                    double valResistivity = ParseCustomDecimal(sheet_YLB.Cell(row, "T").GetString());
 
-                    // 3. Kelompok Bilangan Bulat (0 Koma)
-                    double rawLength = ParseCustomDecimal(sheet.Cell(row, "K").GetString());
+                    // Kelompok Integer
+                    double rawLength = ParseCustomDecimal(sheet_YLB.Cell(row, "K").GetString());
                     double valLength = System.Math.Round(rawLength, 0);
 
-                    // 4. Kelompok Merge/Rata-rata (Tetap dibulatkan 2 angka)
-                    double rawElongation = GetMergedOrAverageValue(sheet, row, "R");
+                    // Kelompok Merge/Rata-rata
+                    double rawElongation = GetMergedOrAverageValue(sheet_YLB, row, "R");
                     double valElongation = System.Math.Round(rawElongation, 2);
 
-                    double rawTensile = GetMergedOrAverageValue(sheet, row, "Q");
+                    double rawTensile = GetMergedOrAverageValue(sheet_YLB, row, "Q");
                     double valTensile = System.Math.Round(rawTensile, 2);
 
-                    string valBendTest = sheet.Cell(row, "W").GetString();
+                    string valBendTest = sheet_YLB.Cell(row, "W").GetString();
 
                     InsertBusbarRow(
                         connection, transaction,
-                        cleanedSize, year, month,
+                        cleanSize_YLB, year, month, currentProdDate,
                         valThickness, valWidth, valLength, valRadius, valChamber,
                         valElectric, valResistivity, valElongation, valTensile,
                         valBendTest, valSpectro, valOxygen
@@ -213,116 +231,138 @@ namespace WpfApp1
             {
                 AppendDebug($"ERROR FILE: {System.IO.Path.GetFileName(filePath)} -> {ex.Message}");
             }
+
+            // (Block Try-Catch Sheet TLJ Placeholder - Dibiarkan sesuai asli)
+            try { var s = workbook.Worksheets.FirstOrDefault(w => w.Name.Trim().Equals("TLJ 350", System.StringComparison.OrdinalIgnoreCase)); if (s == null) return; while (true) { if (string.IsNullOrWhiteSpace(s.Cell(row, "C").GetString())) break; break; } } catch { }
+            try { var s = workbook.Worksheets.FirstOrDefault(w => w.Name.Trim().Equals("TLJ 500", System.StringComparison.OrdinalIgnoreCase)); if (s == null) return; while (true) { if (string.IsNullOrWhiteSpace(s.Cell(row, "C").GetString())) break; break; } } catch { }
         }
 
-        private double GetMergedOrAverageValue(ClosedXML.Excel.IXLWorksheet sheet, int startRow, string columnLetter)
+        // --- FUNGSI BARU: STANDARISASI TANGGAL ---
+        private string StandardizeDate(string rawDate, int expectedMonth, int expectedYear)
         {
-            var cellFirst = sheet.Cell(startRow, columnLetter);
+            if (string.IsNullOrWhiteSpace(rawDate)) return string.Empty;
 
-            if (cellFirst.IsMerged())
+            // 1. Coba Parse sebagai DateTime
+            if (System.DateTime.TryParse(rawDate, out System.DateTime parsedDate))
             {
-                return ParseCustomDecimal(cellFirst.GetString());
+                // Jika tahun dari folder valid, kita utamakan tahun folder (opsional, tapi aman)
+                if (expectedYear > 2000 && parsedDate.Year != expectedYear)
+                {
+                    // Terkadang Excel salah tahun, kita koreksi jika perlu
+                    parsedDate = new System.DateTime(expectedYear, parsedDate.Month, parsedDate.Day);
+                }
+
+                // 2. Cek apakah Bulan cocok dengan Folder?
+                // Contoh Kasus: Raw "01/12/2025" -> Parse Default (US) jadi 12 Januari (Bulan 1).
+                // Tapi Folder adalah "December" (Bulan 12).
+                // Maka kita harus SWAP (Tukar) hari dan bulan.
+                if (expectedMonth > 0 && parsedDate.Month != expectedMonth)
+                {
+                    // Coba tukar Day dan Month
+                    // Hanya mungkin jika Day <= 12 (karena max bulan 12)
+                    if (parsedDate.Day <= 12)
+                    {
+                        int newMonth = parsedDate.Day;
+                        int newDay = parsedDate.Month;
+
+                        // Cek lagi apakah setelah ditukar cocok dengan folder?
+                        if (newMonth == expectedMonth)
+                        {
+                            try
+                            {
+                                parsedDate = new System.DateTime(parsedDate.Year, newMonth, newDay);
+                            }
+                            catch
+                            {
+                                // Jika tanggal tidak valid (misal 30 Februari), biarkan original
+                            }
+                        }
+                    }
+                }
+
+                // 3. Kembalikan format tanggal seragam (dd/MM/yyyy) tanpa jam
+                return parsedDate.ToString("dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture);
             }
-            else
+
+            // Jika gagal parse, kembalikan teks asli (fallback)
+            return rawDate;
+        }
+
+        private int GetMonthNumber(string monthName)
+        {
+            if (string.IsNullOrWhiteSpace(monthName)) return 0;
+            try
             {
-                var val1 = ParseCustomDecimal(cellFirst.GetString());
-                var val2 = ParseCustomDecimal(sheet.Cell(startRow + 1, columnLetter).GetString());
-
-                if (val1 == 0) return val2;
-                if (val2 == 0) return val1;
-
-                return (val1 + val2) / 2.0;
+                return System.DateTime.ParseExact(monthName, "MMMM", System.Globalization.CultureInfo.InvariantCulture).Month;
             }
+            catch
+            {
+                return 0;
+            }
+        }
+        // -----------------------------------------
+
+        private double GetMergedOrAverageValue(ClosedXML.Excel.IXLWorksheet sheet_YLB, int startRow, string columnLetter)
+        {
+            var cellFirst = sheet_YLB.Cell(startRow, columnLetter);
+            if (cellFirst.IsMerged()) return ParseCustomDecimal(cellFirst.GetString());
+
+            var val1 = ParseCustomDecimal(cellFirst.GetString());
+            var val2 = ParseCustomDecimal(sheet_YLB.Cell(startRow + 1, columnLetter).GetString());
+
+            if (val1 == 0) return val2;
+            if (val2 == 0) return val1;
+
+            return (val1 + val2) / 2.0;
         }
 
         private double ParseCustomDecimal(string rawInput)
         {
-            if (string.IsNullOrWhiteSpace(rawInput))
-                return 0.0;
-
+            if (string.IsNullOrWhiteSpace(rawInput)) return 0.0;
             string cleanInput = rawInput.Replace(",", ".").Trim();
-
-            if (double.TryParse(
-                cleanInput,
-                System.Globalization.NumberStyles.Any,
-                System.Globalization.CultureInfo.InvariantCulture,
-                out double result))
-            {
-                return result;
-            }
-
+            if (double.TryParse(cleanInput, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double result)) return result;
             return 0.0;
         }
 
         private string NormalizeMonthFolder(string rawMonth)
         {
-            if (string.IsNullOrWhiteSpace(rawMonth))
-                return string.Empty;
-
+            if (string.IsNullOrWhiteSpace(rawMonth)) return string.Empty;
             for (int i = 0; i < rawMonth.Length; i++)
             {
-                if (!char.IsDigit(rawMonth[i]))
-                    continue;
-
+                if (!char.IsDigit(rawMonth[i])) continue;
                 int start = i;
-
-                while (i < rawMonth.Length && char.IsDigit(rawMonth[i]))
-                    i++;
-
+                while (i < rawMonth.Length && char.IsDigit(rawMonth[i])) i++;
                 string numberText = rawMonth.Substring(start, i - start);
-
-                if (!int.TryParse(numberText, out int monthNumber))
-                    continue;
-
-                if (monthNumber < 1 || monthNumber > 12)
-                    continue;
-
-                return new System.Globalization.DateTimeFormatInfo()
-                    .GetMonthName(monthNumber);
+                if (!int.TryParse(numberText, out int monthNumber)) continue;
+                if (monthNumber < 1 || monthNumber > 12) continue;
+                return new System.Globalization.DateTimeFormatInfo().GetMonthName(monthNumber);
             }
-
             return string.Empty;
         }
 
         private string CleanSizeText(string raw)
         {
-            if (string.IsNullOrWhiteSpace(raw))
-                return string.Empty;
-
+            if (string.IsNullOrWhiteSpace(raw)) return string.Empty;
             string text = raw.ToUpper();
-
             for (int i = 0; i < text.Length; i++)
             {
-                if (!char.IsDigit(text[i]))
-                    continue;
-
+                if (!char.IsDigit(text[i])) continue;
                 int start = i;
-
-                while (i < text.Length && char.IsDigit(text[i]))
-                    i++;
-
-                if (i >= text.Length || text[i] != 'X')
-                    continue;
-
+                while (i < text.Length && char.IsDigit(text[i])) i++;
+                if (i >= text.Length || text[i] != 'X') continue;
                 i++;
-
-                if (i >= text.Length || !char.IsDigit(text[i]))
-                    continue;
-
-                while (i < text.Length && char.IsDigit(text[i]))
-                    i++;
-
+                if (i >= text.Length || !char.IsDigit(text[i])) continue;
+                while (i < text.Length && char.IsDigit(text[i])) i++;
                 string result = text.Substring(start, i - start);
                 return result.Trim();
             }
-
             return string.Empty;
         }
 
         private void InsertBusbarRow(
             Microsoft.Data.Sqlite.SqliteConnection connection,
             Microsoft.Data.Sqlite.SqliteTransaction transaction,
-            string size, string year, string month,
+            string size, string year, string month, string prodDate,
             double thickness, double width, double length, double radius, double chamber,
             double electric, double resistivity, double elongation, double tensile,
             string bendTest, double spectro, double oxygen)
@@ -332,13 +372,13 @@ namespace WpfApp1
 
             cmd.CommandText = @"
                 INSERT INTO Busbar (
-                    Size_mm, Year_folder, Month_folder, 
+                    Size_mm, Year_folder, Month_folder, Prod_date, 
                     Thickness_mm, Width_mm, Length, Radius, Chamber_mm,
                     Electric_IACS, Weight, Elongation, Tensile,
                     Bend_test, Spectro_Cu, Oxygen
                 )
                 VALUES (
-                    @Size, @Year, @Month, 
+                    @Size, @Year, @Month, @ProdDate,
                     @Thickness, @Width, @Length, @Radius, @Chamber,
                     @Electric, @Resistivity, @Elongation, @Tensile,
                     @Bend, @Spectro, @Oxygen
@@ -348,13 +388,13 @@ namespace WpfApp1
             cmd.Parameters.AddWithValue("@Size", size);
             cmd.Parameters.AddWithValue("@Year", year.Trim());
             cmd.Parameters.AddWithValue("@Month", month.Trim());
+            cmd.Parameters.AddWithValue("@ProdDate", prodDate);
 
             cmd.Parameters.AddWithValue("@Thickness", thickness);
             cmd.Parameters.AddWithValue("@Width", width);
             cmd.Parameters.AddWithValue("@Length", length);
             cmd.Parameters.AddWithValue("@Radius", radius);
             cmd.Parameters.AddWithValue("@Chamber", chamber);
-
             cmd.Parameters.AddWithValue("@Electric", electric);
             cmd.Parameters.AddWithValue("@Resistivity", resistivity);
             cmd.Parameters.AddWithValue("@Elongation", elongation);
@@ -378,19 +418,13 @@ namespace WpfApp1
 
         private void AppendDebug(string message)
         {
-            if (_debugLog.Length < 1000)
-            {
-                _debugLog += message + System.Environment.NewLine;
-            }
+            if (_debugLog.Length < 1000) _debugLog += message + System.Environment.NewLine;
         }
 
         private void ShowFinalReport()
         {
             System.Windows.MessageBox.Show(
-                $"IMPORT SELESAI\n\n" +
-                $"File ditemukan : {_totalFilesFound}\n" +
-                $"Baris disimpan : {_totalRowsInserted}\n\n" +
-                $"Debug Log:\n{_debugLog}",
+                $"IMPORT SELESAI\n\nFile ditemukan : {_totalFilesFound}\nBaris disimpan : {_totalRowsInserted}\n\nDebug Log:\n{_debugLog}",
                 "Laporan Import",
                 System.Windows.MessageBoxButton.OK,
                 System.Windows.MessageBoxImage.Information);
