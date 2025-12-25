@@ -9,7 +9,6 @@ namespace WpfApp1
         public System.DateTime Date { get; set; }
         public string BatchNo { get; set; }
         public string Size { get; set; }
-        // Tambahan info untuk debugging agar tahu data dari file mana
         public string SourceFile { get; set; }
     }
 
@@ -22,7 +21,6 @@ namespace WpfApp1
         private int _totalRowsInserted;
         private string _debugLog;
 
-        // Variabel Global untuk menampung SEMUA data TLJ dari seluruh folder
         private System.Collections.Generic.List<TljRecord> _globalTljRecords;
 
         public MainWindow()
@@ -38,7 +36,6 @@ namespace WpfApp1
                 EnsureDatabaseFolderExists();
                 ResetCounters();
 
-                // FASE 1: BACA SEMUA DATA TLJ DARI SEMUA FILE (GLOBAL HARVESTING)
                 _globalTljRecords = new System.Collections.Generic.List<TljRecord>();
                 HarvestAllTljData();
 
@@ -47,7 +44,6 @@ namespace WpfApp1
                     System.Windows.MessageBox.Show("Tidak ada data TLJ ditemukan di seluruh folder.", "Peringatan");
                 }
 
-                // FASE 2: PROSES DATA YLB DAN COCOKKAN DENGAN GLOBAL TLJ
                 using var connection = new Microsoft.Data.Sqlite.SqliteConnection($"Data Source={DbPath}");
                 connection.Open();
 
@@ -113,7 +109,6 @@ namespace WpfApp1
             cmd.ExecuteNonQuery();
         }
 
-        // --- FASE 1: MENGUMPULKAN DATA TLJ ---
         private void HarvestAllTljData()
         {
             if (!System.IO.Directory.Exists(ExcelRootFolder)) return;
@@ -129,14 +124,11 @@ namespace WpfApp1
 
                         try
                         {
-                            // Buka Workbook hanya untuk mengambil TLJ
                             using var workbook = new ClosedXML.Excel.XLWorkbook(file);
 
-                            // Ambil dari Sheet 350
                             var tlj350 = LoadTljSheet(workbook, "TLJ 350", fileName);
                             _globalTljRecords.AddRange(tlj350);
 
-                            // Ambil dari Sheet 500
                             var tlj500 = LoadTljSheet(workbook, "TLJ 500", fileName);
                             _globalTljRecords.AddRange(tlj500);
                         }
@@ -184,7 +176,6 @@ namespace WpfApp1
             return results;
         }
 
-        // --- FASE 2: MEMPROSES YLB ---
         private void TraverseFoldersAndProcessYlb(
             Microsoft.Data.Sqlite.SqliteConnection connection,
             Microsoft.Data.Sqlite.SqliteTransaction transaction)
@@ -259,9 +250,6 @@ namespace WpfApp1
 
                     if (currentProdDateObj.HasValue && !string.IsNullOrEmpty(cleanSize_YLB))
                     {
-                        // Mencari di GLOBAL LIST (_globalTljRecords)
-                        // Logika: Cari Size Sama, Tanggal TLJ <= Tanggal YLB, ambil tanggal paling besar
-
                         var candidates = _globalTljRecords
                             .Where(x => x.Size == cleanSize_YLB && x.Date <= currentProdDateObj.Value)
                             .OrderByDescending(x => x.Date)
@@ -273,7 +261,6 @@ namespace WpfApp1
                         }
                     }
 
-                    // --- Mengambil Data Lainnya ---
                     double valThickness = System.Math.Round(ParseCustomDecimal(sheet_YLB.Cell(row, "G").GetString()), 2);
                     double valWidth = System.Math.Round(ParseCustomDecimal(sheet_YLB.Cell(row, "I").GetString()), 2);
                     double valRadius = System.Math.Round(ParseCustomDecimal(sheet_YLB.Cell(row, "J").GetString()), 2);
