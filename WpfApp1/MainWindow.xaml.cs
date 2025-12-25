@@ -10,6 +10,10 @@ namespace WpfApp1
         public string BatchNo { get; set; }
         public string Size { get; set; }
         public string SourceFile { get; set; }
+
+        // Tambahan untuk Debugging dan Logika Pemilihan Sheet
+        public string SheetName { get; set; }
+        public int RowIndex { get; set; }
     }
 
     public partial class MainWindow : System.Windows.Window
@@ -126,6 +130,7 @@ namespace WpfApp1
                         {
                             using var workbook = new ClosedXML.Excel.XLWorkbook(file);
 
+                            // Catat nama sheet secara eksplisit
                             var tlj350 = LoadTljSheet(workbook, "TLJ 350", fileName);
                             _globalTljRecords.AddRange(tlj350);
 
@@ -167,7 +172,9 @@ namespace WpfApp1
                             Date = dt,
                             BatchNo = rawBatch.Trim(),
                             Size = CleanSizeText(rawSize),
-                            SourceFile = sourceFileName
+                            SourceFile = sourceFileName,
+                            SheetName = sheetName, // Simpan nama sheet
+                            RowIndex = r            // Simpan nomor baris
                         });
                     }
                 }
@@ -250,14 +257,29 @@ namespace WpfApp1
 
                     if (currentProdDateObj.HasValue && !string.IsNullOrEmpty(cleanSize_YLB))
                     {
+                        // 1. Tentukan sheet target berdasarkan ukuran
+                        string expectedSheet = GetExpectedTljSheet(cleanSize_YLB);
+
+                        // 2. Filter data: Ukuran SAMA, Tanggal <= YLB, DAN Sheet Name SAMA
                         var candidates = _globalTljRecords
-                            .Where(x => x.Size == cleanSize_YLB && x.Date <= currentProdDateObj.Value)
+                            .Where(x => x.Size == cleanSize_YLB &&
+                                        x.Date <= currentProdDateObj.Value &&
+                                        x.SheetName == expectedSheet) // Filter ini yang krusial
                             .OrderByDescending(x => x.Date)
                             .ToList();
 
                         if (candidates.Count > 0)
                         {
-                            foundBatchNo = candidates.First().BatchNo;
+                            var bestMatch = candidates.First();
+                            foundBatchNo = bestMatch.BatchNo;
+
+                            // Log Debugging Detail jika cocok
+                            AppendDebug($"MATCH: Size {cleanSize_YLB} ({currentProdDateString}) -> Batch {foundBatchNo} | Source: {bestMatch.SourceFile} | Sheet: {bestMatch.SheetName} | Row: {bestMatch.RowIndex}");
+                        }
+                        else
+                        {
+                            // Log Debugging jika tidak cocok (untuk analisis kenapa kosong)
+                            AppendDebug($"NO MATCH: Size {cleanSize_YLB} ({currentProdDateString}). Expected Sheet: {expectedSheet}. (Candidates in other sheets may exist but were ignored).");
                         }
                     }
 
@@ -294,6 +316,37 @@ namespace WpfApp1
         }
 
         // --- Helper Methods ---
+
+        /// <summary>
+        /// Menentukan sheet TLJ berdasarkan aturan:
+        /// Lebar > 100 ATAU Luas Penampang > 1000 mm^2 -> TLJ 500
+        /// Selain itu -> TLJ 350
+        /// </summary>
+        private string GetExpectedTljSheet(string sizeText)
+        {
+            // Format size: "10X125" atau "5x100"
+            var parts = sizeText.ToLower().Split('x');
+            if (parts.Length != 2) return "TLJ 350"; // Default jika format aneh
+
+            if (double.TryParse(parts[0], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double thickness) &&
+                double.TryParse(parts[1], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double width))
+            {
+                double area = thickness * width;
+
+                // Logika sesuai contoh user:
+                // 5x100 (Width 100, Area 500) -> TLJ 350
+                // 5x125 (Width 125) -> TLJ 500 (Karena Lebar > 100)
+                // 10x100 (Width 100, Area 1000) -> TLJ 350
+                // 15x100 (Width 100, Area 1500) -> TLJ 500 (Karena Area > 1000)
+
+                if (width > 100.0 || area > 1000.0)
+                {
+                    return "TLJ 500";
+                }
+            }
+
+            return "TLJ 350";
+        }
 
         private string StandardizeDate(string rawDate, int expectedMonth, int expectedYear)
         {
@@ -434,13 +487,33 @@ namespace WpfApp1
 
         private void AppendDebug(string message)
         {
-            if (_debugLog.Length < 1000) _debugLog += message + System.Environment.NewLine;
+            // Hapus batas panjang karena sekarang kita simpan ke file teks, bukan messagebox
+            _debugLog += message + System.Environment.NewLine;
         }
 
         private void ShowFinalReport()
         {
+            // Tentukan lokasi file log (sama dengan folder database)
+            string logDir = System.IO.Path.GetDirectoryName(DbPath);
+            string logPath = System.IO.Path.Combine(logDir, "Import_Debug_Log.txt");
+
+            try
+            {
+                // Tulis seluruh log ke file
+                System.IO.File.WriteAllText(logPath, _debugLog);
+            }
+            catch (System.Exception ex)
+            {
+                System.Windows.MessageBox.Show($"Gagal menyimpan log ke file: {ex.Message}", "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            }
+
+            string summary = $"IMPORT SELESAI\n\n" +
+                             $"File ditemukan : {_totalFilesFound}\n" +
+                             $"Baris disimpan : {_totalRowsInserted}\n\n" +
+                             $"Debug Log lengkap telah disimpan di:\n{logPath}";
+
             System.Windows.MessageBox.Show(
-                $"IMPORT SELESAI\n\nFile ditemukan : {_totalFilesFound}\nBaris disimpan : {_totalRowsInserted}\n\nDebug Log:\n{_debugLog}",
+                summary,
                 "Laporan Import",
                 System.Windows.MessageBoxButton.OK,
                 System.Windows.MessageBoxImage.Information);
