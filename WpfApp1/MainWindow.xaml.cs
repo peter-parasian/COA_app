@@ -1,13 +1,10 @@
 ﻿using ClosedXML.Excel;
 using Microsoft.Data.Sqlite;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Windows;
 
 namespace WpfApp1
 {
-    public partial class MainWindow : Window
+    public partial class MainWindow : System.Windows.Window
     {
         private const string ExcelRootFolder = @"C:\Users\mrrx\Documents\My Web Sites\H\OPERATOR\COPPER BUSBAR & STRIP";
         private const string DbPath = @"C:\sqLite\data_qc.db";
@@ -26,36 +23,28 @@ namespace WpfApp1
         {
             try
             {
-                // 1. Pastikan folder database ada
                 EnsureDatabaseFolderExists();
 
-                // 2. Buka koneksi database
-                using var connection = new SqliteConnection($"Data Source={DbPath}");
+                using var connection = new Microsoft.Data.Sqlite.SqliteConnection($"Data Source={DbPath}");
                 connection.Open();
 
-                // 3. Buat ulang tabel (struktur fresh)
                 CreateBusbarTable(connection);
 
-                // 4. Mulai transaksi untuk performa insert batch
                 using var transaction = connection.BeginTransaction();
 
-                // 5. Traverse folder dan proses file
                 TraverseFoldersAndImport(connection, transaction);
 
-                // 6. Commit perubahan ke database
                 transaction.Commit();
 
-                // 7. Tampilkan laporan akhir
                 ShowFinalReport();
             }
-            catch (Exception ex)
+            catch (System.Exception ex)
             {
-                // Logging error yang jelas ke UI
-                MessageBox.Show(
+                System.Windows.MessageBox.Show(
                     $"ERROR FATAL:\n{ex.Message}\n\nStack Trace:\n{ex.StackTrace}",
                     "Import Gagal",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Error);
             }
         }
 
@@ -69,41 +58,41 @@ namespace WpfApp1
             }
         }
 
-        private void CreateBusbarTable(SqliteConnection connection)
+        private void CreateBusbarTable(Microsoft.Data.Sqlite.SqliteConnection connection)
         {
             using var cmd = connection.CreateCommand();
 
-            // Menggunakan multi-line string untuk keterbacaan SQL
             cmd.CommandText = @"
                 DROP TABLE IF EXISTS Busbar;
 
                 CREATE TABLE IF NOT EXISTS Busbar (
                     Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    Batch_no TEXT,
-                    Prod_date TEXT,
-                    Size_mm TEXT,
-                    Thickness_mm REAL,
-                    Width_mm REAL,
-                    Radius REAL,
-                    Length REAL,
-                    Chamber_mm REAL,
-                    Status TEXT,
                     Year_folder TEXT,
                     Month_folder TEXT,
-                    Oxygen_analizer REAL,
-                    Spectro_Cu TEXT,
-                    Electric_iacs REAL,
+                    Batch_no TEXT,
+                    Prod_date TEXT,
+                    Size_mm,
+                    Thickness_mm REAL,
+                    Width_mm REAL,
+		            Length REAL,
+                    Radius REAL,
+                    Chamber_mm REAL,
+		            Electric_iacs REAL,
                     Weight_resistivity REAL,
                     Elongation_pct REAL,
-                    Bend_test TEXT, 
-                    Tensile_strength REAL
+                    Tensile_strength REAL,
+                    Bend_test TEXT,
+                    Spectro_Cu REAL,
+                    Oxygen_analizer REAL
                 );
             ";
 
             cmd.ExecuteNonQuery();
         }
 
-        private void TraverseFoldersAndImport(SqliteConnection connection, SqliteTransaction transaction)
+        private void TraverseFoldersAndImport(
+            Microsoft.Data.Sqlite.SqliteConnection connection,
+            Microsoft.Data.Sqlite.SqliteTransaction transaction)
         {
             ResetCounters();
 
@@ -112,55 +101,46 @@ namespace WpfApp1
                 throw new System.IO.DirectoryNotFoundException($"Folder root Excel tidak ditemukan: {ExcelRootFolder}");
             }
 
-            // Loop Folder Tahun
-            foreach (var yearDir in System.IO.Directory.GetDirectories(ExcelRootFolder))
+            foreach (string yearDir in System.IO.Directory.GetDirectories(ExcelRootFolder))
             {
-                string year = new System.IO.DirectoryInfo(yearDir).Name;
+                string year = new System.IO.DirectoryInfo(yearDir).Name.Trim();
 
-                // Loop Folder Bulan
-                foreach (var monthDir in System.IO.Directory.GetDirectories(yearDir))
+                foreach (string monthDir in System.IO.Directory.GetDirectories(yearDir))
                 {
-                    string month = new System.IO.DirectoryInfo(monthDir).Name;
+                    string rawMonth = new System.IO.DirectoryInfo(monthDir).Name.Trim();
+                    string normalizedMonth = NormalizeMonthFolder(rawMonth);
 
-                    // Loop File Excel
-                    foreach (var file in System.IO.Directory.GetFiles(monthDir, "*.xlsx"))
+                    foreach (string file in System.IO.Directory.GetFiles(monthDir, "*.xlsx"))
                     {
                         string fileName = System.IO.Path.GetFileName(file);
 
-                        // Skip file temporary Excel (yang sedang dibuka)
                         if (fileName.StartsWith("~$"))
                             continue;
 
                         _totalFilesFound++;
 
-                        ProcessSingleExcelFile(
-                            connection,
-                            transaction,
-                            file,
-                            year,
-                            month);
+                        ProcessSingleExcelFile(connection, transaction, file, year, normalizedMonth);
                     }
                 }
             }
         }
 
         private void ProcessSingleExcelFile(
-            SqliteConnection connection,
-            SqliteTransaction transaction,
+            Microsoft.Data.Sqlite.SqliteConnection connection,
+            Microsoft.Data.Sqlite.SqliteTransaction transaction,
             string filePath,
             string year,
             string month)
         {
             try
             {
-                // Menggunakan ClosedXML untuk membaca Excel tanpa instalasi Office Interop
-                using var workbook = new XLWorkbook(filePath);
+                using var workbook = new ClosedXML.Excel.XLWorkbook(filePath);
 
-                // Cari sheet bernama "YLB 50" (case insensitive)
                 var sheet = workbook.Worksheets
                     .FirstOrDefault(w =>
-                        w.Name.Trim()
-                        .Equals("YLB 50", StringComparison.OrdinalIgnoreCase));
+                        w.Name.Trim().Equals(
+                            "YLB 50",
+                            System.StringComparison.OrdinalIgnoreCase));
 
                 if (sheet == null)
                 {
@@ -168,38 +148,98 @@ namespace WpfApp1
                     return;
                 }
 
-                // Mulai baca dari baris 3 (sesuai logika kode asli)
                 int row = 3;
 
                 while (true)
                 {
-                    // Ambil nilai dari kolom ke-3 (Column C) untuk ukuran
-                    // Gunakan GetString agar konsisten, cek null/empty setelahnya
                     string sizeValue = sheet.Cell(row, 3).GetString();
 
-                    // Jika sel kosong, diasumsikan data selesai
                     if (string.IsNullOrWhiteSpace(sizeValue))
                         break;
 
-                    // Simpan ke database
-                    InsertBusbarRow(connection, transaction, sizeValue, year, month);
+                    string cleanedSize = CleanSizeText(sizeValue);
+
+                    InsertBusbarRow(connection, transaction, cleanedSize, year, month);
 
                     _totalRowsInserted++;
 
-                    // Lompat 1 baris (sesuai logika kode asli: baris data selang seling)
                     row += 2;
                 }
             }
-            catch (Exception ex)
+            catch (System.Exception ex)
             {
-                // Tangkap error per-file agar proses lain tidak terhenti
                 AppendDebug($"ERROR FILE: {System.IO.Path.GetFileName(filePath)} -> {ex.Message}");
             }
         }
 
+        private string NormalizeMonthFolder(string rawMonth)
+        {
+            if (string.IsNullOrWhiteSpace(rawMonth))
+                return string.Empty;
+
+            for (int i = 0; i < rawMonth.Length; i++)
+            {
+                if (!char.IsDigit(rawMonth[i]))
+                    continue;
+
+                int start = i;
+
+                while (i < rawMonth.Length && char.IsDigit(rawMonth[i]))
+                    i++;
+
+                string numberText = rawMonth.Substring(start, i - start);
+
+                if (!int.TryParse(numberText, out int monthNumber))
+                    continue;
+
+                if (monthNumber < 1 || monthNumber > 12)
+                    continue;
+
+                return new System.Globalization.DateTimeFormatInfo()
+                    .GetMonthName(monthNumber);
+            }
+
+            return string.Empty;
+        }
+
+        private string CleanSizeText(string raw)
+        {
+            if (string.IsNullOrWhiteSpace(raw))
+                return string.Empty;
+
+            string text = raw.ToUpper();
+
+            for (int i = 0; i < text.Length; i++)
+            {
+                if (!char.IsDigit(text[i]))
+                    continue;
+
+                int start = i;
+
+                while (i < text.Length && char.IsDigit(text[i]))
+                    i++;
+
+                if (i >= text.Length || text[i] != 'X')
+                    continue;
+
+                i++;
+
+                if (i >= text.Length || !char.IsDigit(text[i]))
+                    continue;
+
+                while (i < text.Length && char.IsDigit(text[i]))
+                    i++;
+
+                string result = text.Substring(start, i - start);
+                return result.Trim();
+            }
+
+            return string.Empty;
+        }
+
         private void InsertBusbarRow(
-            SqliteConnection connection,
-            SqliteTransaction transaction,
+            Microsoft.Data.Sqlite.SqliteConnection connection,
+            Microsoft.Data.Sqlite.SqliteTransaction transaction,
             string size,
             string year,
             string month)
@@ -207,15 +247,14 @@ namespace WpfApp1
             using var cmd = connection.CreateCommand();
             cmd.Transaction = transaction;
 
-            // Parameterized Query untuk mencegah SQL Injection dan handle tipe data dengan aman
             cmd.CommandText = @"
                 INSERT INTO Busbar (Size_mm, Year_folder, Month_folder)
                 VALUES (@Size, @Year, @Month);
             ";
 
             cmd.Parameters.AddWithValue("@Size", size);
-            cmd.Parameters.AddWithValue("@Year", year);
-            cmd.Parameters.AddWithValue("@Month", month);
+            cmd.Parameters.AddWithValue("@Year", year.Trim());
+            cmd.Parameters.AddWithValue("@Month", month.Trim());
 
             cmd.ExecuteNonQuery();
         }
@@ -229,7 +268,6 @@ namespace WpfApp1
 
         private void AppendDebug(string message)
         {
-            // Batasi log agar memori tidak membengkak
             if (_debugLog.Length < 1000)
             {
                 _debugLog += message + System.Environment.NewLine;
@@ -238,14 +276,14 @@ namespace WpfApp1
 
         private void ShowFinalReport()
         {
-            MessageBox.Show(
+            System.Windows.MessageBox.Show(
                 $"IMPORT SELESAI\n\n" +
                 $"File ditemukan : {_totalFilesFound}\n" +
                 $"Baris disimpan : {_totalRowsInserted}\n\n" +
                 $"Debug Log:\n{_debugLog}",
                 "Laporan Import",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+                System.Windows.MessageBoxButton.OK,
+                System.Windows.MessageBoxImage.Information);
         }
     }
 }
