@@ -1,19 +1,10 @@
 ﻿using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.Data.Sqlite;
-using System.Linq;
+using System.Windows;
 
 namespace WpfApp1
 {
-    public class TljRecord
-    {
-        public System.DateTime Date { get; set; }
-        public string BatchNo { get; set; }
-        public string Size { get; set; }
-        public string SourceFile { get; set; }
-        public string SheetName { get; set; }
-        public int RowIndex { get; set; }
-    }
-
     public partial class MainWindow : System.Windows.Window
     {
         private const string ExcelRootFolder = @"C:\Users\mrrx\Documents\My Web Sites\H\OPERATOR\COPPER BUSBAR & STRIP";
@@ -22,8 +13,6 @@ namespace WpfApp1
         private int _totalFilesFound;
         private int _totalRowsInserted;
         private string _debugLog;
-
-        private System.Collections.Generic.List<TljRecord> _globalTljRecords;
 
         public MainWindow()
         {
@@ -36,15 +25,6 @@ namespace WpfApp1
             try
             {
                 EnsureDatabaseFolderExists();
-                ResetCounters();
-
-                _globalTljRecords = new System.Collections.Generic.List<TljRecord>();
-                HarvestAllTljData();
-
-                if (_globalTljRecords.Count == 0)
-                {
-                    System.Windows.MessageBox.Show("Tidak ada data TLJ ditemukan di seluruh folder.", "Peringatan");
-                }
 
                 using var connection = new Microsoft.Data.Sqlite.SqliteConnection($"Data Source={DbPath}");
                 connection.Open();
@@ -53,7 +33,7 @@ namespace WpfApp1
 
                 using var transaction = connection.BeginTransaction();
 
-                TraverseFoldersAndProcessYlb(connection, transaction);
+                TraverseFoldersAndImport(connection, transaction);
 
                 transaction.Commit();
 
@@ -111,79 +91,16 @@ namespace WpfApp1
             cmd.ExecuteNonQuery();
         }
 
-        private void HarvestAllTljData()
-        {
-            if (!System.IO.Directory.Exists(ExcelRootFolder)) return;
-
-            foreach (string yearDir in System.IO.Directory.GetDirectories(ExcelRootFolder))
-            {
-                foreach (string monthDir in System.IO.Directory.GetDirectories(yearDir))
-                {
-                    foreach (string file in System.IO.Directory.GetFiles(monthDir, "*.xlsx"))
-                    {
-                        string fileName = System.IO.Path.GetFileName(file);
-                        if (fileName.StartsWith("~$")) continue;
-
-                        try
-                        {
-                            using var workbook = new ClosedXML.Excel.XLWorkbook(file);
-
-                            var tlj350 = LoadTljSheet(workbook, "TLJ 350", fileName);
-                            _globalTljRecords.AddRange(tlj350);
-
-                            var tlj500 = LoadTljSheet(workbook, "TLJ 500", fileName);
-                            _globalTljRecords.AddRange(tlj500);
-                        }
-                        catch (System.Exception ex)
-                        {
-                            AppendDebug($"Warning Reading TLJ {fileName}: {ex.Message}");
-                        }
-                    }
-                }
-            }
-        }
-
-        private System.Collections.Generic.List<TljRecord> LoadTljSheet(ClosedXML.Excel.XLWorkbook workbook, string sheetName, string sourceFileName)
-        {
-            var results = new System.Collections.Generic.List<TljRecord>();
-            var sheet = workbook.Worksheets.FirstOrDefault(w => w.Name.Trim().Equals(sheetName, System.StringComparison.OrdinalIgnoreCase));
-
-            if (sheet == null) return results;
-
-            int r = 3;
-            while (true)
-            {
-                string rawSize = sheet.Cell(r, "D").GetString();
-                if (string.IsNullOrWhiteSpace(rawSize)) break;
-
-                string rawBatch = sheet.Cell(r, "C").GetString();
-                string rawDate = sheet.Cell(r, "B").GetString();
-
-                if (System.DateTime.TryParse(rawDate, out System.DateTime dt))
-                {
-                    if (!string.IsNullOrWhiteSpace(rawBatch))
-                    {
-                        results.Add(new TljRecord
-                        {
-                            Date = dt,
-                            BatchNo = rawBatch.Trim(),
-                            Size = CleanSizeText(rawSize),
-                            SourceFile = sourceFileName,
-                            SheetName = sheetName, 
-                            RowIndex = r           
-                        });
-                    }
-                }
-                r++;
-            }
-            return results;
-        }
-
-        private void TraverseFoldersAndProcessYlb(
+        private void TraverseFoldersAndImport(
             Microsoft.Data.Sqlite.SqliteConnection connection,
             Microsoft.Data.Sqlite.SqliteTransaction transaction)
         {
-            if (!System.IO.Directory.Exists(ExcelRootFolder)) return;
+            ResetCounters();
+
+            if (!System.IO.Directory.Exists(ExcelRootFolder))
+            {
+                throw new System.IO.DirectoryNotFoundException($"Folder root Excel tidak ditemukan: {ExcelRootFolder}");
+            }
 
             foreach (string yearDir in System.IO.Directory.GetDirectories(ExcelRootFolder))
             {
@@ -197,16 +114,19 @@ namespace WpfApp1
                     foreach (string file in System.IO.Directory.GetFiles(monthDir, "*.xlsx"))
                     {
                         string fileName = System.IO.Path.GetFileName(file);
-                        if (fileName.StartsWith("~$")) continue;
+
+                        if (fileName.StartsWith("~$"))
+                            continue;
 
                         _totalFilesFound++;
-                        ProcessSingleExcelFileForYlb(connection, transaction, file, year, normalizedMonth);
+
+                        ProcessSingleExcelFile(connection, transaction, file, year, normalizedMonth);
                     }
                 }
             }
         }
 
-        private void ProcessSingleExcelFileForYlb(
+        private void ProcessSingleExcelFile(
             Microsoft.Data.Sqlite.SqliteConnection connection,
             Microsoft.Data.Sqlite.SqliteTransaction transaction,
             string filePath,
@@ -214,17 +134,23 @@ namespace WpfApp1
             string month)
         {
             using var workbook = new ClosedXML.Excel.XLWorkbook(filePath);
-
             int row = 3;
+
             try
             {
                 var sheet_YLB = workbook.Worksheets
-                    .FirstOrDefault(w => w.Name.Trim().Equals("YLB 50", System.StringComparison.OrdinalIgnoreCase));
+                    .FirstOrDefault(w =>
+                        w.Name.Trim().Equals(
+                            "YLB 50",
+                            System.StringComparison.OrdinalIgnoreCase));
 
-                if (sheet_YLB == null) return;
+                if (sheet_YLB == null)
+                {
+                    AppendDebug($"SKIP: Sheet 'YLB 50' tidak ditemukan -> {System.IO.Path.GetFileName(filePath)}");
+                    return;
+                }
 
-                string currentProdDateString = string.Empty;
-                System.DateTime? currentProdDateObj = null;
+                string currentProdDate = string.Empty;
 
                 int folderMonthNum = GetMonthNumber(month);
                 int folderYearNum = 0;
@@ -233,107 +159,86 @@ namespace WpfApp1
                 while (true)
                 {
                     string sizeValue_YLB = sheet_YLB.Cell(row, "C").GetString();
-                    if (string.IsNullOrWhiteSpace(sizeValue_YLB)) break;
+                    if (string.IsNullOrWhiteSpace(sizeValue_YLB))
+                        break;
 
                     string rawDateFromCell = sheet_YLB.Cell(row, "B").GetString().Trim();
+
                     if (!string.IsNullOrEmpty(rawDateFromCell))
                     {
-                        currentProdDateString = StandardizeDate(rawDateFromCell, folderMonthNum, folderYearNum);
-                        if (System.DateTime.TryParseExact(currentProdDateString, "dd/MM/yyyy",
-                            System.Globalization.CultureInfo.InvariantCulture,
-                            System.Globalization.DateTimeStyles.None,
-                            out System.DateTime dtResult))
-                        {
-                            currentProdDateObj = dtResult;
-                        }
+                        currentProdDate = StandardizeDate(rawDateFromCell, folderMonthNum, folderYearNum);
                     }
 
                     string cleanSize_YLB = CleanSizeText(sizeValue_YLB);
-                    string foundBatchNo = "0.0";
 
-                    if (currentProdDateObj.HasValue && !string.IsNullOrEmpty(cleanSize_YLB))
-                    {
-                        string expectedSheet = GetExpectedTljSheet(cleanSize_YLB);
+                    // Kelompok 2 Angka Belakang Koma
+                    double rawThickness = ParseCustomDecimal(sheet_YLB.Cell(row, "G").GetString());
+                    double valThickness = System.Math.Round(rawThickness, 2);
 
-                        var candidates = _globalTljRecords
-                            .Where(x => x.Size == cleanSize_YLB &&
-                                        x.Date <= currentProdDateObj.Value &&
-                                        x.SheetName == expectedSheet) 
-                            .OrderByDescending(x => x.Date)
-                            .ToList();
+                    double rawWidth = ParseCustomDecimal(sheet_YLB.Cell(row, "I").GetString());
+                    double valWidth = System.Math.Round(rawWidth, 2);
 
-                        if (candidates.Count > 0)
-                        {
-                            var bestMatch = candidates.First();
-                            foundBatchNo = bestMatch.BatchNo;
+                    double rawRadius = ParseCustomDecimal(sheet_YLB.Cell(row, "J").GetString());
+                    double valRadius = System.Math.Round(rawRadius, 2);
 
-                            AppendDebug($"MATCH: Size {cleanSize_YLB} ({currentProdDateString}) -> Batch {foundBatchNo} | Source: {bestMatch.SourceFile} | Sheet: {bestMatch.SheetName} | Row: {bestMatch.RowIndex}");
-                        }
-                        else
-                        {
-                            AppendDebug($"NO MATCH: Size {cleanSize_YLB} ({currentProdDateString}). Expected Sheet: {expectedSheet}. (Candidates in other sheets may exist but were ignored).");
-                        }
-                    }
+                    double rawChamber = ParseCustomDecimal(sheet_YLB.Cell(row, "L").GetString());
+                    double valChamber = System.Math.Round(rawChamber, 2);
 
-                    double valThickness = System.Math.Round(ParseCustomDecimal(sheet_YLB.Cell(row, "G").GetString()), 2);
-                    double valWidth = System.Math.Round(ParseCustomDecimal(sheet_YLB.Cell(row, "I").GetString()), 2);
-                    double valRadius = System.Math.Round(ParseCustomDecimal(sheet_YLB.Cell(row, "J").GetString()), 2);
-                    double valChamber = System.Math.Round(ParseCustomDecimal(sheet_YLB.Cell(row, "L").GetString()), 2);
-                    double valElectric = System.Math.Round(ParseCustomDecimal(sheet_YLB.Cell(row, "U").GetString()), 2);
-                    double valOxygen = System.Math.Round(ParseCustomDecimal(sheet_YLB.Cell(row, "X").GetString()), 2);
+                    double rawElectric = ParseCustomDecimal(sheet_YLB.Cell(row, "U").GetString());
+                    double valElectric = System.Math.Round(rawElectric, 2);
+
+                    double rawOxygen = ParseCustomDecimal(sheet_YLB.Cell(row, "X").GetString());
+                    double valOxygen = System.Math.Round(rawOxygen, 2);
+
+                    // Kelompok Tanpa Batasan (Asli)
                     double valSpectro = ParseCustomDecimal(sheet_YLB.Cell(row, "Y").GetString());
                     double valResistivity = ParseCustomDecimal(sheet_YLB.Cell(row, "T").GetString());
-                    double valLength = System.Math.Round(ParseCustomDecimal(sheet_YLB.Cell(row, "K").GetString()), 0);
 
-                    double valElongation = System.Math.Round(GetMergedOrAverageValue(sheet_YLB, row, "R"), 2);
-                    double valTensile = System.Math.Round(GetMergedOrAverageValue(sheet_YLB, row, "Q"), 2);
+                    // Kelompok Integer
+                    double rawLength = ParseCustomDecimal(sheet_YLB.Cell(row, "K").GetString());
+                    double valLength = System.Math.Round(rawLength, 0);
+
+                    // Kelompok Merge/Rata-rata
+                    double rawElongation = GetMergedOrAverageValue(sheet_YLB, row, "R");
+                    double valElongation = System.Math.Round(rawElongation, 2);
+
+                    double rawTensile = GetMergedOrAverageValue(sheet_YLB, row, "Q");
+                    double valTensile = System.Math.Round(rawTensile, 2);
+
                     string valBendTest = sheet_YLB.Cell(row, "W").GetString();
 
                     InsertBusbarRow(
                         connection, transaction,
-                        cleanSize_YLB, year, month, foundBatchNo, currentProdDateString,
+                        cleanSize_YLB, year, month, currentProdDate,
                         valThickness, valWidth, valLength, valRadius, valChamber,
                         valElectric, valResistivity, valElongation, valTensile,
                         valBendTest, valSpectro, valOxygen
                     );
 
                     _totalRowsInserted++;
+
                     row += 2;
                 }
             }
             catch (System.Exception ex)
             {
-                AppendDebug($"ERROR PROCESS YLB: {System.IO.Path.GetFileName(filePath)} -> {ex.Message}");
-            }
-        }
-
-        private string GetExpectedTljSheet(string sizeText)
-        {
-            // Format size: "10X125" atau "5x100"
-            var parts = sizeText.ToLower().Split('x');
-            if (parts.Length != 2) return "TLJ 350"; 
-
-            if (double.TryParse(parts[0], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double thickness) &&
-                double.TryParse(parts[1], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double width))
-            {
-                double area = thickness * width;
-
-                if (width > 100.0 || area > 1000.0)
-                {
-                    return "TLJ 500";
-                }
+                AppendDebug($"ERROR FILE: {System.IO.Path.GetFileName(filePath)} -> {ex.Message}");
             }
 
-            return "TLJ 350";
+            try { var s = workbook.Worksheets.FirstOrDefault(w => w.Name.Trim().Equals("TLJ 350", System.StringComparison.OrdinalIgnoreCase)); if (s == null) return; while (true) { if (string.IsNullOrWhiteSpace(s.Cell(row, "C").GetString())) break; break; } } catch { }
+            try { var s = workbook.Worksheets.FirstOrDefault(w => w.Name.Trim().Equals("TLJ 500", System.StringComparison.OrdinalIgnoreCase)); if (s == null) return; while (true) { if (string.IsNullOrWhiteSpace(s.Cell(row, "C").GetString())) break; break; } } catch { }
         }
 
         private string StandardizeDate(string rawDate, int expectedMonth, int expectedYear)
         {
             if (string.IsNullOrWhiteSpace(rawDate)) return string.Empty;
+
             if (System.DateTime.TryParse(rawDate, out System.DateTime parsedDate))
             {
                 if (expectedYear > 2000 && parsedDate.Year != expectedYear)
+                {
                     parsedDate = new System.DateTime(expectedYear, parsedDate.Month, parsedDate.Day);
+                }
 
                 if (expectedMonth > 0 && parsedDate.Month != expectedMonth)
                 {
@@ -341,30 +246,44 @@ namespace WpfApp1
                     {
                         int newMonth = parsedDate.Day;
                         int newDay = parsedDate.Month;
+
                         if (newMonth == expectedMonth)
+                        {
                             parsedDate = new System.DateTime(parsedDate.Year, newMonth, newDay);
+                        }
                     }
                 }
+
                 return parsedDate.ToString("dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture);
             }
+
             return rawDate;
         }
 
         private int GetMonthNumber(string monthName)
         {
             if (string.IsNullOrWhiteSpace(monthName)) return 0;
-            try { return System.DateTime.ParseExact(monthName, "MMMM", System.Globalization.CultureInfo.InvariantCulture).Month; }
-            catch { return 0; }
+            try
+            {
+                return System.DateTime.ParseExact(monthName, "MMMM", System.Globalization.CultureInfo.InvariantCulture).Month;
+            }
+            catch
+            {
+                return 0;
+            }
         }
 
         private double GetMergedOrAverageValue(ClosedXML.Excel.IXLWorksheet sheet_YLB, int startRow, string columnLetter)
         {
             var cellFirst = sheet_YLB.Cell(startRow, columnLetter);
             if (cellFirst.IsMerged()) return ParseCustomDecimal(cellFirst.GetString());
+
             var val1 = ParseCustomDecimal(cellFirst.GetString());
             var val2 = ParseCustomDecimal(sheet_YLB.Cell(startRow + 1, columnLetter).GetString());
+
             if (val1 == 0) return val2;
             if (val2 == 0) return val1;
+
             return (val1 + val2) / 2.0;
         }
 
@@ -453,7 +372,7 @@ namespace WpfApp1
                         System.Char.IsDigit(cleanRemaining[i + 1]))
                     {
                         int bStart = i;
-                        int bEnd = i + 1; 
+                        int bEnd = i + 1;
                         while (bEnd < cleanRemaining.Length && System.Char.IsDigit(cleanRemaining[bEnd]))
                         {
                             bEnd++;
@@ -479,32 +398,34 @@ namespace WpfApp1
         private void InsertBusbarRow(
             Microsoft.Data.Sqlite.SqliteConnection connection,
             Microsoft.Data.Sqlite.SqliteTransaction transaction,
-            string size, string year, string month, string batchNo, string prodDate,
+            string size, string year, string month, string prodDate,
             double thickness, double width, double length, double radius, double chamber,
             double electric, double resistivity, double elongation, double tensile,
             string bendTest, double spectro, double oxygen)
         {
             using var cmd = connection.CreateCommand();
             cmd.Transaction = transaction;
+
             cmd.CommandText = @"
                 INSERT INTO Busbar (
-                    Size_mm, Year_folder, Month_folder, Batch_no, Prod_date, 
+                    Size_mm, Year_folder, Month_folder, Prod_date, 
                     Thickness_mm, Width_mm, Length, Radius, Chamber_mm,
                     Electric_IACS, Weight, Elongation, Tensile,
                     Bend_test, Spectro_Cu, Oxygen
                 )
                 VALUES (
-                    @Size, @Year, @Month, @BatchNo, @ProdDate,
+                    @Size, @Year, @Month, @ProdDate,
                     @Thickness, @Width, @Length, @Radius, @Chamber,
                     @Electric, @Resistivity, @Elongation, @Tensile,
                     @Bend, @Spectro, @Oxygen
-                );";
+                );
+            ";
 
             cmd.Parameters.AddWithValue("@Size", size);
             cmd.Parameters.AddWithValue("@Year", year.Trim());
             cmd.Parameters.AddWithValue("@Month", month.Trim());
-            cmd.Parameters.AddWithValue("@BatchNo", batchNo);
             cmd.Parameters.AddWithValue("@ProdDate", prodDate);
+
             cmd.Parameters.AddWithValue("@Thickness", thickness);
             cmd.Parameters.AddWithValue("@Width", width);
             cmd.Parameters.AddWithValue("@Length", length);
@@ -514,8 +435,10 @@ namespace WpfApp1
             cmd.Parameters.AddWithValue("@Resistivity", resistivity);
             cmd.Parameters.AddWithValue("@Elongation", elongation);
             cmd.Parameters.AddWithValue("@Tensile", tensile);
+
             object bendVal = string.IsNullOrEmpty(bendTest) ? System.DBNull.Value : bendTest;
             cmd.Parameters.AddWithValue("@Bend", bendVal);
+
             cmd.Parameters.AddWithValue("@Spectro", spectro);
             cmd.Parameters.AddWithValue("@Oxygen", oxygen);
 
@@ -531,30 +454,13 @@ namespace WpfApp1
 
         private void AppendDebug(string message)
         {
-            _debugLog += message + System.Environment.NewLine;
+            if (_debugLog.Length < 1000) _debugLog += message + System.Environment.NewLine;
         }
 
         private void ShowFinalReport()
         {
-            string logDir = System.IO.Path.GetDirectoryName(DbPath);
-            string logPath = System.IO.Path.Combine(logDir, "Import_Debug_Log.txt");
-
-            try
-            {
-                System.IO.File.WriteAllText(logPath, _debugLog);
-            }
-            catch (System.Exception ex)
-            {
-                System.Windows.MessageBox.Show($"Gagal menyimpan log ke file: {ex.Message}", "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
-            }
-
-            string summary = $"IMPORT SELESAI\n\n" +
-                             $"File ditemukan : {_totalFilesFound}\n" +
-                             $"Baris disimpan : {_totalRowsInserted}\n\n" +
-                             $"Debug Log lengkap telah disimpan di:\n{logPath}";
-
             System.Windows.MessageBox.Show(
-                summary,
+                $"IMPORT SELESAI\n\nFile ditemukan : {_totalFilesFound}\nBaris disimpan : {_totalRowsInserted}\n\nDebug Log:\n{_debugLog}",
                 "Laporan Import",
                 System.Windows.MessageBoxButton.OK,
                 System.Windows.MessageBoxImage.Information);
