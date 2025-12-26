@@ -10,8 +10,6 @@ namespace WpfApp1
         public string BatchNo { get; set; }
         public string Size { get; set; }
         public string SourceFile { get; set; }
-
-        // Tambahan untuk Debugging dan Logika Pemilihan Sheet
         public string SheetName { get; set; }
         public int RowIndex { get; set; }
     }
@@ -130,7 +128,6 @@ namespace WpfApp1
                         {
                             using var workbook = new ClosedXML.Excel.XLWorkbook(file);
 
-                            // Catat nama sheet secara eksplisit
                             var tlj350 = LoadTljSheet(workbook, "TLJ 350", fileName);
                             _globalTljRecords.AddRange(tlj350);
 
@@ -164,7 +161,6 @@ namespace WpfApp1
 
                 if (System.DateTime.TryParse(rawDate, out System.DateTime dt))
                 {
-                    // Filter: Hanya masukkan data yang valid (Batch terisi)
                     if (!string.IsNullOrWhiteSpace(rawBatch))
                     {
                         results.Add(new TljRecord
@@ -173,8 +169,8 @@ namespace WpfApp1
                             BatchNo = rawBatch.Trim(),
                             Size = CleanSizeText(rawSize),
                             SourceFile = sourceFileName,
-                            SheetName = sheetName, // Simpan nama sheet
-                            RowIndex = r            // Simpan nomor baris
+                            SheetName = sheetName, 
+                            RowIndex = r           
                         });
                     }
                 }
@@ -257,14 +253,12 @@ namespace WpfApp1
 
                     if (currentProdDateObj.HasValue && !string.IsNullOrEmpty(cleanSize_YLB))
                     {
-                        // 1. Tentukan sheet target berdasarkan ukuran
                         string expectedSheet = GetExpectedTljSheet(cleanSize_YLB);
 
-                        // 2. Filter data: Ukuran SAMA, Tanggal <= YLB, DAN Sheet Name SAMA
                         var candidates = _globalTljRecords
                             .Where(x => x.Size == cleanSize_YLB &&
                                         x.Date <= currentProdDateObj.Value &&
-                                        x.SheetName == expectedSheet) // Filter ini yang krusial
+                                        x.SheetName == expectedSheet) 
                             .OrderByDescending(x => x.Date)
                             .ToList();
 
@@ -273,12 +267,10 @@ namespace WpfApp1
                             var bestMatch = candidates.First();
                             foundBatchNo = bestMatch.BatchNo;
 
-                            // Log Debugging Detail jika cocok
                             AppendDebug($"MATCH: Size {cleanSize_YLB} ({currentProdDateString}) -> Batch {foundBatchNo} | Source: {bestMatch.SourceFile} | Sheet: {bestMatch.SheetName} | Row: {bestMatch.RowIndex}");
                         }
                         else
                         {
-                            // Log Debugging jika tidak cocok (untuk analisis kenapa kosong)
                             AppendDebug($"NO MATCH: Size {cleanSize_YLB} ({currentProdDateString}). Expected Sheet: {expectedSheet}. (Candidates in other sheets may exist but were ignored).");
                         }
                     }
@@ -315,29 +307,16 @@ namespace WpfApp1
             }
         }
 
-        // --- Helper Methods ---
-
-        /// <summary>
-        /// Menentukan sheet TLJ berdasarkan aturan:
-        /// Lebar > 100 ATAU Luas Penampang > 1000 mm^2 -> TLJ 500
-        /// Selain itu -> TLJ 350
-        /// </summary>
         private string GetExpectedTljSheet(string sizeText)
         {
             // Format size: "10X125" atau "5x100"
             var parts = sizeText.ToLower().Split('x');
-            if (parts.Length != 2) return "TLJ 350"; // Default jika format aneh
+            if (parts.Length != 2) return "TLJ 350"; 
 
             if (double.TryParse(parts[0], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double thickness) &&
                 double.TryParse(parts[1], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double width))
             {
                 double area = thickness * width;
-
-                // Logika sesuai contoh user:
-                // 5x100 (Width 100, Area 500) -> TLJ 350
-                // 5x125 (Width 125) -> TLJ 500 (Karena Lebar > 100)
-                // 10x100 (Width 100, Area 1000) -> TLJ 350
-                // 15x100 (Width 100, Area 1500) -> TLJ 500 (Karena Area > 1000)
 
                 if (width > 100.0 || area > 1000.0)
                 {
@@ -413,23 +392,88 @@ namespace WpfApp1
             return string.Empty;
         }
 
-        private string CleanSizeText(string raw)
+        private System.String CleanSizeText(System.String raw)
         {
-            if (string.IsNullOrWhiteSpace(raw)) return string.Empty;
-            string text = raw.ToUpper();
+            if (System.String.IsNullOrWhiteSpace(raw)) return System.String.Empty;
+
+            System.String text = raw.ToUpper();
+
             int start = -1;
             for (int i = 0; i < text.Length; i++)
             {
-                if (char.IsDigit(text[i])) { start = i; break; }
+                if (System.Char.IsDigit(text[i]))
+                {
+                    start = i;
+                    break;
+                }
             }
-            if (start == -1) return string.Empty;
-            string substring = text.Substring(start);
+
+            if (start == -1) return System.String.Empty;
+
+            System.String substring = text.Substring(start);
+
             int xIndex = substring.IndexOf('X');
-            if (xIndex == -1) return string.Empty;
-            if (xIndex + 1 >= substring.Length || !char.IsDigit(substring[xIndex + 1])) return string.Empty;
+            if (xIndex == -1) return System.String.Empty;
+
+            if (xIndex + 1 >= substring.Length || !System.Char.IsDigit(substring[xIndex + 1]))
+                return System.String.Empty;
+
             int end = xIndex + 1;
-            while (end < substring.Length && char.IsDigit(substring[end])) end++;
-            return substring.Substring(0, end).Trim();
+            while (end < substring.Length && System.Char.IsDigit(substring[end]))
+                end++;
+
+            System.String result = substring.Substring(0, end).Trim();
+
+            System.String remaining = substring.Substring(end).Trim();
+
+            System.String keyword = System.String.Empty;
+
+            System.String cleanRemaining = System.String.Empty;
+            for (int i = 0; i < remaining.Length; i++)
+            {
+                if (System.Char.IsLetterOrDigit(remaining[i]))
+                {
+                    cleanRemaining += remaining[i];
+                }
+            }
+
+            if (cleanRemaining.Contains("FR"))
+            {
+                int frIndex = cleanRemaining.IndexOf("FR");
+                if (frIndex >= 0)
+                {
+                    keyword = "FR";
+                }
+            }
+            else if (!System.String.IsNullOrEmpty(cleanRemaining))
+            {
+                for (int i = 0; i < cleanRemaining.Length; i++)
+                {
+                    if (cleanRemaining[i] == 'B' && i + 1 < cleanRemaining.Length &&
+                        System.Char.IsDigit(cleanRemaining[i + 1]))
+                    {
+                        int bStart = i;
+                        int bEnd = i + 1; 
+                        while (bEnd < cleanRemaining.Length && System.Char.IsDigit(cleanRemaining[bEnd]))
+                        {
+                            bEnd++;
+                        }
+
+                        if (bEnd - bStart >= 2)
+                        {
+                            keyword = cleanRemaining.Substring(bStart, bEnd - bStart);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (!System.String.IsNullOrEmpty(keyword))
+            {
+                result = result + " " + keyword;
+            }
+
+            return result.Trim();
         }
 
         private void InsertBusbarRow(
@@ -487,19 +531,16 @@ namespace WpfApp1
 
         private void AppendDebug(string message)
         {
-            // Hapus batas panjang karena sekarang kita simpan ke file teks, bukan messagebox
             _debugLog += message + System.Environment.NewLine;
         }
 
         private void ShowFinalReport()
         {
-            // Tentukan lokasi file log (sama dengan folder database)
             string logDir = System.IO.Path.GetDirectoryName(DbPath);
             string logPath = System.IO.Path.Combine(logDir, "Import_Debug_Log.txt");
 
             try
             {
-                // Tulis seluruh log ke file
                 System.IO.File.WriteAllText(logPath, _debugLog);
             }
             catch (System.Exception ex)
