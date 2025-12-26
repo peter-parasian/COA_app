@@ -1,5 +1,7 @@
 ﻿using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Drawing.Charts;
 using DocumentFormat.OpenXml.Spreadsheet;
+using DocumentFormat.OpenXml.Wordprocessing;
 using Microsoft.Data.Sqlite;
 using System.Windows;
 
@@ -89,6 +91,36 @@ namespace WpfApp1
             ";
 
             cmd.ExecuteNonQuery();
+
+            cmd.CommandText = @"
+                DROP TABLE IF EXISTS TLJ500;
+
+                CREATE TABLE IF NOT EXISTS TLJ500 (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    Year_folder TEXT,
+                    Month_folder TEXT,
+                    Batch_no TEXT,
+                    Prod_date TEXT,
+                    Size_mm TEXT
+                );
+            ";
+
+            cmd.ExecuteNonQuery();
+
+            cmd.CommandText = @"
+                DROP TABLE IF EXISTS TLJ350;
+
+                CREATE TABLE IF NOT EXISTS TLJ350 (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    Year_folder TEXT,
+                    Month_folder TEXT,
+                    Batch_no TEXT,
+                    Prod_date TEXT,
+                    Size_mm TEXT
+                );
+            ";
+
+            cmd.ExecuteNonQuery();
         }
 
         private void TraverseFoldersAndImport(
@@ -136,6 +168,7 @@ namespace WpfApp1
             using var workbook = new ClosedXML.Excel.XLWorkbook(filePath);
             int row = 3;
 
+            // --- Process YLB Sheet ---
             try
             {
                 var sheet_YLB = workbook.Worksheets
@@ -147,86 +180,180 @@ namespace WpfApp1
                 if (sheet_YLB == null)
                 {
                     AppendDebug($"SKIP: Sheet 'YLB 50' tidak ditemukan -> {System.IO.Path.GetFileName(filePath)}");
-                    return;
+                    // Do not return here, allow checking other sheets
                 }
-
-                string currentProdDate = string.Empty;
-
-                int folderMonthNum = GetMonthNumber(month);
-                int folderYearNum = 0;
-                int.TryParse(year, out folderYearNum);
-
-                while (true)
+                else
                 {
-                    string sizeValue_YLB = sheet_YLB.Cell(row, "C").GetString();
-                    if (string.IsNullOrWhiteSpace(sizeValue_YLB))
-                        break;
+                    string currentProdDate = string.Empty;
 
-                    string rawDateFromCell = sheet_YLB.Cell(row, "B").GetString().Trim();
+                    int folderMonthNum = GetMonthNumber(month);
+                    int folderYearNum = 0;
+                    int.TryParse(year, out folderYearNum);
 
-                    if (!string.IsNullOrEmpty(rawDateFromCell))
+                    while (true)
                     {
-                        currentProdDate = StandardizeDate(rawDateFromCell, folderMonthNum, folderYearNum);
+                        string sizeValue_YLB = sheet_YLB.Cell(row, "C").GetString();
+                        if (string.IsNullOrWhiteSpace(sizeValue_YLB))
+                            break;
+
+                        string rawDateFromCell = sheet_YLB.Cell(row, "B").GetString().Trim();
+
+                        if (!string.IsNullOrEmpty(rawDateFromCell))
+                        {
+                            currentProdDate = StandardizeDate(rawDateFromCell, folderMonthNum, folderYearNum);
+                        }
+
+                        string cleanSize_YLB = CleanSizeText(sizeValue_YLB);
+
+                        // Kelompok 2 Angka Belakang Koma
+                        double rawThickness = ParseCustomDecimal(sheet_YLB.Cell(row, "G").GetString());
+                        double valThickness = System.Math.Round(rawThickness, 2);
+
+                        double rawWidth = ParseCustomDecimal(sheet_YLB.Cell(row, "I").GetString());
+                        double valWidth = System.Math.Round(rawWidth, 2);
+
+                        double rawRadius = ParseCustomDecimal(sheet_YLB.Cell(row, "J").GetString());
+                        double valRadius = System.Math.Round(rawRadius, 2);
+
+                        double rawChamber = ParseCustomDecimal(sheet_YLB.Cell(row, "L").GetString());
+                        double valChamber = System.Math.Round(rawChamber, 2);
+
+                        double rawElectric = ParseCustomDecimal(sheet_YLB.Cell(row, "U").GetString());
+                        double valElectric = System.Math.Round(rawElectric, 2);
+
+                        double rawOxygen = ParseCustomDecimal(sheet_YLB.Cell(row, "X").GetString());
+                        double valOxygen = System.Math.Round(rawOxygen, 2);
+
+                        // Kelompok Tanpa Batasan (Asli)
+                        double valSpectro = ParseCustomDecimal(sheet_YLB.Cell(row, "Y").GetString());
+                        double valResistivity = ParseCustomDecimal(sheet_YLB.Cell(row, "T").GetString());
+
+                        // Kelompok Integer
+                        double rawLength = ParseCustomDecimal(sheet_YLB.Cell(row, "K").GetString());
+                        double valLength = System.Math.Round(rawLength, 0);
+
+                        // Kelompok Merge/Rata-rata
+                        double rawElongation = GetMergedOrAverageValue(sheet_YLB, row, "R");
+                        double valElongation = System.Math.Round(rawElongation, 2);
+
+                        double rawTensile = GetMergedOrAverageValue(sheet_YLB, row, "Q");
+                        double valTensile = System.Math.Round(rawTensile, 2);
+
+                        string valBendTest = sheet_YLB.Cell(row, "W").GetString();
+
+                        InsertBusbarRow(
+                            connection, transaction,
+                            cleanSize_YLB, year, month, currentProdDate,
+                            valThickness, valWidth, valLength, valRadius, valChamber,
+                            valElectric, valResistivity, valElongation, valTensile,
+                            valBendTest, valSpectro, valOxygen
+                        );
+
+                        _totalRowsInserted++;
+                        row += 2;
                     }
-
-                    string cleanSize_YLB = CleanSizeText(sizeValue_YLB);
-
-                    // Kelompok 2 Angka Belakang Koma
-                    double rawThickness = ParseCustomDecimal(sheet_YLB.Cell(row, "G").GetString());
-                    double valThickness = System.Math.Round(rawThickness, 2);
-
-                    double rawWidth = ParseCustomDecimal(sheet_YLB.Cell(row, "I").GetString());
-                    double valWidth = System.Math.Round(rawWidth, 2);
-
-                    double rawRadius = ParseCustomDecimal(sheet_YLB.Cell(row, "J").GetString());
-                    double valRadius = System.Math.Round(rawRadius, 2);
-
-                    double rawChamber = ParseCustomDecimal(sheet_YLB.Cell(row, "L").GetString());
-                    double valChamber = System.Math.Round(rawChamber, 2);
-
-                    double rawElectric = ParseCustomDecimal(sheet_YLB.Cell(row, "U").GetString());
-                    double valElectric = System.Math.Round(rawElectric, 2);
-
-                    double rawOxygen = ParseCustomDecimal(sheet_YLB.Cell(row, "X").GetString());
-                    double valOxygen = System.Math.Round(rawOxygen, 2);
-
-                    // Kelompok Tanpa Batasan (Asli)
-                    double valSpectro = ParseCustomDecimal(sheet_YLB.Cell(row, "Y").GetString());
-                    double valResistivity = ParseCustomDecimal(sheet_YLB.Cell(row, "T").GetString());
-
-                    // Kelompok Integer
-                    double rawLength = ParseCustomDecimal(sheet_YLB.Cell(row, "K").GetString());
-                    double valLength = System.Math.Round(rawLength, 0);
-
-                    // Kelompok Merge/Rata-rata
-                    double rawElongation = GetMergedOrAverageValue(sheet_YLB, row, "R");
-                    double valElongation = System.Math.Round(rawElongation, 2);
-
-                    double rawTensile = GetMergedOrAverageValue(sheet_YLB, row, "Q");
-                    double valTensile = System.Math.Round(rawTensile, 2);
-
-                    string valBendTest = sheet_YLB.Cell(row, "W").GetString();
-
-                    InsertBusbarRow(
-                        connection, transaction,
-                        cleanSize_YLB, year, month, currentProdDate,
-                        valThickness, valWidth, valLength, valRadius, valChamber,
-                        valElectric, valResistivity, valElongation, valTensile,
-                        valBendTest, valSpectro, valOxygen
-                    );
-
-                    _totalRowsInserted++;
-
-                    row += 2;
                 }
             }
             catch (System.Exception ex)
             {
-                AppendDebug($"ERROR FILE: {System.IO.Path.GetFileName(filePath)} -> {ex.Message}");
+                AppendDebug($"ERROR FILE (YLB): {System.IO.Path.GetFileName(filePath)} -> {ex.Message}");
             }
 
-            try { var s = workbook.Worksheets.FirstOrDefault(w => w.Name.Trim().Equals("TLJ 350", System.StringComparison.OrdinalIgnoreCase)); if (s == null) return; while (true) { if (string.IsNullOrWhiteSpace(s.Cell(row, "C").GetString())) break; break; } } catch { }
-            try { var s = workbook.Worksheets.FirstOrDefault(w => w.Name.Trim().Equals("TLJ 500", System.StringComparison.OrdinalIgnoreCase)); if (s == null) return; while (true) { if (string.IsNullOrWhiteSpace(s.Cell(row, "C").GetString())) break; break; } } catch { }
+            // --- Process TLJ 350 Sheet ---
+            // Reset row for new sheet processing
+            row = 3;
+            try
+            {
+                var sheet_TLJ350 = workbook.Worksheets.FirstOrDefault(w => w.Name.Trim().Equals("TLJ 350", System.StringComparison.OrdinalIgnoreCase));
+                if (sheet_TLJ350 == null)
+                {
+                    AppendDebug($"SKIP: Sheet 'TLJ350' tidak ditemukan -> {System.IO.Path.GetFileName(filePath)}");
+                }
+                else
+                {
+                    string currentProdDate = string.Empty;
+
+                    int folderMonthNum = GetMonthNumber(month);
+                    int folderYearNum = 0;
+                    int.TryParse(year, out folderYearNum);
+
+                    while (true)
+                    {
+                        string sizeValue_TLJ350 = sheet_TLJ350.Cell(row, "D").GetString();
+
+                        if (string.IsNullOrWhiteSpace(sizeValue_TLJ350))
+                            break;
+
+                        string rawDateFromCell = sheet_TLJ350.Cell(row, "B").GetString().Trim();
+
+                        if (!string.IsNullOrEmpty(rawDateFromCell))
+                        {
+                            currentProdDate = StandardizeDate(rawDateFromCell, folderMonthNum, folderYearNum);
+                        }
+
+                        string cleanSize_TLJ350 = CleanSizeText(sizeValue_TLJ350);
+
+                        string batchValue = sheet_TLJ350.Cell(row, "C").GetString();
+
+                        InsertTLJ500_Row(connection, transaction, cleanSize_TLJ350, year, month, currentProdDate, batchValue);
+
+                        _totalRowsInserted++;
+                        row += 2;
+                    }
+                }
+            }
+            catch (System.Exception ex) // FIXED: Added 'ex' declaration
+            {
+                AppendDebug($"ERROR FILE (TLJ350): {System.IO.Path.GetFileName(filePath)} -> {ex.Message}");
+            }
+
+            // --- Process TLJ 500 Sheet ---
+            // Reset row for new sheet processing
+            row = 3;
+            try
+            {
+                var sheet_TLJ500 = workbook.Worksheets.FirstOrDefault(w => w.Name.Trim().Equals("TLJ 500", System.StringComparison.OrdinalIgnoreCase));
+                if (sheet_TLJ500 == null)
+                {
+                    AppendDebug($"SKIP: Sheet 'TLJ500' tidak ditemukan -> {System.IO.Path.GetFileName(filePath)}");
+                }
+                else
+                {
+                    string currentProdDate = string.Empty;
+
+                    int folderMonthNum = GetMonthNumber(month);
+                    int folderYearNum = 0;
+                    int.TryParse(year, out folderYearNum);
+
+                    while (true)
+                    {
+                        string sizeValue_TLJ500 = sheet_TLJ500.Cell(row, "D").GetString();
+
+                        if (string.IsNullOrWhiteSpace(sizeValue_TLJ500))
+                            break;
+
+                        string rawDateFromCell = sheet_TLJ500.Cell(row, "B").GetString().Trim();
+
+                        if (!string.IsNullOrEmpty(rawDateFromCell))
+                        {
+                            currentProdDate = StandardizeDate(rawDateFromCell, folderMonthNum, folderYearNum);
+                        }
+
+                        string cleanSize_TLJ500 = CleanSizeText(sizeValue_TLJ500);
+
+                        string batchValue = sheet_TLJ500.Cell(row, "C").GetString();
+
+                        InsertTLJ350_Row(connection, transaction, cleanSize_TLJ500, year, month, currentProdDate, batchValue);
+
+                        _totalRowsInserted++;
+                        row += 2;
+                    }
+                }
+            }
+            catch (System.Exception ex) // FIXED: Added 'ex' declaration
+            {
+                AppendDebug($"ERROR FILE (TLJ500): {System.IO.Path.GetFileName(filePath)} -> {ex.Message}");
+            }
         }
 
         private string StandardizeDate(string rawDate, int expectedMonth, int expectedYear)
@@ -441,6 +568,52 @@ namespace WpfApp1
 
             cmd.Parameters.AddWithValue("@Spectro", spectro);
             cmd.Parameters.AddWithValue("@Oxygen", oxygen);
+
+            cmd.ExecuteNonQuery();
+        }
+
+        private void InsertTLJ350_Row(
+            Microsoft.Data.Sqlite.SqliteConnection connection,
+            Microsoft.Data.Sqlite.SqliteTransaction transaction,
+            string size, string year, string month, string prodDate, string batchNum)
+        {
+            using var cmd = connection.CreateCommand();
+            cmd.Transaction = transaction;
+
+            cmd.CommandText = @"
+                INSERT INTO TLJ350 (Size_mm, Year_folder, Month_folder, Prod_date, Batch_no)
+                VALUES (@Size, @Year, @Month, @ProdDate, @Batch);
+            ";
+
+            cmd.Parameters.AddWithValue("@Size", size);
+            cmd.Parameters.AddWithValue("@Year", year.Trim());
+            cmd.Parameters.AddWithValue("@Month", month.Trim());
+            cmd.Parameters.AddWithValue("@ProdDate", prodDate);
+            object batchVal = string.IsNullOrEmpty(batchNum) ? System.DBNull.Value : batchNum;
+            cmd.Parameters.AddWithValue("@Batch", batchVal);
+
+            cmd.ExecuteNonQuery();
+        }
+
+        private void InsertTLJ500_Row(
+            Microsoft.Data.Sqlite.SqliteConnection connection,
+            Microsoft.Data.Sqlite.SqliteTransaction transaction,
+            string size, string year, string month, string prodDate, string batchNum)
+        {
+            using var cmd = connection.CreateCommand();
+            cmd.Transaction = transaction;
+
+            cmd.CommandText = @"
+                INSERT INTO TLJ500 (Size_mm, Year_folder, Month_folder, Prod_date, Batch_no)
+                VALUES (@Size, @Year, @Month, @ProdDate, @Batch);
+            ";
+
+            cmd.Parameters.AddWithValue("@Size", size);
+            cmd.Parameters.AddWithValue("@Year", year.Trim());
+            cmd.Parameters.AddWithValue("@Month", month.Trim());
+            cmd.Parameters.AddWithValue("@ProdDate", prodDate);
+            object batchVal = string.IsNullOrEmpty(batchNum) ? System.DBNull.Value : batchNum;
+            cmd.Parameters.AddWithValue("@Batch", batchVal);
 
             cmd.ExecuteNonQuery();
         }
