@@ -37,6 +37,9 @@ namespace WpfApp1
 
                 TraverseFoldersAndImport(connection, transaction);
 
+                // Panggil fungsi untuk mengisi Batch_no di tabel Busbar
+                UpdateBusbarBatchNumbers(connection, transaction);
+
                 transaction.Commit();
 
                 ShowFinalReport();
@@ -295,14 +298,14 @@ namespace WpfApp1
 
                         string batchValue = sheet_TLJ350.Cell(row, "C").GetString();
 
-                        InsertTLJ500_Row(connection, transaction, cleanSize_TLJ350, year, month, currentProdDate, batchValue);
+                        InsertTLJ350_Row(connection, transaction, cleanSize_TLJ350, year, month, currentProdDate, batchValue);
 
                         _totalRowsInserted++;
                         row += 2;
                     }
                 }
             }
-            catch (System.Exception ex) // FIXED: Added 'ex' declaration
+            catch (System.Exception ex)
             {
                 AppendDebug($"ERROR FILE (TLJ350): {System.IO.Path.GetFileName(filePath)} -> {ex.Message}");
             }
@@ -343,14 +346,14 @@ namespace WpfApp1
 
                         string batchValue = sheet_TLJ500.Cell(row, "C").GetString();
 
-                        InsertTLJ350_Row(connection, transaction, cleanSize_TLJ500, year, month, currentProdDate, batchValue);
+                        InsertTLJ500_Row(connection, transaction, cleanSize_TLJ500, year, month, currentProdDate, batchValue);
 
                         _totalRowsInserted++;
                         row += 2;
                     }
                 }
             }
-            catch (System.Exception ex) // FIXED: Added 'ex' declaration
+            catch (System.Exception ex)
             {
                 AppendDebug($"ERROR FILE (TLJ500): {System.IO.Path.GetFileName(filePath)} -> {ex.Message}");
             }
@@ -616,6 +619,221 @@ namespace WpfApp1
             cmd.Parameters.AddWithValue("@Batch", batchVal);
 
             cmd.ExecuteNonQuery();
+        }
+
+        private void UpdateBusbarBatchNumbers(
+            Microsoft.Data.Sqlite.SqliteConnection connection,
+            Microsoft.Data.Sqlite.SqliteTransaction transaction)
+        {
+            try
+            {
+                // Ambil semua data Busbar yang masih kosong Batch_no-nya
+                using var selectBusbarCmd = connection.CreateCommand();
+                selectBusbarCmd.Transaction = transaction;
+                selectBusbarCmd.CommandText = @"
+                    SELECT Id, Size_mm, Prod_date 
+                    FROM Busbar 
+                    WHERE (Batch_no IS NULL OR Batch_no = '')
+                    ORDER BY Prod_date, Id
+                ";
+
+                using var busbarReader = selectBusbarCmd.ExecuteReader();
+                while (busbarReader.Read())
+                {
+                    int busbarId = busbarReader.GetInt32(0);
+                    string size_mm = busbarReader.GetString(1);
+                    string prod_date = busbarReader.GetString(2);
+
+                    // Tentukan tabel TLJ berdasarkan ukuran
+                    string targetTable = DetermineTLJTable(size_mm);
+
+                    // Cari batch_no yang sesuai
+                    string batchNumbers = FindBatchNumbers(connection, transaction, targetTable, size_mm, prod_date);
+
+                    // Update Batch_no di tabel Busbar
+                    if (!System.String.IsNullOrEmpty(batchNumbers))
+                    {
+                        UpdateBusbarBatch(connection, transaction, busbarId, batchNumbers);
+                    }
+                }
+            }
+            catch (System.Exception ex)
+            {
+                AppendDebug($"ERROR UpdateBusbarBatchNumbers: {ex.Message}");
+                throw;
+            }
+        }
+
+        private string DetermineTLJTable(string size_mm)
+        {
+            // Ekstrak angka dari string ukuran
+            // Format: "10X125", "5X100 FR", dll
+            string cleanSize = size_mm.ToUpper().Replace(" ", "");
+
+            // Cari posisi 'X'
+            int xIndex = cleanSize.IndexOf('X');
+            if (xIndex == -1) return "TLJ500"; // Default ke TLJ500 jika format tidak valid
+
+            // Ekstrak angka sebelum dan sesudah X
+            string beforeX = cleanSize.Substring(0, xIndex);
+            string afterX = cleanSize.Substring(xIndex + 1);
+
+            // Hapus karakter non-digit dari afterX
+            string afterXDigits = "";
+            for (int i = 0; i < afterX.Length; i++)
+            {
+                if (System.Char.IsDigit(afterX[i]))
+                {
+                    afterXDigits += afterX[i];
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            // Coba parse ke integer
+            if (int.TryParse(beforeX, out int firstDimension) &&
+                int.TryParse(afterXDigits, out int secondDimension))
+            {
+                // Aturan: Jika ukuran ≤ 10 × 100 → TLJ350, else → TLJ500
+                if (firstDimension <= 10 && secondDimension <= 100)
+                {
+                    return "TLJ350";
+                }
+            }
+
+            return "TLJ500";
+        }
+
+        private string FindBatchNumbers(
+            Microsoft.Data.Sqlite.SqliteConnection connection,
+            Microsoft.Data.Sqlite.SqliteTransaction transaction,
+            string tableName,
+            string size_mm,
+            string targetDate)
+        {
+            try
+            {
+                // Konversi string date ke DateTime untuk perbandingan
+                System.DateTime targetDateTime;
+                if (!System.DateTime.TryParseExact(
+                    targetDate,
+                    "dd/MM/yyyy",
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    System.Globalization.DateTimeStyles.None,
+                    out targetDateTime))
+                {
+                    // Coba format alternatif
+                    if (!System.DateTime.TryParse(targetDate, out targetDateTime))
+                    {
+                        return string.Empty;
+                    }
+                }
+
+                // Query 1: Cari dengan tanggal yang sama persis
+                using var cmdSameDate = connection.CreateCommand();
+                cmdSameDate.Transaction = transaction;
+                cmdSameDate.CommandText = $@"
+                    SELECT Batch_no, Prod_date 
+                    FROM {tableName} 
+                    WHERE Size_mm = @Size_mm 
+                      AND Prod_date = @TargetDate
+                    ORDER BY Prod_date DESC
+                ";
+
+                cmdSameDate.Parameters.AddWithValue("@Size_mm", size_mm);
+                cmdSameDate.Parameters.AddWithValue("@TargetDate", targetDate);
+
+                using var readerSameDate = cmdSameDate.ExecuteReader();
+                if (readerSameDate.HasRows)
+                {
+                    return ExtractBatchNumbers(readerSameDate);
+                }
+
+                // Query 2: Cari dengan tanggal sebelum targetDate (mundur ke belakang)
+                using var cmdBeforeDate = connection.CreateCommand();
+                cmdBeforeDate.Transaction = transaction;
+                cmdBeforeDate.CommandText = $@"
+                    SELECT Batch_no, Prod_date 
+                    FROM {tableName} 
+                    WHERE Size_mm = @Size_mm 
+                      AND Prod_date < @TargetDate
+                    ORDER BY Prod_date DESC
+                    LIMIT 1
+                ";
+
+                cmdBeforeDate.Parameters.AddWithValue("@Size_mm", size_mm);
+                cmdBeforeDate.Parameters.AddWithValue("@TargetDate", targetDate);
+
+                using var readerBeforeDate = cmdBeforeDate.ExecuteReader();
+                if (readerBeforeDate.HasRows)
+                {
+                    return ExtractBatchNumbers(readerBeforeDate);
+                }
+
+                return string.Empty;
+            }
+            catch (System.Exception ex)
+            {
+                AppendDebug($"ERROR FindBatchNumbers for {size_mm} on {targetDate}: {ex.Message}");
+                return string.Empty;
+            }
+        }
+
+        private string ExtractBatchNumbers(Microsoft.Data.Sqlite.SqliteDataReader reader)
+        {
+            System.Collections.Generic.List<string> batchList = new System.Collections.Generic.List<string>();
+
+            while (reader.Read())
+            {
+                if (!reader.IsDBNull(0))
+                {
+                    string batchData = reader.GetString(0);
+
+                    // Jika batchData berisi multiple lines (contoh: 250712-010166\n250713-010176)
+                    if (!System.String.IsNullOrEmpty(batchData))
+                    {
+                        // Pisahkan berdasarkan newline
+                        string[] batches = batchData.Split(
+                            new[] { '\n', '\r' },
+                            System.StringSplitOptions.RemoveEmptyEntries
+                        );
+
+                        foreach (string batch in batches)
+                        {
+                            string trimmedBatch = batch.Trim();
+                            if (!System.String.IsNullOrEmpty(trimmedBatch))
+                            {
+                                batchList.Add(trimmedBatch);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Gabungkan dengan newline untuk penyimpanan di database
+            return System.String.Join("\n", batchList);
+        }
+
+        private void UpdateBusbarBatch(
+            Microsoft.Data.Sqlite.SqliteConnection connection,
+            Microsoft.Data.Sqlite.SqliteTransaction transaction,
+            int busbarId,
+            string batchNumbers)
+        {
+            using var updateCmd = connection.CreateCommand();
+            updateCmd.Transaction = transaction;
+            updateCmd.CommandText = @"
+                UPDATE Busbar 
+                SET Batch_no = @BatchNumbers 
+                WHERE Id = @Id
+            ";
+
+            updateCmd.Parameters.AddWithValue("@BatchNumbers", batchNumbers);
+            updateCmd.Parameters.AddWithValue("@Id", busbarId);
+
+            updateCmd.ExecuteNonQuery();
         }
 
         private void ResetCounters()
