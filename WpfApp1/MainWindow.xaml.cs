@@ -11,10 +11,30 @@ namespace WpfApp1
     {
         private const string ExcelRootFolder = @"C:\Users\mrrx\Documents\My Web Sites\H\OPERATOR\COPPER BUSBAR & STRIP";
         private const string DbPath = @"C:\sqLite\data_qc.db";
+        private const int BatchSize = 500;
 
         private int _totalFilesFound;
         private int _totalRowsInserted;
-        private string _debugLog = string.Empty; // Fix warning CS8618
+        private string _debugLog = "";
+
+        private System.Collections.Generic.List<string> _busbarBatchBuffer = new System.Collections.Generic.List<string>();
+        private System.Collections.Generic.List<Microsoft.Data.Sqlite.SqliteParameter> _busbarParamBuffer = new System.Collections.Generic.List<Microsoft.Data.Sqlite.SqliteParameter>();
+        private int _busbarBatchCount = 0;
+
+        private System.Collections.Generic.List<string> _tlj350BatchBuffer = new System.Collections.Generic.List<string>();
+        private System.Collections.Generic.List<Microsoft.Data.Sqlite.SqliteParameter> _tlj350ParamBuffer = new System.Collections.Generic.List<Microsoft.Data.Sqlite.SqliteParameter>();
+        private int _tlj350BatchCount = 0;
+
+        private System.Collections.Generic.List<string> _tlj500BatchBuffer = new System.Collections.Generic.List<string>();
+        private System.Collections.Generic.List<Microsoft.Data.Sqlite.SqliteParameter> _tlj500ParamBuffer = new System.Collections.Generic.List<Microsoft.Data.Sqlite.SqliteParameter>();
+        private int _tlj500BatchCount = 0;
+
+        private struct TLJRecord
+        {
+            public string Size_mm;
+            public string Prod_date;
+            public string Batch_no;
+        }
 
         public MainWindow()
         {
@@ -31,16 +51,15 @@ namespace WpfApp1
                 using var connection = new Microsoft.Data.Sqlite.SqliteConnection($"Data Source={DbPath}");
                 connection.Open();
 
-                // --- OPTIMASI 1: Konfigurasi Kecepatan SQLite ---
-                using var pragmaCmd = connection.CreateCommand();
-                pragmaCmd.CommandText = "PRAGMA journal_mode = WAL; PRAGMA synchronous = NORMAL; PRAGMA cache_size = -10000;";
-                pragmaCmd.ExecuteNonQuery();
-
                 CreateBusbarTable(connection);
 
                 using var transaction = connection.BeginTransaction();
 
                 TraverseFoldersAndImport(connection, transaction);
+
+                FlushBatch(connection, transaction, "Busbar", _busbarBatchBuffer, _busbarParamBuffer);
+                FlushBatch(connection, transaction, "TLJ350", _tlj350BatchBuffer, _tlj350ParamBuffer);
+                FlushBatch(connection, transaction, "TLJ500", _tlj500BatchBuffer, _tlj500ParamBuffer);
 
                 UpdateBusbarBatchNumbers(connection, transaction);
 
@@ -99,10 +118,6 @@ namespace WpfApp1
 
             cmd.ExecuteNonQuery();
 
-            // --- OPTIMASI 2: Membuat Index ---
-            cmd.CommandText = "CREATE INDEX IF NOT EXISTS idx_busbar_search ON Busbar(Size_mm, Prod_date);";
-            cmd.ExecuteNonQuery();
-
             cmd.CommandText = @"
                 DROP TABLE IF EXISTS TLJ500;
 
@@ -118,9 +133,6 @@ namespace WpfApp1
 
             cmd.ExecuteNonQuery();
 
-            cmd.CommandText = "CREATE INDEX IF NOT EXISTS idx_tlJ500_search ON TLJ500(Size_mm, Prod_date);";
-            cmd.ExecuteNonQuery();
-
             cmd.CommandText = @"
                 DROP TABLE IF EXISTS TLJ350;
 
@@ -134,9 +146,6 @@ namespace WpfApp1
                 );
             ";
 
-            cmd.ExecuteNonQuery();
-
-            cmd.CommandText = "CREATE INDEX IF NOT EXISTS idx_tlJ350_search ON TLJ350(Size_mm, Prod_date);";
             cmd.ExecuteNonQuery();
         }
 
@@ -184,75 +193,19 @@ namespace WpfApp1
         {
             using var workbook = new ClosedXML.Excel.XLWorkbook(filePath);
 
-            // --- OPTIMASI 3: Siapkan Command Sekali Saja (Menggunakan SqliteType yang benar) ---
+            ProcessYLBSheet(connection, transaction, workbook, filePath, year, month);
+            ProcessTLJ350Sheet(connection, transaction, workbook, filePath, year, month);
+            ProcessTLJ500Sheet(connection, transaction, workbook, filePath, year, month);
+        }
 
-            // Command untuk Busbar
-            var cmdBusbar = connection.CreateCommand();
-            cmdBusbar.Transaction = transaction;
-            cmdBusbar.CommandText = @"
-                INSERT INTO Busbar (
-                    Size_mm, Year_folder, Month_folder, Prod_date, 
-                    Thickness_mm, Width_mm, Length, Radius, Chamber_mm,
-                    Electric_IACS, Weight, Elongation, Tensile,
-                    Bend_test, Spectro_Cu, Oxygen
-                )
-                VALUES (
-                    @Size, @Year, @Month, @ProdDate,
-                    @Thickness, @Width, @Length, @Radius, @Chamber,
-                    @Electric, @Resistivity, @Elongation, @Tensile,
-                    @Bend, @Spectro, @Oxygen
-                );
-            ";
-
-            // Fix Error CS1503: Menggunakan Microsoft.Data.Sqlite.SqliteType
-            var pSize = cmdBusbar.Parameters.Add("@Size", Microsoft.Data.Sqlite.SqliteType.Text);
-            var pYear = cmdBusbar.Parameters.Add("@Year", Microsoft.Data.Sqlite.SqliteType.Text);
-            var pMonth = cmdBusbar.Parameters.Add("@Month", Microsoft.Data.Sqlite.SqliteType.Text);
-            var pProdDate = cmdBusbar.Parameters.Add("@ProdDate", Microsoft.Data.Sqlite.SqliteType.Text);
-            var pThickness = cmdBusbar.Parameters.Add("@Thickness", Microsoft.Data.Sqlite.SqliteType.Real);
-            var pWidth = cmdBusbar.Parameters.Add("@Width", Microsoft.Data.Sqlite.SqliteType.Real);
-            var pLength = cmdBusbar.Parameters.Add("@Length", Microsoft.Data.Sqlite.SqliteType.Real);
-            var pRadius = cmdBusbar.Parameters.Add("@Radius", Microsoft.Data.Sqlite.SqliteType.Real);
-            var pChamber = cmdBusbar.Parameters.Add("@Chamber", Microsoft.Data.Sqlite.SqliteType.Real);
-            var pElectric = cmdBusbar.Parameters.Add("@Electric", Microsoft.Data.Sqlite.SqliteType.Real);
-            var pResistivity = cmdBusbar.Parameters.Add("@Resistivity", Microsoft.Data.Sqlite.SqliteType.Real);
-            var pElongation = cmdBusbar.Parameters.Add("@Elongation", Microsoft.Data.Sqlite.SqliteType.Real);
-            var pTensile = cmdBusbar.Parameters.Add("@Tensile", Microsoft.Data.Sqlite.SqliteType.Real);
-            var pBend = cmdBusbar.Parameters.Add("@Bend", Microsoft.Data.Sqlite.SqliteType.Text);
-            var pSpectro = cmdBusbar.Parameters.Add("@Spectro", Microsoft.Data.Sqlite.SqliteType.Real);
-            var pOxygen = cmdBusbar.Parameters.Add("@Oxygen", Microsoft.Data.Sqlite.SqliteType.Real);
-
-
-            // Command untuk TLJ350
-            var cmdTLJ350 = connection.CreateCommand();
-            cmdTLJ350.Transaction = transaction;
-            cmdTLJ350.CommandText = @"
-                INSERT INTO TLJ350 (Size_mm, Year_folder, Month_folder, Prod_date, Batch_no)
-                VALUES (@Size, @Year, @Month, @ProdDate, @Batch);
-            ";
-            var pT350_Size = cmdTLJ350.Parameters.Add("@Size", Microsoft.Data.Sqlite.SqliteType.Text);
-            var pT350_Year = cmdTLJ350.Parameters.Add("@Year", Microsoft.Data.Sqlite.SqliteType.Text);
-            var pT350_Month = cmdTLJ350.Parameters.Add("@Month", Microsoft.Data.Sqlite.SqliteType.Text);
-            var pT350_ProdDate = cmdTLJ350.Parameters.Add("@ProdDate", Microsoft.Data.Sqlite.SqliteType.Text);
-            var pT350_Batch = cmdTLJ350.Parameters.Add("@Batch", Microsoft.Data.Sqlite.SqliteType.Text);
-
-            // Command untuk TLJ500
-            var cmdTLJ500 = connection.CreateCommand();
-            cmdTLJ500.Transaction = transaction;
-            cmdTLJ500.CommandText = @"
-                INSERT INTO TLJ500 (Size_mm, Year_folder, Month_folder, Prod_date, Batch_no)
-                VALUES (@Size, @Year, @Month, @ProdDate, @Batch);
-            ";
-            var pT500_Size = cmdTLJ500.Parameters.Add("@Size", Microsoft.Data.Sqlite.SqliteType.Text);
-            var pT500_Year = cmdTLJ500.Parameters.Add("@Year", Microsoft.Data.Sqlite.SqliteType.Text);
-            var pT500_Month = cmdTLJ500.Parameters.Add("@Month", Microsoft.Data.Sqlite.SqliteType.Text);
-            var pT500_ProdDate = cmdTLJ500.Parameters.Add("@ProdDate", Microsoft.Data.Sqlite.SqliteType.Text);
-            var pT500_Batch = cmdTLJ500.Parameters.Add("@Batch", Microsoft.Data.Sqlite.SqliteType.Text);
-
-
-            int row = 3;
-
-            // --- Process YLB Sheet ---
+        private void ProcessYLBSheet(
+            Microsoft.Data.Sqlite.SqliteConnection connection,
+            Microsoft.Data.Sqlite.SqliteTransaction transaction,
+            ClosedXML.Excel.XLWorkbook workbook,
+            string filePath,
+            string year,
+            string month)
+        {
             try
             {
                 var sheet_YLB = workbook.Worksheets
@@ -264,198 +217,297 @@ namespace WpfApp1
                 if (sheet_YLB == null)
                 {
                     AppendDebug($"SKIP: Sheet 'YLB 50' tidak ditemukan -> {System.IO.Path.GetFileName(filePath)}");
+                    return;
                 }
-                else
+
+                string currentProdDate = string.Empty;
+                int folderMonthNum = GetMonthNumber(month);
+                int folderYearNum = 0;
+                int.TryParse(year, out folderYearNum);
+                int row = 3;
+
+                while (true)
                 {
-                    string currentProdDate = string.Empty;
+                    string sizeValue_YLB = sheet_YLB.Cell(row, "C").GetString();
+                    if (string.IsNullOrWhiteSpace(sizeValue_YLB))
+                        break;
 
-                    int folderMonthNum = GetMonthNumber(month);
-                    int folderYearNum = 0;
-                    int.TryParse(year, out folderYearNum);
+                    string rawDateFromCell = sheet_YLB.Cell(row, "B").GetString().Trim();
 
-                    while (true)
+                    if (!string.IsNullOrEmpty(rawDateFromCell))
                     {
-                        string sizeValue_YLB = sheet_YLB.Cell(row, "C").GetString();
-                        if (string.IsNullOrWhiteSpace(sizeValue_YLB))
-                            break;
-
-                        string rawDateFromCell = sheet_YLB.Cell(row, "B").GetString().Trim();
-
-                        if (!string.IsNullOrEmpty(rawDateFromCell))
-                        {
-                            currentProdDate = StandardizeDate(rawDateFromCell, folderMonthNum, folderYearNum);
-                        }
-
-                        string cleanSize_YLB = CleanSizeText(sizeValue_YLB);
-
-                        double rawThickness = ParseCustomDecimal(sheet_YLB.Cell(row, "G").GetString());
-                        double valThickness = System.Math.Round(rawThickness, 2);
-
-                        double rawWidth = ParseCustomDecimal(sheet_YLB.Cell(row, "I").GetString());
-                        double valWidth = System.Math.Round(rawWidth, 2);
-
-                        double rawRadius = ParseCustomDecimal(sheet_YLB.Cell(row, "J").GetString());
-                        double valRadius = System.Math.Round(rawRadius, 2);
-
-                        double rawChamber = ParseCustomDecimal(sheet_YLB.Cell(row, "L").GetString());
-                        double valChamber = System.Math.Round(rawChamber, 2);
-
-                        double rawElectric = ParseCustomDecimal(sheet_YLB.Cell(row, "U").GetString());
-                        double valElectric = System.Math.Round(rawElectric, 2);
-
-                        double rawOxygen = ParseCustomDecimal(sheet_YLB.Cell(row, "X").GetString());
-                        double valOxygen = System.Math.Round(rawOxygen, 2);
-
-                        double valSpectro = ParseCustomDecimal(sheet_YLB.Cell(row, "Y").GetString());
-                        double valResistivity = ParseCustomDecimal(sheet_YLB.Cell(row, "T").GetString());
-
-                        double rawLength = ParseCustomDecimal(sheet_YLB.Cell(row, "K").GetString());
-                        double valLength = System.Math.Round(rawLength, 0);
-
-                        double rawElongation = GetMergedOrAverageValue(sheet_YLB, row, "R");
-                        double valElongation = System.Math.Round(rawElongation, 2);
-
-                        double rawTensile = GetMergedOrAverageValue(sheet_YLB, row, "Q");
-                        double valTensile = System.Math.Round(rawTensile, 2);
-
-                        string valBendTest = sheet_YLB.Cell(row, "W").GetString();
-
-                        // --- Gunakan Prepared Command ---
-                        pSize.Value = cleanSize_YLB;
-                        pYear.Value = year.Trim();
-                        pMonth.Value = month.Trim();
-                        // Fix Error CS0103 (Typo 'prodDate:')
-                        pProdDate.Value = currentProdDate;
-                        pThickness.Value = valThickness;
-                        pWidth.Value = valWidth;
-                        pLength.Value = valLength;
-                        pRadius.Value = valRadius;
-                        pChamber.Value = valChamber;
-                        pElectric.Value = valElectric;
-                        pResistivity.Value = valResistivity;
-                        pElongation.Value = valElongation;
-                        pTensile.Value = valTensile;
-                        pBend.Value = string.IsNullOrEmpty(valBendTest) ? System.DBNull.Value : valBendTest;
-                        pSpectro.Value = valSpectro;
-                        pOxygen.Value = valOxygen;
-
-                        cmdBusbar.ExecuteNonQuery();
-
-                        _totalRowsInserted++;
-                        row += 2;
+                        currentProdDate = StandardizeDate(rawDateFromCell, folderMonthNum, folderYearNum);
                     }
+
+                    string cleanSize_YLB = CleanSizeText(sizeValue_YLB);
+
+                    double rawThickness = ParseCustomDecimal(sheet_YLB.Cell(row, "G").GetString());
+                    double valThickness = System.Math.Round(rawThickness, 2);
+
+                    double rawWidth = ParseCustomDecimal(sheet_YLB.Cell(row, "I").GetString());
+                    double valWidth = System.Math.Round(rawWidth, 2);
+
+                    double rawRadius = ParseCustomDecimal(sheet_YLB.Cell(row, "J").GetString());
+                    double valRadius = System.Math.Round(rawRadius, 2);
+
+                    double rawChamber = ParseCustomDecimal(sheet_YLB.Cell(row, "L").GetString());
+                    double valChamber = System.Math.Round(rawChamber, 2);
+
+                    double rawElectric = ParseCustomDecimal(sheet_YLB.Cell(row, "U").GetString());
+                    double valElectric = System.Math.Round(rawElectric, 2);
+
+                    double rawOxygen = ParseCustomDecimal(sheet_YLB.Cell(row, "X").GetString());
+                    double valOxygen = System.Math.Round(rawOxygen, 2);
+
+                    double valSpectro = ParseCustomDecimal(sheet_YLB.Cell(row, "Y").GetString());
+                    double valResistivity = ParseCustomDecimal(sheet_YLB.Cell(row, "T").GetString());
+
+                    double rawLength = ParseCustomDecimal(sheet_YLB.Cell(row, "K").GetString());
+                    double valLength = System.Math.Round(rawLength, 0);
+
+                    double rawElongation = GetMergedOrAverageValue(sheet_YLB, row, "R");
+                    double valElongation = System.Math.Round(rawElongation, 2);
+
+                    double rawTensile = GetMergedOrAverageValue(sheet_YLB, row, "Q");
+                    double valTensile = System.Math.Round(rawTensile, 2);
+
+                    string valBendTest = sheet_YLB.Cell(row, "W").GetString();
+
+                    AppendBusbarBatch(
+                        connection, transaction,
+                        cleanSize_YLB, year, month, currentProdDate,
+                        valThickness, valWidth, valLength, valRadius, valChamber,
+                        valElectric, valResistivity, valElongation, valTensile,
+                        valBendTest, valSpectro, valOxygen
+                    );
+
+                    _totalRowsInserted++;
+                    row += 2;
                 }
             }
             catch (System.Exception ex)
             {
                 AppendDebug($"ERROR FILE (YLB): {System.IO.Path.GetFileName(filePath)} -> {ex.Message}");
             }
+        }
 
-            // --- Process TLJ 350 Sheet ---
-            row = 3;
+        private void ProcessTLJ350Sheet(
+            Microsoft.Data.Sqlite.SqliteConnection connection,
+            Microsoft.Data.Sqlite.SqliteTransaction transaction,
+            ClosedXML.Excel.XLWorkbook workbook,
+            string filePath,
+            string year,
+            string month)
+        {
             try
             {
                 var sheet_TLJ350 = workbook.Worksheets.FirstOrDefault(w => w.Name.Trim().Equals("TLJ 350", System.StringComparison.OrdinalIgnoreCase));
                 if (sheet_TLJ350 == null)
                 {
                     AppendDebug($"SKIP: Sheet 'TLJ350' tidak ditemukan -> {System.IO.Path.GetFileName(filePath)}");
+                    return;
                 }
-                else
+
+                string currentProdDate = string.Empty;
+                int folderMonthNum = GetMonthNumber(month);
+                int folderYearNum = 0;
+                int.TryParse(year, out folderYearNum);
+                int row = 3;
+
+                while (true)
                 {
-                    string currentProdDate = string.Empty;
+                    string sizeValue_TLJ350 = sheet_TLJ350.Cell(row, "D").GetString();
 
-                    int folderMonthNum = GetMonthNumber(month);
-                    int folderYearNum = 0;
-                    int.TryParse(year, out folderYearNum);
+                    if (string.IsNullOrWhiteSpace(sizeValue_TLJ350))
+                        break;
 
-                    while (true)
+                    string rawDateFromCell = sheet_TLJ350.Cell(row, "B").GetString().Trim();
+
+                    if (!string.IsNullOrEmpty(rawDateFromCell))
                     {
-                        string sizeValue_TLJ350 = sheet_TLJ350.Cell(row, "D").GetString();
-
-                        if (string.IsNullOrWhiteSpace(sizeValue_TLJ350))
-                            break;
-
-                        string rawDateFromCell = sheet_TLJ350.Cell(row, "B").GetString().Trim();
-
-                        if (!string.IsNullOrEmpty(rawDateFromCell))
-                        {
-                            currentProdDate = StandardizeDate(rawDateFromCell, folderMonthNum, folderYearNum);
-                        }
-
-                        string cleanSize_TLJ350 = CleanSizeText(sizeValue_TLJ350);
-
-                        string batchValue = sheet_TLJ350.Cell(row, "C").GetString();
-
-                        pT350_Size.Value = cleanSize_TLJ350;
-                        pT350_Year.Value = year.Trim();
-                        pT350_Month.Value = month.Trim();
-                        pT350_ProdDate.Value = currentProdDate;
-                        pT350_Batch.Value = string.IsNullOrEmpty(batchValue) ? System.DBNull.Value : batchValue;
-
-                        cmdTLJ350.ExecuteNonQuery();
-
-                        _totalRowsInserted++;
-                        row += 2;
+                        currentProdDate = StandardizeDate(rawDateFromCell, folderMonthNum, folderYearNum);
                     }
+
+                    string cleanSize_TLJ350 = CleanSizeText(sizeValue_TLJ350);
+
+                    string batchValue = sheet_TLJ350.Cell(row, "C").GetString();
+
+                    AppendTLJ350Batch(connection, transaction, cleanSize_TLJ350, year, month, currentProdDate, batchValue);
+
+                    _totalRowsInserted++;
+                    row += 2;
                 }
             }
             catch (System.Exception ex)
             {
                 AppendDebug($"ERROR FILE (TLJ350): {System.IO.Path.GetFileName(filePath)} -> {ex.Message}");
             }
+        }
 
-            // --- Process TLJ 500 Sheet ---
-            row = 3;
+        private void ProcessTLJ500Sheet(
+            Microsoft.Data.Sqlite.SqliteConnection connection,
+            Microsoft.Data.Sqlite.SqliteTransaction transaction,
+            ClosedXML.Excel.XLWorkbook workbook,
+            string filePath,
+            string year,
+            string month)
+        {
             try
             {
                 var sheet_TLJ500 = workbook.Worksheets.FirstOrDefault(w => w.Name.Trim().Equals("TLJ 500", System.StringComparison.OrdinalIgnoreCase));
                 if (sheet_TLJ500 == null)
                 {
                     AppendDebug($"SKIP: Sheet 'TLJ500' tidak ditemukan -> {System.IO.Path.GetFileName(filePath)}");
+                    return;
                 }
-                else
+
+                string currentProdDate = string.Empty;
+                int folderMonthNum = GetMonthNumber(month);
+                int folderYearNum = 0;
+                int.TryParse(year, out folderYearNum);
+                int row = 3;
+
+                while (true)
                 {
-                    string currentProdDate = string.Empty;
+                    string sizeValue_TLJ500 = sheet_TLJ500.Cell(row, "D").GetString();
 
-                    int folderMonthNum = GetMonthNumber(month);
-                    int folderYearNum = 0;
-                    int.TryParse(year, out folderYearNum);
+                    if (string.IsNullOrWhiteSpace(sizeValue_TLJ500))
+                        break;
 
-                    while (true)
+                    string rawDateFromCell = sheet_TLJ500.Cell(row, "B").GetString().Trim();
+
+                    if (!string.IsNullOrEmpty(rawDateFromCell))
                     {
-                        string sizeValue_TLJ500 = sheet_TLJ500.Cell(row, "D").GetString();
-
-                        if (string.IsNullOrWhiteSpace(sizeValue_TLJ500))
-                            break;
-
-                        string rawDateFromCell = sheet_TLJ500.Cell(row, "B").GetString().Trim();
-
-                        if (!string.IsNullOrEmpty(rawDateFromCell))
-                        {
-                            currentProdDate = StandardizeDate(rawDateFromCell, folderMonthNum, folderYearNum);
-                        }
-
-                        string cleanSize_TLJ500 = CleanSizeText(sizeValue_TLJ500);
-
-                        string batchValue = sheet_TLJ500.Cell(row, "C").GetString();
-
-                        pT500_Size.Value = cleanSize_TLJ500;
-                        pT500_Year.Value = year.Trim();
-                        pT500_Month.Value = month.Trim();
-                        pT500_ProdDate.Value = currentProdDate;
-                        pT500_Batch.Value = string.IsNullOrEmpty(batchValue) ? System.DBNull.Value : batchValue;
-
-                        cmdTLJ500.ExecuteNonQuery();
-
-                        _totalRowsInserted++;
-                        row += 2;
+                        currentProdDate = StandardizeDate(rawDateFromCell, folderMonthNum, folderYearNum);
                     }
+
+                    string cleanSize_TLJ500 = CleanSizeText(sizeValue_TLJ500);
+
+                    string batchValue = sheet_TLJ500.Cell(row, "C").GetString();
+
+                    AppendTLJ500Batch(connection, transaction, cleanSize_TLJ500, year, month, currentProdDate, batchValue);
+
+                    _totalRowsInserted++;
+                    row += 2;
                 }
             }
             catch (System.Exception ex)
             {
                 AppendDebug($"ERROR FILE (TLJ500): {System.IO.Path.GetFileName(filePath)} -> {ex.Message}");
             }
+        }
+
+        private void AppendBusbarBatch(
+            Microsoft.Data.Sqlite.SqliteConnection connection,
+            Microsoft.Data.Sqlite.SqliteTransaction transaction,
+            string size, string year, string month, string prodDate,
+            double thickness, double width, double length, double radius, double chamber,
+            double electric, double resistivity, double elongation, double tensile,
+            string bendTest, double spectro, double oxygen)
+        {
+            int baseIndex = _busbarBatchCount * 17;
+
+            _busbarBatchBuffer.Add($"(@Size{baseIndex}, @Year{baseIndex}, @Month{baseIndex}, @ProdDate{baseIndex}, @Thickness{baseIndex}, @Width{baseIndex}, @Length{baseIndex}, @Radius{baseIndex}, @Chamber{baseIndex}, @Electric{baseIndex}, @Resistivity{baseIndex}, @Elongation{baseIndex}, @Tensile{baseIndex}, @Bend{baseIndex}, @Spectro{baseIndex}, @Oxygen{baseIndex})");
+
+            _busbarParamBuffer.Add(new Microsoft.Data.Sqlite.SqliteParameter($"@Size{baseIndex}", size));
+            _busbarParamBuffer.Add(new Microsoft.Data.Sqlite.SqliteParameter($"@Year{baseIndex}", year.Trim()));
+            _busbarParamBuffer.Add(new Microsoft.Data.Sqlite.SqliteParameter($"@Month{baseIndex}", month.Trim()));
+            _busbarParamBuffer.Add(new Microsoft.Data.Sqlite.SqliteParameter($"@ProdDate{baseIndex}", prodDate));
+            _busbarParamBuffer.Add(new Microsoft.Data.Sqlite.SqliteParameter($"@Thickness{baseIndex}", thickness));
+            _busbarParamBuffer.Add(new Microsoft.Data.Sqlite.SqliteParameter($"@Width{baseIndex}", width));
+            _busbarParamBuffer.Add(new Microsoft.Data.Sqlite.SqliteParameter($"@Length{baseIndex}", length));
+            _busbarParamBuffer.Add(new Microsoft.Data.Sqlite.SqliteParameter($"@Radius{baseIndex}", radius));
+            _busbarParamBuffer.Add(new Microsoft.Data.Sqlite.SqliteParameter($"@Chamber{baseIndex}", chamber));
+            _busbarParamBuffer.Add(new Microsoft.Data.Sqlite.SqliteParameter($"@Electric{baseIndex}", electric));
+            _busbarParamBuffer.Add(new Microsoft.Data.Sqlite.SqliteParameter($"@Resistivity{baseIndex}", resistivity));
+            _busbarParamBuffer.Add(new Microsoft.Data.Sqlite.SqliteParameter($"@Elongation{baseIndex}", elongation));
+            _busbarParamBuffer.Add(new Microsoft.Data.Sqlite.SqliteParameter($"@Tensile{baseIndex}", tensile));
+            _busbarParamBuffer.Add(new Microsoft.Data.Sqlite.SqliteParameter($"@Bend{baseIndex}", string.IsNullOrEmpty(bendTest) ? System.DBNull.Value : bendTest));
+            _busbarParamBuffer.Add(new Microsoft.Data.Sqlite.SqliteParameter($"@Spectro{baseIndex}", spectro));
+            _busbarParamBuffer.Add(new Microsoft.Data.Sqlite.SqliteParameter($"@Oxygen{baseIndex}", oxygen));
+
+            _busbarBatchCount++;
+
+            if (_busbarBatchCount >= BatchSize)
+            {
+                FlushBatch(connection, transaction, "Busbar", _busbarBatchBuffer, _busbarParamBuffer);
+                _busbarBatchBuffer.Clear();
+                _busbarParamBuffer.Clear();
+                _busbarBatchCount = 0;
+            }
+        }
+
+        private void AppendTLJ350Batch(
+            Microsoft.Data.Sqlite.SqliteConnection connection,
+            Microsoft.Data.Sqlite.SqliteTransaction transaction,
+            string size, string year, string month, string prodDate, string batchNum)
+        {
+            int baseIndex = _tlj350BatchCount * 5;
+
+            _tlj350BatchBuffer.Add($"(@Size{baseIndex}, @Year{baseIndex}, @Month{baseIndex}, @ProdDate{baseIndex}, @Batch{baseIndex})");
+
+            _tlj350ParamBuffer.Add(new Microsoft.Data.Sqlite.SqliteParameter($"@Size{baseIndex}", size));
+            _tlj350ParamBuffer.Add(new Microsoft.Data.Sqlite.SqliteParameter($"@Year{baseIndex}", year.Trim()));
+            _tlj350ParamBuffer.Add(new Microsoft.Data.Sqlite.SqliteParameter($"@Month{baseIndex}", month.Trim()));
+            _tlj350ParamBuffer.Add(new Microsoft.Data.Sqlite.SqliteParameter($"@ProdDate{baseIndex}", prodDate));
+            _tlj350ParamBuffer.Add(new Microsoft.Data.Sqlite.SqliteParameter($"@Batch{baseIndex}", string.IsNullOrEmpty(batchNum) ? System.DBNull.Value : batchNum));
+
+            _tlj350BatchCount++;
+
+            if (_tlj350BatchCount >= BatchSize)
+            {
+                FlushBatch(connection, transaction, "TLJ350", _tlj350BatchBuffer, _tlj350ParamBuffer);
+                _tlj350BatchBuffer.Clear();
+                _tlj350ParamBuffer.Clear();
+                _tlj350BatchCount = 0;
+            }
+        }
+
+        private void AppendTLJ500Batch(
+            Microsoft.Data.Sqlite.SqliteConnection connection,
+            Microsoft.Data.Sqlite.SqliteTransaction transaction,
+            string size, string year, string month, string prodDate, string batchNum)
+        {
+            int baseIndex = _tlj500BatchCount * 5;
+
+            _tlj500BatchBuffer.Add($"(@Size{baseIndex}, @Year{baseIndex}, @Month{baseIndex}, @ProdDate{baseIndex}, @Batch{baseIndex})");
+
+            _tlj500ParamBuffer.Add(new Microsoft.Data.Sqlite.SqliteParameter($"@Size{baseIndex}", size));
+            _tlj500ParamBuffer.Add(new Microsoft.Data.Sqlite.SqliteParameter($"@Year{baseIndex}", year.Trim()));
+            _tlj500ParamBuffer.Add(new Microsoft.Data.Sqlite.SqliteParameter($"@Month{baseIndex}", month.Trim()));
+            _tlj500ParamBuffer.Add(new Microsoft.Data.Sqlite.SqliteParameter($"@ProdDate{baseIndex}", prodDate));
+            _tlj500ParamBuffer.Add(new Microsoft.Data.Sqlite.SqliteParameter($"@Batch{baseIndex}", string.IsNullOrEmpty(batchNum) ? System.DBNull.Value : batchNum));
+
+            _tlj500BatchCount++;
+
+            if (_tlj500BatchCount >= BatchSize)
+            {
+                FlushBatch(connection, transaction, "TLJ500", _tlj500BatchBuffer, _tlj500ParamBuffer);
+                _tlj500BatchBuffer.Clear();
+                _tlj500ParamBuffer.Clear();
+                _tlj500BatchCount = 0;
+            }
+        }
+
+        private void FlushBatch(
+            Microsoft.Data.Sqlite.SqliteConnection connection,
+            Microsoft.Data.Sqlite.SqliteTransaction transaction,
+            string tableName,
+            System.Collections.Generic.List<string> valueClauses,
+            System.Collections.Generic.List<Microsoft.Data.Sqlite.SqliteParameter> parameters)
+        {
+            if (valueClauses.Count == 0) return;
+
+            using var cmd = connection.CreateCommand();
+            cmd.Transaction = transaction;
+
+            string columns = tableName == "Busbar"
+                ? "Size_mm, Year_folder, Month_folder, Prod_date, Thickness_mm, Width_mm, Length, Radius, Chamber_mm, Electric_IACS, Weight, Elongation, Tensile, Bend_test, Spectro_Cu, Oxygen"
+                : "Size_mm, Year_folder, Month_folder, Prod_date, Batch_no";
+
+            cmd.CommandText = $"INSERT INTO {tableName} ({columns}) VALUES {string.Join(", ", valueClauses)}";
+            cmd.Parameters.AddRange(parameters.ToArray());
+            cmd.ExecuteNonQuery();
         }
 
         private string StandardizeDate(string rawDate, int expectedMonth, int expectedYear)
@@ -624,39 +676,15 @@ namespace WpfApp1
             return result.Trim();
         }
 
-        private void InsertBusbarRow(
-            Microsoft.Data.Sqlite.SqliteConnection connection,
-            Microsoft.Data.Sqlite.SqliteTransaction transaction,
-            string size, string year, string month, string prodDate,
-            double thickness, double width, double length, double radius, double chamber,
-            double electric, double resistivity, double elongation, double tensile,
-            string bendTest, double spectro, double oxygen)
-        {
-            // Logic dipindah ke ProcessSingleExcelFile
-        }
-
-        private void InsertTLJ350_Row(
-            Microsoft.Data.Sqlite.SqliteConnection connection,
-            Microsoft.Data.Sqlite.SqliteTransaction transaction,
-            string size, string year, string month, string prodDate, string batchNum)
-        {
-            // Logic dipindah ke ProcessSingleExcelFile
-        }
-
-        private void InsertTLJ500_Row(
-            Microsoft.Data.Sqlite.SqliteConnection connection,
-            Microsoft.Data.Sqlite.SqliteTransaction transaction,
-            string size, string year, string month, string prodDate, string batchNum)
-        {
-            // Logic dipindah ke ProcessSingleExcelFile
-        }
-
         private void UpdateBusbarBatchNumbers(
             Microsoft.Data.Sqlite.SqliteConnection connection,
             Microsoft.Data.Sqlite.SqliteTransaction transaction)
         {
             try
             {
+                var tlj350Data = FetchTLJData(connection, transaction, "TLJ350");
+                var tlj500Data = FetchTLJData(connection, transaction, "TLJ500");
+
                 using var selectBusbarCmd = connection.CreateCommand();
                 selectBusbarCmd.Transaction = transaction;
                 selectBusbarCmd.CommandText = @"
@@ -666,14 +694,6 @@ namespace WpfApp1
                     ORDER BY Prod_date, Id
                 ";
 
-                using var updateCmd = connection.CreateCommand();
-                updateCmd.Transaction = transaction;
-                updateCmd.CommandText = "UPDATE Busbar SET Batch_no = @BatchNumbers WHERE Id = @Id";
-
-                // Fix Error CS1503 di Update Function
-                var pUpdateBatch = updateCmd.Parameters.Add("@BatchNumbers", Microsoft.Data.Sqlite.SqliteType.Text);
-                var pUpdateId = updateCmd.Parameters.Add("@Id", Microsoft.Data.Sqlite.SqliteType.Integer);
-
                 using var busbarReader = selectBusbarCmd.ExecuteReader();
                 while (busbarReader.Read())
                 {
@@ -682,14 +702,13 @@ namespace WpfApp1
                     string prod_date = busbarReader.GetString(2);
 
                     string targetTable = DetermineTLJTable(size_mm);
+                    var data = targetTable == "TLJ350" ? tlj350Data : tlj500Data;
 
-                    string batchNumbers = FindBatchNumbers(connection, transaction, targetTable, size_mm, prod_date);
+                    string batchNumbers = FindBatchNumberFromMemory(data, size_mm, prod_date);
 
                     if (!System.String.IsNullOrEmpty(batchNumbers))
                     {
-                        pUpdateBatch.Value = batchNumbers;
-                        pUpdateId.Value = busbarId;
-                        updateCmd.ExecuteNonQuery();
+                        UpdateBusbarBatch(connection, transaction, busbarId, batchNumbers);
                     }
                 }
             }
@@ -698,6 +717,81 @@ namespace WpfApp1
                 AppendDebug($"ERROR UpdateBusbarBatchNumbers: {ex.Message}");
                 throw;
             }
+        }
+
+        private System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<TLJRecord>> FetchTLJData(
+            Microsoft.Data.Sqlite.SqliteConnection connection,
+            Microsoft.Data.Sqlite.SqliteTransaction transaction,
+            string tableName)
+        {
+            var data = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<TLJRecord>>();
+
+            using var cmd = connection.CreateCommand();
+            cmd.Transaction = transaction;
+            cmd.CommandText = $"SELECT Size_mm, Prod_date, Batch_no FROM {tableName} ORDER BY Size_mm, Prod_date DESC";
+
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                var record = new TLJRecord
+                {
+                    Size_mm = reader.GetString(0),
+                    Prod_date = reader.GetString(1),
+                    Batch_no = reader.IsDBNull(2) ? string.Empty : reader.GetString(2)
+                };
+
+                string key = record.Size_mm;
+                if (!data.ContainsKey(key))
+                {
+                    data[key] = new System.Collections.Generic.List<TLJRecord>();
+                }
+                data[key].Add(record);
+            }
+
+            return data;
+        }
+
+        private string FindBatchNumberFromMemory(
+            System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<TLJRecord>> data,
+            string size_mm,
+            string targetDate)
+        {
+            if (!data.ContainsKey(size_mm)) return string.Empty;
+
+            var records = data[size_mm];
+            System.Collections.Generic.List<string> batchList = new System.Collections.Generic.List<string>();
+
+            bool foundExactDate = false;
+            foreach (var record in records)
+            {
+                if (record.Prod_date == targetDate)
+                {
+                    if (!System.String.IsNullOrEmpty(record.Batch_no))
+                    {
+                        batchList.Add(record.Batch_no);
+                        foundExactDate = true;
+                    }
+                }
+                else if (foundExactDate)
+                {
+                    break;
+                }
+            }
+
+            if (batchList.Count > 0)
+            {
+                return System.String.Join("\n", batchList);
+            }
+
+            foreach (var record in records)
+            {
+                if (record.Prod_date.CompareTo(targetDate) < 0)
+                {
+                    return record.Batch_no ?? string.Empty;
+                }
+            }
+
+            return string.Empty;
         }
 
         private string DetermineTLJTable(string size_mm)
@@ -735,114 +829,24 @@ namespace WpfApp1
             return "TLJ500";
         }
 
-        private string FindBatchNumbers(
-            Microsoft.Data.Sqlite.SqliteConnection connection,
-            Microsoft.Data.Sqlite.SqliteTransaction transaction,
-            string tableName,
-            string size_mm,
-            string targetDate)
-        {
-            try
-            {
-                System.DateTime targetDateTime;
-                if (!System.DateTime.TryParseExact(
-                    targetDate,
-                    "dd/MM/yyyy",
-                    System.Globalization.CultureInfo.InvariantCulture,
-                    System.Globalization.DateTimeStyles.None,
-                    out targetDateTime))
-                {
-                    if (!System.DateTime.TryParse(targetDate, out targetDateTime))
-                    {
-                        return string.Empty;
-                    }
-                }
-
-                using var cmdSameDate = connection.CreateCommand();
-                cmdSameDate.Transaction = transaction;
-                cmdSameDate.CommandText = $@"
-                    SELECT Batch_no, Prod_date 
-                    FROM {tableName} 
-                    WHERE Size_mm = @Size_mm 
-                      AND Prod_date = @TargetDate
-                    ORDER BY Prod_date DESC
-                ";
-                cmdSameDate.Parameters.AddWithValue("@Size_mm", size_mm);
-                cmdSameDate.Parameters.AddWithValue("@TargetDate", targetDate);
-
-                using var readerSameDate = cmdSameDate.ExecuteReader();
-                if (readerSameDate.HasRows)
-                {
-                    return ExtractBatchNumbers(readerSameDate);
-                }
-
-                using var cmdBeforeDate = connection.CreateCommand();
-                cmdBeforeDate.Transaction = transaction;
-                cmdBeforeDate.CommandText = $@"
-                    SELECT Batch_no, Prod_date 
-                    FROM {tableName} 
-                    WHERE Size_mm = @Size_mm 
-                      AND Prod_date < @TargetDate
-                    ORDER BY Prod_date DESC
-                    LIMIT 1
-                ";
-                cmdBeforeDate.Parameters.AddWithValue("@Size_mm", size_mm);
-                cmdBeforeDate.Parameters.AddWithValue("@TargetDate", targetDate);
-
-                using var readerBeforeDate = cmdBeforeDate.ExecuteReader();
-                if (readerBeforeDate.HasRows)
-                {
-                    return ExtractBatchNumbers(readerBeforeDate);
-                }
-
-                return string.Empty;
-            }
-            catch (System.Exception ex)
-            {
-                AppendDebug($"ERROR FindBatchNumbers for {size_mm} on {targetDate}: {ex.Message}");
-                return string.Empty;
-            }
-        }
-
-        private string ExtractBatchNumbers(Microsoft.Data.Sqlite.SqliteDataReader reader)
-        {
-            System.Collections.Generic.List<string> batchList = new System.Collections.Generic.List<string>();
-
-            while (reader.Read())
-            {
-                if (!reader.IsDBNull(0))
-                {
-                    string batchData = reader.GetString(0);
-
-                    if (!System.String.IsNullOrEmpty(batchData))
-                    {
-                        string[] batches = batchData.Split(
-                            new[] { '\n', '\r' },
-                            System.StringSplitOptions.RemoveEmptyEntries
-                        );
-
-                        foreach (string batch in batches)
-                        {
-                            string trimmedBatch = batch.Trim();
-                            if (!System.String.IsNullOrEmpty(trimmedBatch))
-                            {
-                                batchList.Add(trimmedBatch);
-                            }
-                        }
-                    }
-                }
-            }
-
-            return System.String.Join("\n", batchList);
-        }
-
         private void UpdateBusbarBatch(
             Microsoft.Data.Sqlite.SqliteConnection connection,
             Microsoft.Data.Sqlite.SqliteTransaction transaction,
             int busbarId,
             string batchNumbers)
         {
-            // Logic dipindah
+            using var updateCmd = connection.CreateCommand();
+            updateCmd.Transaction = transaction;
+            updateCmd.CommandText = @"
+                UPDATE Busbar 
+                SET Batch_no = @BatchNumbers 
+                WHERE Id = @Id
+            ";
+
+            updateCmd.Parameters.AddWithValue("@BatchNumbers", batchNumbers);
+            updateCmd.Parameters.AddWithValue("@Id", busbarId);
+
+            updateCmd.ExecuteNonQuery();
         }
 
         private void ResetCounters()
@@ -856,7 +860,6 @@ namespace WpfApp1
         {
             if (_debugLog.Length < 1000) _debugLog += message + System.Environment.NewLine;
         }
-
 
         private void ShowFinalReport()
         {
