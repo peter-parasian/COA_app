@@ -6,7 +6,33 @@
         xmlns:local="clr-namespace:WpfApp1"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
-    <Grid>
 
+    <Grid>
+        <StackPanel HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Width="300"
+                    Orientation="Vertical"
+                    Margin="10">
+
+            <Button Content="MODE 1 - Import Busbar"
+                    Height="40"
+                    Margin="0,5"
+                    Click="ButtonMode1_Click"/>
+
+            <Button Content="MODE 2"
+                    Height="40"
+                    Margin="0,5"
+                    Click="ButtonMode2_Click"/>
+
+            <Button Content="MODE 3"
+                    Height="40"
+                    Margin="0,5"
+                    Click="ButtonMode3_Click"/>
+
+            <Button Content="MODE 4"
+                    Height="40"
+                    Margin="0,5"
+                    Click="ButtonMode4_Click"/>
+        </StackPanel>
     </Grid>
 </Window>

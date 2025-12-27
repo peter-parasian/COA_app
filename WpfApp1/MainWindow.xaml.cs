@@ -38,8 +38,40 @@ namespace WpfApp1
         public MainWindow()
         {
             InitializeComponent();
+        }
+
+        private void ButtonMode1_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
             ImportExcelToSQLite();
         }
+
+        private void ButtonMode2_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            System.Windows.MessageBox.Show(
+                "MODE 2 belum diimplementasikan",
+                "Info",
+                System.Windows.MessageBoxButton.OK,
+                System.Windows.MessageBoxImage.Information);
+        }
+
+        private void ButtonMode3_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            System.Windows.MessageBox.Show(
+                "MODE 3 belum diimplementasikan",
+                "Info",
+                System.Windows.MessageBoxButton.OK,
+                System.Windows.MessageBoxImage.Information);
+        }
+
+        private void ButtonMode4_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            System.Windows.MessageBox.Show(
+                "MODE 4 belum diimplementasikan",
+                "Info",
+                System.Windows.MessageBoxButton.OK,
+                System.Windows.MessageBoxImage.Information);
+        }
+
 
         private void ImportExcelToSQLite()
         {
