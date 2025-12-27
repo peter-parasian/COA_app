@@ -1,38 +1,166 @@
 ﻿<Window x:Class="WpfApp1.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:WpfApp1"
-        mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="Indowire Plant 2 - Quality Control System"
+        MinWidth="700"
+        MinHeight="450"
+        Background="#F8F9FA">
 
-    <Grid>
-        <StackPanel HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    Width="300"
-                    Orientation="Vertical"
-                    Margin="10">
+    <Window.Resources>
+        <!-- TEMA WARNA INDOWIRE PLANT 2 -->
+        <SolidColorBrush x:Key="PrimaryGreen" Color="#28A745"/>
+        <SolidColorBrush x:Key="PrimaryOrange" Color="#FD7E14"/>
+        <SolidColorBrush x:Key="LightGray" Color="#F8F9FA"/>
+        <SolidColorBrush x:Key="DarkGray" Color="#343A40"/>
 
-            <Button Content="MODE 1 - Import Busbar"
-                    Height="40"
-                    Margin="0,5"
-                    Click="ButtonMode1_Click"/>
+        <!-- STYLE BUTTON DENGAN HOVER EFFECT -->
+        <Style x:Key="IndowireButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource PrimaryGreen}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" 
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="8"
+                                Padding="10">
+                            <ContentPresenter HorizontalAlignment="Center" 
+                                            VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{StaticResource PrimaryOrange}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#E56A00"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="border" Property="Background" Value="#6C757D"/>
+                                <Setter TargetName="border" Property="Opacity" Value="0.6"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
 
-            <Button Content="MODE 2"
-                    Height="40"
-                    Margin="0,5"
-                    Click="ButtonMode2_Click"/>
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
 
-            <Button Content="MODE 3"
-                    Height="40"
-                    Margin="0,5"
-                    Click="ButtonMode3_Click"/>
+        <!-- HEADER: Logo + Nama Perusahaan -->
+        <Viewbox Stretch="Uniform" Height="80">
+            <StackPanel Orientation="Horizontal"
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Center"
+                        Margin="0,0,0,10">
 
-            <Button Content="MODE 4"
-                    Height="40"
-                    Margin="0,5"
-                    Click="ButtonMode4_Click"/>
-        </StackPanel>
+                <Image Source="C:\Users\mrrx\Documents\Custom Office Templates\WpfApp1\WpfApp1\Images\company_logo.png"
+                       Height="60"
+                       Margin="0,0,15,0"/>
+
+                <TextBlock Text="PT. Indowire Prima Industrindo (Plan 2)"
+                           FontSize="28"
+                           FontWeight="Bold"
+                           Foreground="{StaticResource DarkGray}"
+                           VerticalAlignment="Center"/>
+            </StackPanel>
+        </Viewbox>
+
+        <!-- SLOGAN -->
+        <TextBlock Grid.Row="1"
+                   Text="SUPER TEAM"
+                   FontSize="22"
+                   FontWeight="SemiBold"
+                   Foreground="{StaticResource PrimaryOrange}"
+                   HorizontalAlignment="Center"
+                   Margin="0,5,0,20"/>
+
+        <!-- BUTTON AREA -->
+        <Grid Grid.Row="2">
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Button 1 -->
+            <Button Grid.Row="0" Grid.Column="0" 
+                    Margin="10" 
+                    Click="ButtonMode1_Click"
+                    Style="{StaticResource IndowireButtonStyle}">
+                <Viewbox Stretch="Uniform">
+                    <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+                        <Image Source="C:\Users\mrrx\Documents\Custom Office Templates\WpfApp1\WpfApp1\Images\logo1.jpg" Height="80"/>
+                        <TextBlock Text="Busbar Copper Strip"
+                                   FontSize="16"
+                                   FontWeight="SemiBold"
+                                   Foreground="White"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,5,0,0"/>
+                    </StackPanel>
+                </Viewbox>
+            </Button>
+
+            <!-- Button 2 -->
+            <Button Grid.Row="0" Grid.Column="1" 
+                    Margin="10" 
+                    Click="ButtonMode2_Click"
+                    Style="{StaticResource IndowireButtonStyle}">
+                <Viewbox Stretch="Uniform">
+                    <StackPanel Orientation="Vertical">
+                        <Image Source="Images/logo2.png" Height="80"/>
+                        <TextBlock Text="MODE 2" 
+                                   FontSize="16" 
+                                   Foreground="White"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,5,0,0"/>
+                    </StackPanel>
+                </Viewbox>
+            </Button>
+
+            <!-- Button 3 -->
+            <Button Grid.Row="1" Grid.Column="0" 
+                    Margin="10" 
+                    Click="ButtonMode3_Click"
+                    Style="{StaticResource IndowireButtonStyle}">
+                <Viewbox Stretch="Uniform">
+                    <StackPanel Orientation="Vertical">
+                        <Image Source="Images/logo3.png" Height="80"/>
+                        <TextBlock Text="MODE 3" 
+                                   FontSize="16" 
+                                   Foreground="White"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,5,0,0"/>
+                    </StackPanel>
+                </Viewbox>
+            </Button>
+
+            <!-- Button 4 -->
+            <Button Grid.Row="1" Grid.Column="1" 
+                    Margin="10" 
+                    Click="ButtonMode4_Click"
+                    Style="{StaticResource IndowireButtonStyle}">
+                <Viewbox Stretch="Uniform">
+                    <StackPanel Orientation="Vertical">
+                        <Image Source="Images/logo4.png" Height="80"/>
+                        <TextBlock Text="MODE 4" 
+                                   FontSize="16" 
+                                   Foreground="White"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,5,0,0"/>
+                    </StackPanel>
+                </Viewbox>
+            </Button>
+        </Grid>
     </Grid>
 </Window>
