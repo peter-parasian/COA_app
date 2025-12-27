@@ -40,9 +40,40 @@ namespace WpfApp1
             InitializeComponent();
         }
 
+        // MODIFIED: Button Click sekarang menjalankan tugas di background (Async)
         private void ButtonMode1_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            ImportExcelToSQLite();
+            // Matikan tombol sementara agar user tidak klik 2x
+            ((System.Windows.Controls.Button)sender).IsEnabled = false;
+
+            // Jalankan proses berat di Task terpisah (Background Thread)
+            System.Threading.Tasks.Task.Run(() =>
+            {
+                try
+                {
+                    ImportExcelToSQLite();
+                }
+                catch (System.Exception ex)
+                {
+                    // Kembali ke UI Thread untuk menampilkan error
+                    this.Dispatcher.Invoke(() =>
+                    {
+                        System.Windows.MessageBox.Show(
+                            $"ERROR FATAL:\n{ex.Message}\n\nStack Trace:\n{ex.StackTrace}",
+                            "Import Gagal",
+                            System.Windows.MessageBoxButton.OK,
+                            System.Windows.MessageBoxImage.Error);
+                    });
+                }
+                finally
+                {
+                    // Kembali ke UI Thread untuk mengaktifkan tombol kembali
+                    this.Dispatcher.Invoke(() =>
+                    {
+                        ((System.Windows.Controls.Button)sender).IsEnabled = true;
+                    });
+                }
+            });
         }
 
         private void ButtonMode2_Click(object sender, System.Windows.RoutedEventArgs e)
@@ -72,7 +103,7 @@ namespace WpfApp1
                 System.Windows.MessageBoxImage.Information);
         }
 
-
+        //Logika
         private void ImportExcelToSQLite()
         {
             try
@@ -80,9 +111,13 @@ namespace WpfApp1
                 EnsureDatabaseFolderExists();
 
                 // Bersihkan buffer sebelum mulai
+                // Perlu Invoke ke UI thread jika list ini di-bound ke UI, 
+                // tapi karena ini field private background, aman untuk diakses langsung di thread selama tidak ada race condition lain.
+                // Untuk amannya kita reset di sini karena ini awal task.
                 _busbarBatchBuffer.Clear();
                 _tlj350BatchBuffer.Clear();
                 _tlj500BatchBuffer.Clear();
+                ResetCounters();
 
                 using var connection = new Microsoft.Data.Sqlite.SqliteConnection($"Data Source={DbPath}");
                 connection.Open();
@@ -109,15 +144,16 @@ namespace WpfApp1
 
                 transaction.Commit();
 
-                ShowFinalReport();
+                // Tampilkan report di UI Thread setelah selesai
+                this.Dispatcher.Invoke(() =>
+                {
+                    ShowFinalReport();
+                });
             }
             catch (System.Exception ex)
             {
-                System.Windows.MessageBox.Show(
-                    $"ERROR FATAL:\n{ex.Message}\n\nStack Trace:\n{ex.StackTrace}",
-                    "Import Gagal",
-                    System.Windows.MessageBoxButton.OK,
-                    System.Windows.MessageBoxImage.Error);
+                // Lempar ke catch block di Task.Run untuk ditangani disana
+                throw;
             }
         }
 
@@ -176,8 +212,6 @@ namespace WpfApp1
             Microsoft.Data.Sqlite.SqliteConnection connection,
             Microsoft.Data.Sqlite.SqliteTransaction transaction)
         {
-            ResetCounters();
-
             if (!System.IO.Directory.Exists(ExcelRootFolder))
             {
                 throw new System.IO.DirectoryNotFoundException($"Folder root Excel tidak ditemukan: {ExcelRootFolder}");
@@ -214,6 +248,7 @@ namespace WpfApp1
             string month)
         {
             // Membuka file tetap per-file karena logic excel closedXML butuh stream
+            // ClosedXML membaca file I/O, aman dilakukan di background thread
             using var workbook = new ClosedXML.Excel.XLWorkbook(filePath);
             int row = 3;
 
@@ -394,7 +429,7 @@ namespace WpfApp1
             {
                 if (i > 0) sqlBuilder.Append(",");
                 // Menggunakan parameter index @p0_1, @p0_2 dll untuk keamanan
-                sqlBuilder.Append($"(@s{i}, @y{i}, @m{i}, @d{i}, @t{i}, @w{i}, @l{i}, @r{i}, @c{i}, @e{i}, 0, @el{i}, @tn{i}, @bt{i}, @sp{i}, @ox{i})");
+                sqlBuilder.Append($"(@s{i}, @y{i}, @m{i}, @d{i}, @t{i}, @wd{i}, @l{i}, @r{i}, @c{i}, @e{i}, @wt{i}, @el{i}, @tn{i}, @bt{i}, @sp{i}, @ox{i})");
 
                 var item = _busbarBatchBuffer[i];
                 cmd.Parameters.AddWithValue($"@s{i}", item.Size);
@@ -402,10 +437,11 @@ namespace WpfApp1
                 cmd.Parameters.AddWithValue($"@m{i}", item.Month.Trim());
                 cmd.Parameters.AddWithValue($"@d{i}", item.ProdDate);
                 cmd.Parameters.AddWithValue($"@t{i}", item.Thickness);
-                cmd.Parameters.AddWithValue($"@w{i}", item.Width);
+                cmd.Parameters.AddWithValue($"@wd{i}", item.Width);
                 cmd.Parameters.AddWithValue($"@l{i}", item.Length);
                 cmd.Parameters.AddWithValue($"@r{i}", item.Radius);
                 cmd.Parameters.AddWithValue($"@c{i}", item.Chamber);
+                cmd.Parameters.AddWithValue($"@wt{i}", item.Resistivity);
                 cmd.Parameters.AddWithValue($"@e{i}", item.Electric);
                 cmd.Parameters.AddWithValue($"@el{i}", item.Elongation);
                 cmd.Parameters.AddWithValue($"@tn{i}", item.Tensile);
@@ -857,7 +893,11 @@ namespace WpfApp1
 
         private void AppendDebug(string message)
         {
-            if (_debugLog.Length < 1000) _debugLog += message + System.Environment.NewLine;
+            // Membuat lock sederhana karena ini sekarang diakses dari background thread
+            lock (_debugLog)
+            {
+                if (_debugLog.Length < 1000) _debugLog += message + System.Environment.NewLine;
+            }
         }
 
         private void ShowFinalReport()
