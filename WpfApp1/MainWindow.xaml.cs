@@ -37,7 +37,6 @@ namespace WpfApp1
 
                 TraverseFoldersAndImport(connection, transaction);
 
-                // Panggil fungsi untuk mengisi Batch_no di tabel Busbar
                 UpdateBusbarBatchNumbers(connection, transaction);
 
                 transaction.Commit();
@@ -183,7 +182,6 @@ namespace WpfApp1
                 if (sheet_YLB == null)
                 {
                     AppendDebug($"SKIP: Sheet 'YLB 50' tidak ditemukan -> {System.IO.Path.GetFileName(filePath)}");
-                    // Do not return here, allow checking other sheets
                 }
                 else
                 {
@@ -263,7 +261,6 @@ namespace WpfApp1
             }
 
             // --- Process TLJ 350 Sheet ---
-            // Reset row for new sheet processing
             row = 3;
             try
             {
@@ -311,7 +308,6 @@ namespace WpfApp1
             }
 
             // --- Process TLJ 500 Sheet ---
-            // Reset row for new sheet processing
             row = 3;
             try
             {
@@ -627,7 +623,6 @@ namespace WpfApp1
         {
             try
             {
-                // Ambil semua data Busbar yang masih kosong Batch_no-nya
                 using var selectBusbarCmd = connection.CreateCommand();
                 selectBusbarCmd.Transaction = transaction;
                 selectBusbarCmd.CommandText = @"
@@ -644,13 +639,10 @@ namespace WpfApp1
                     string size_mm = busbarReader.GetString(1);
                     string prod_date = busbarReader.GetString(2);
 
-                    // Tentukan tabel TLJ berdasarkan ukuran
                     string targetTable = DetermineTLJTable(size_mm);
 
-                    // Cari batch_no yang sesuai
                     string batchNumbers = FindBatchNumbers(connection, transaction, targetTable, size_mm, prod_date);
 
-                    // Update Batch_no di tabel Busbar
                     if (!System.String.IsNullOrEmpty(batchNumbers))
                     {
                         UpdateBusbarBatch(connection, transaction, busbarId, batchNumbers);
@@ -666,19 +658,14 @@ namespace WpfApp1
 
         private string DetermineTLJTable(string size_mm)
         {
-            // Ekstrak angka dari string ukuran
-            // Format: "10X125", "5X100 FR", dll
             string cleanSize = size_mm.ToUpper().Replace(" ", "");
 
-            // Cari posisi 'X'
             int xIndex = cleanSize.IndexOf('X');
-            if (xIndex == -1) return "TLJ500"; // Default ke TLJ500 jika format tidak valid
+            if (xIndex == -1) return "TLJ500"; 
 
-            // Ekstrak angka sebelum dan sesudah X
             string beforeX = cleanSize.Substring(0, xIndex);
             string afterX = cleanSize.Substring(xIndex + 1);
 
-            // Hapus karakter non-digit dari afterX
             string afterXDigits = "";
             for (int i = 0; i < afterX.Length; i++)
             {
@@ -692,11 +679,9 @@ namespace WpfApp1
                 }
             }
 
-            // Coba parse ke integer
             if (int.TryParse(beforeX, out int firstDimension) &&
                 int.TryParse(afterXDigits, out int secondDimension))
             {
-                // Aturan: Jika ukuran ≤ 10 × 100 → TLJ350, else → TLJ500
                 if (firstDimension <= 10 && secondDimension <= 100)
                 {
                     return "TLJ350";
@@ -715,7 +700,6 @@ namespace WpfApp1
         {
             try
             {
-                // Konversi string date ke DateTime untuk perbandingan
                 System.DateTime targetDateTime;
                 if (!System.DateTime.TryParseExact(
                     targetDate,
@@ -724,14 +708,12 @@ namespace WpfApp1
                     System.Globalization.DateTimeStyles.None,
                     out targetDateTime))
                 {
-                    // Coba format alternatif
                     if (!System.DateTime.TryParse(targetDate, out targetDateTime))
                     {
                         return string.Empty;
                     }
                 }
 
-                // Query 1: Cari dengan tanggal yang sama persis
                 using var cmdSameDate = connection.CreateCommand();
                 cmdSameDate.Transaction = transaction;
                 cmdSameDate.CommandText = $@"
@@ -751,7 +733,6 @@ namespace WpfApp1
                     return ExtractBatchNumbers(readerSameDate);
                 }
 
-                // Query 2: Cari dengan tanggal sebelum targetDate (mundur ke belakang)
                 using var cmdBeforeDate = connection.CreateCommand();
                 cmdBeforeDate.Transaction = transaction;
                 cmdBeforeDate.CommandText = $@"
@@ -791,10 +772,8 @@ namespace WpfApp1
                 {
                     string batchData = reader.GetString(0);
 
-                    // Jika batchData berisi multiple lines (contoh: 250712-010166\n250713-010176)
                     if (!System.String.IsNullOrEmpty(batchData))
                     {
-                        // Pisahkan berdasarkan newline
                         string[] batches = batchData.Split(
                             new[] { '\n', '\r' },
                             System.StringSplitOptions.RemoveEmptyEntries
@@ -812,7 +791,6 @@ namespace WpfApp1
                 }
             }
 
-            // Gabungkan dengan newline untuk penyimpanan di database
             return System.String.Join("\n", batchList);
         }
 
@@ -848,6 +826,7 @@ namespace WpfApp1
             if (_debugLog.Length < 1000) _debugLog += message + System.Environment.NewLine;
         }
 
+        
         private void ShowFinalReport()
         {
             System.Windows.MessageBox.Show(

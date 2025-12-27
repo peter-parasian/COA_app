@@ -1,32 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<!-- Aplikasi Desktop Windows -->
 		<OutputType>WinExe</OutputType>
-
-		<!-- Target .NET Windows -->
 		<TargetFramework>net10.0-windows</TargetFramework>
-
-		<!-- WPF -->
 		<UseWPF>true</UseWPF>
-
-		<!-- Best practice modern C# -->
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
-
-		<!-- Performa & stabilitas -->
 		<PlatformTarget>x64</PlatformTarget>
 		<LangVersion>latest</LangVersion>
-
-		<!-- Disable warning yang tidak relevan -->
 		<NoWarn>1591</NoWarn>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<!-- SQLite: database embedded, cepat, aman -->
 		<PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.1" />
-
-		<!-- Excel parser TANPA Excel terinstall -->
 		<PackageReference Include="ClosedXML" Version="0.104.2" />
 	</ItemGroup>
 
