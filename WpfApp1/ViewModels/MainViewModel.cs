@@ -146,7 +146,7 @@ namespace WpfApp1.ViewModels
 
                 System.Windows.Application.Current.Dispatcher.Invoke(() =>
                 {
-                    OnShowMessage?.Invoke($"IMPORT SELESAI\n\nFile ditemukan : {TotalFilesFound}\nBaris disimpan : {TotalRowsInserted}\n\nDebug Log:\n{DebugLog}");
+                    //OnShowMessage?.Invoke($"IMPORT SELESAI\n\nFile ditemukan : {TotalFilesFound}\nBaris disimpan : {TotalRowsInserted}\n\nDebug Log:\n{DebugLog}");
 
                     LoadAvailableYears();
                 });
@@ -174,6 +174,8 @@ namespace WpfApp1.ViewModels
 
         public void BackToMenu()
         {
+            ResetSearchData();
+
             ShowBlankPage = false;
         }
 
@@ -285,10 +287,10 @@ namespace WpfApp1.ViewModels
                 {
                     OnShowMessage?.Invoke("Data tidak ditemukan untuk kriteria tersebut.");
                 }
-                else
-                {
-                    OnShowMessage?.Invoke($"Ditemukan {SearchResults.Count} data.");
-                }
+                //else
+                //{
+                //    OnShowMessage?.Invoke($"Ditemukan {SearchResults.Count} data.");
+                //}
             }
             catch (System.Exception ex)
             {
@@ -315,6 +317,16 @@ namespace WpfApp1.ViewModels
                 default: return indoMonth;
             }
         }
+
+        private void ResetSearchData()
+        {
+            SelectedYear = null;
+            SelectedMonth = null;
+            SelectedDate = null;
+            SelectedStandard = null;
+            SearchResults.Clear();
+        }
+
     }
 
     public class RelayCommand : System.Windows.Input.ICommand
