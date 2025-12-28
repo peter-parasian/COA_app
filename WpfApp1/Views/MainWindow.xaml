@@ -362,7 +362,9 @@
                                         <DataTemplate>
                                             <Button Content="+" Width="30" Height="26" Background="#28A745" Foreground="White"
                                             FontSize="16" Padding="0,-2,0,0" BorderThickness="0" Cursor="Hand"
-                                            ToolTip="Tambahkan ke daftar" Style="{StaticResource MahApps.Styles.Button.Square}"/>
+                                            ToolTip="Tambahkan ke daftar" Style="{StaticResource MahApps.Styles.Button.Square}"
+                                            Command="{Binding DataContext.AddToExportCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            CommandParameter="{Binding}"/>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
@@ -388,6 +390,7 @@
                         </Border>
 
                         <DataGrid x:Name="GridBasket"
+                                  ItemsSource="{Binding ExportList}"
                                   Style="{StaticResource MahApps.Styles.DataGrid}"
                                   AutoGenerateColumns="False"
                                   GridLinesVisibility="Horizontal"
@@ -401,15 +404,18 @@
                                   ColumnHeaderStyle="{StaticResource CenteredColumnHeaderStyle}"
                                   BorderThickness="0">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="NO" Width="50" Binding="{Binding PartName}" ElementStyle="{StaticResource CenteredCellStyle}"/>
+                                <DataGridTextColumn Header="ID" Width="50" Binding="{Binding Id}" ElementStyle="{StaticResource CenteredCellStyle}"/>
                                 <DataGridTextColumn Header="SIZE (SPEC)" Width="*" Binding="{Binding Specification}" ElementStyle="{StaticResource CenteredCellStyle}"/>
                                 <DataGridTextColumn Header="PROD DATE" Width="*" Binding="{Binding DateProd}" ElementStyle="{StaticResource CenteredCellStyle}"/>
+
                                 <DataGridTemplateColumn Header="ACTION" Width="70">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <Button Content="×" Width="30" Height="26" Background="#DC3545" Foreground="White"
                                                     FontSize="18" Padding="0,-4,0,0" BorderThickness="0" Cursor="Hand"
-                                                    ToolTip="Hapus dari daftar" Style="{StaticResource MahApps.Styles.Button.Square}"/>
+                                                    ToolTip="Hapus dari daftar" Style="{StaticResource MahApps.Styles.Button.Square}"
+                                                    Command="{Binding DataContext.RemoveFromExportCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    CommandParameter="{Binding}"/>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
@@ -451,7 +457,7 @@
                         <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="5,0,0,0">
                             <TextBlock Text="Customer:" FontSize="12" FontWeight="Bold" Foreground="#6C757D" VerticalAlignment="Center" Margin="0,0,10,0"/>
                             <TextBox MinWidth="100" Style="{StaticResource MahApps.Styles.TextBox}"
-                                     Controls:TextBoxHelper.Watermark="Input Name Company"
+                                     Controls:TextBoxHelper.Watermark="Input Company"
                                      Controls:TextBoxHelper.ClearTextButton="True"
                                      VerticalAlignment="Center"/>
                         </StackPanel>

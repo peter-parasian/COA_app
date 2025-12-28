@@ -104,7 +104,12 @@ namespace WpfApp1.ViewModels
             set { _searchResults = value; OnPropertyChanged(); }
         }
 
+        public System.Collections.ObjectModel.ObservableCollection<WpfApp1.Core.Models.BusbarExportItem> ExportList { get; set; }
+            = new System.Collections.ObjectModel.ObservableCollection<WpfApp1.Core.Models.BusbarExportItem>();
+
         public System.Windows.Input.ICommand FindCommand { get; }
+        public System.Windows.Input.ICommand AddToExportCommand { get; }
+        public System.Windows.Input.ICommand RemoveFromExportCommand { get; }
 
         public MainViewModel()
         {
@@ -125,6 +130,8 @@ namespace WpfApp1.ViewModels
             LoadAvailableYears();
 
             FindCommand = new RelayCommand(ExecuteFind);
+            AddToExportCommand = new RelayCommand(ExecuteAddToExport);
+            RemoveFromExportCommand = new RelayCommand(ExecuteRemoveFromExport);
         }
 
         public void ImportExcelToSQLite()
@@ -175,7 +182,7 @@ namespace WpfApp1.ViewModels
         public void BackToMenu()
         {
             ResetSearchData();
-
+            ExportList.Clear();
             ShowBlankPage = false;
         }
 
@@ -250,7 +257,7 @@ namespace WpfApp1.ViewModels
             }
         }
 
-        private void ExecuteFind()
+        private void ExecuteFind(object? parameter)
         {
             if (string.IsNullOrWhiteSpace(SelectedYear))
             {
@@ -298,6 +305,32 @@ namespace WpfApp1.ViewModels
             }
         }
 
+        private void ExecuteAddToExport(object? parameter)
+        {
+            if (parameter is BusbarSearchItem selectedItem)
+            {
+                bool exists = ExportList.Any(x => x.RecordData.Id == selectedItem.FullRecord.Id);
+
+                if (!exists)
+                {
+                    var exportItem = new WpfApp1.Core.Models.BusbarExportItem(selectedItem.FullRecord);
+                    ExportList.Add(exportItem);
+                }
+                else
+                {
+                    OnShowMessage?.Invoke("Data ini sudah ada dalam daftar Export.");
+                }
+            }
+        }
+
+        private void ExecuteRemoveFromExport(object? parameter)
+        {
+            if (parameter is WpfApp1.Core.Models.BusbarExportItem itemToRemove)
+            {
+                ExportList.Remove(itemToRemove);
+            }
+        }
+
         private string ConvertMonthToEnglish(string indoMonth)
         {
             switch (indoMonth)
@@ -331,10 +364,10 @@ namespace WpfApp1.ViewModels
 
     public class RelayCommand : System.Windows.Input.ICommand
     {
-        private readonly System.Action _execute;
-        private readonly System.Func<bool>? _canExecute;
+        private readonly System.Action<object?> _execute;
+        private readonly System.Func<object?, bool>? _canExecute;
 
-        public RelayCommand(System.Action execute, System.Func<bool>? canExecute = null)
+        public RelayCommand(System.Action<object?> execute, System.Func<object?, bool>? canExecute = null)
         {
             _execute = execute;
             _canExecute = canExecute;
@@ -346,8 +379,8 @@ namespace WpfApp1.ViewModels
             remove { System.Windows.Input.CommandManager.RequerySuggested -= value; }
         }
 
-        public bool CanExecute(object? parameter) => _canExecute == null || _canExecute();
+        public bool CanExecute(object? parameter) => _canExecute == null || _canExecute(parameter);
 
-        public void Execute(object? parameter) => _execute();
+        public void Execute(object? parameter) => _execute(parameter);
     }
 }

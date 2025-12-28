@@ -7,5 +7,6 @@ namespace WpfApp1.Core.Models
         public int No { get; set; }
         public string Specification { get; set; } = string.Empty;
         public string DateProd { get; set; } = string.Empty;
+        public BusbarRecord FullRecord { get; set; }
     }
 }

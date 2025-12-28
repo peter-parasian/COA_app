@@ -314,7 +314,6 @@ namespace WpfApp1.Data.Repositories
             return string.Empty;
         }
 
-        // LOGIKA PENCARIAN: Filter berdasarkan Year, Month, dan Prod_date
         public System.Collections.Generic.List<BusbarSearchItem> SearchBusbarRecords(string year, string month, string prodDate)
         {
             var results = new System.Collections.Generic.List<BusbarSearchItem>();
@@ -322,8 +321,9 @@ namespace WpfApp1.Data.Repositories
             using var conn = _dbContext.CreateConnection();
 
             using var command = conn.CreateCommand();
+
             command.CommandText = @"
-                SELECT Id, Size_mm, Prod_date 
+                SELECT * 
                 FROM Busbar 
                 WHERE Year_folder = @year 
                   AND Month_folder = @month 
@@ -336,18 +336,52 @@ namespace WpfApp1.Data.Repositories
             using var reader = command.ExecuteReader();
             while (reader.Read())
             {
+                BusbarRecord fullRecord = new BusbarRecord();
+
+                fullRecord.Id = reader.GetInt32(reader.GetOrdinal("Id"));
+
+                fullRecord.Size = reader["Size_mm"] as string ?? string.Empty;
+                fullRecord.Year = reader["Year_folder"] as string ?? string.Empty;
+                fullRecord.Month = reader["Month_folder"] as string ?? string.Empty;
+                fullRecord.ProdDate = reader["Prod_date"] as string ?? string.Empty;
+                fullRecord.BendTest = reader["Bend_test"] as string ?? string.Empty;
+                fullRecord.BatchNo = reader["Batch_no"] as string ?? string.Empty;
+
+                fullRecord.Thickness = ParseDoubleSafe(reader["Thickness_mm"]);
+                fullRecord.Width = ParseDoubleSafe(reader["Width_mm"]);
+                fullRecord.Length = ParseDoubleSafe(reader["Length"]);
+                fullRecord.Radius = ParseDoubleSafe(reader["Radius"]);
+                fullRecord.Chamber = ParseDoubleSafe(reader["Chamber_mm"]);
+                fullRecord.Electric = ParseDoubleSafe(reader["Electric_IACS"]);
+                fullRecord.Resistivity = ParseDoubleSafe(reader["Weight"]);
+                fullRecord.Elongation = ParseDoubleSafe(reader["Elongation"]);
+                fullRecord.Tensile = ParseDoubleSafe(reader["Tensile"]);
+                fullRecord.Spectro = ParseDoubleSafe(reader["Spectro_Cu"]);
+                fullRecord.Oxygen = ParseDoubleSafe(reader["Oxygen"]);
+
                 results.Add(new BusbarSearchItem
                 {
-                    No = reader.GetInt32(0),
-                    Specification = reader.GetString(1),
-                    DateProd = reader.GetString(2)
+                    No = fullRecord.Id,
+                    Specification = fullRecord.Size,
+                    DateProd = fullRecord.ProdDate,
+                    FullRecord = fullRecord
                 });
             }
 
             return results;
         }
 
-        // METODE UNTUK MENGAMBIL DAFTAR TAHUN UNIK DARI DATABASE
+        private double ParseDoubleSafe(object value)
+        {
+            if (value == null || value == System.DBNull.Value) return 0.0;
+            if (value is double d) return d;
+            if (value is float f) return (double)f;
+            if (value is int i) return (double)i;
+            if (value is long l) return (double)l;
+            if (value is string s && double.TryParse(s, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double result)) return result;
+            return 0.0;
+        }
+
         public System.Collections.Generic.List<string> GetAvailableYears()
         {
             var years = new System.Collections.Generic.List<string>();
@@ -357,7 +391,6 @@ namespace WpfApp1.Data.Repositories
                 using var conn = _dbContext.CreateConnection();
                 using var command = conn.CreateCommand();
 
-                // Ambil tahun yang unik dan urutkan
                 command.CommandText = "SELECT DISTINCT Year_folder FROM Busbar ORDER BY Year_folder DESC";
 
                 using var reader = command.ExecuteReader();
@@ -368,7 +401,6 @@ namespace WpfApp1.Data.Repositories
             }
             catch (System.Exception)
             {
-                // Return list kosong jika error
             }
 
             return years;
