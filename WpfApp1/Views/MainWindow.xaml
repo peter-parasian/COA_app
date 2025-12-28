@@ -7,8 +7,8 @@
         xmlns:local="clr-namespace:WpfApp1"
         mc:Ignorable="d"
         Title="Indowire Plant 2 - Quality Control System"
-        MinWidth="1000"
-        MinHeight="700"
+        MinWidth="900"
+        MinHeight="600"
         Background="#F4F7F6"
         FontFamily="Segoe UI"
         WindowState="Maximized"
@@ -67,7 +67,6 @@
             <Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
 
-        <!-- Template Khusus untuk Dropdown ke Atas -->
         <ControlTemplate x:Key="UpComboBoxControlTemplate" TargetType="ComboBox">
             <Grid>
                 <ToggleButton Name="ToggleButton" 
@@ -115,7 +114,6 @@
                          Visibility="Hidden"
                          IsReadOnly="{TemplateBinding IsReadOnly}"/>
 
-                <!-- Popup dengan Placement="Top" agar terbuka ke atas -->
                 <Popup Name="Popup" 
                        Placement="Top" 
                        IsOpen="{TemplateBinding IsDropDownOpen}" 
@@ -139,8 +137,7 @@
     </Window.Resources>
 
     <Grid Margin="0">
-
-        <Grid x:Name="MainMenuPanel" Margin="20">
+        <Grid x:Name="MainMenuPanel" Margin="20,40,20,20">
             <Grid.Style>
                 <Style TargetType="Grid">
                     <Setter Property="Visibility" Value="Visible"/>
@@ -215,7 +212,7 @@
             </Grid>
         </Grid>
 
-        <Grid x:Name="BlankPagePanel" Margin="25">
+        <Grid x:Name="BlankPagePanel" Margin="15,50,15,15">
             <Grid.Style>
                 <Style TargetType="Grid">
                     <Setter Property="Visibility" Value="Collapsed"/>
@@ -233,63 +230,62 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <Grid Grid.Row="0" Margin="0,0,0,20">
+            <Grid Grid.Row="0" Margin="0,0,0,25">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <Button Click="ButtonBack_Click" Style="{StaticResource CircleBackBtnStyle}" ToolTip="Kembali ke Menu Utama" Margin="0,0,20,0">
+                <Button Click="ButtonBack_Click" Style="{StaticResource CircleBackBtnStyle}" ToolTip="Kembali ke Menu Utama" Margin="0,0,15,0">
                     <TextBlock Text="&#xE72B;" FontFamily="Segoe MDL2 Assets" FontSize="20" FontWeight="Bold"/>
                 </Button>
 
                 <Border Grid.Column="1" Background="White" CornerRadius="4" BorderBrush="#DEE2E6" BorderThickness="1" Padding="20,15">
                     <Grid>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
 
-                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                            <StackPanel VerticalAlignment="Center" Margin="0,0,25,0">
+                        <WrapPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Top">
+                            <StackPanel VerticalAlignment="Top" Margin="0,0,25,0">
                                 <TextBlock Text="DATA FILTER" FontSize="14" FontWeight="Bold" Foreground="#28A745"/>
                                 <TextBlock Text="DATABASE SEARCH" FontSize="11" Foreground="#6C757D"/>
                             </StackPanel>
 
                             <Border Width="1" Height="35" Background="#CED4DA" Margin="0,0,20,0"/>
 
-                            <StackPanel Margin="0,0,15,0" VerticalAlignment="Center">
+                            <StackPanel Margin="0,0,15,0" VerticalAlignment="Top">
                                 <TextBlock Text="YEAR" FontSize="11" FontWeight="SemiBold" Foreground="#6C757D" Margin="0,0,0,4"/>
-                                <ComboBox Width="100" SelectedIndex="0" Style="{StaticResource MahApps.Styles.ComboBox}">
+                                <ComboBox MinWidth="80" Width="100" SelectedIndex="0" Style="{StaticResource MahApps.Styles.ComboBox}">
                                     <ComboBoxItem Content="2025"/>
                                     <ComboBoxItem Content="2024"/>
                                 </ComboBox>
                             </StackPanel>
 
-                            <StackPanel Margin="0,0,15,0" VerticalAlignment="Center">
+                            <StackPanel Margin="0,0,15,0" VerticalAlignment="Top">
                                 <TextBlock Text="MONTH" FontSize="11" FontWeight="SemiBold" Foreground="#6C757D" Margin="0,0,0,4"/>
-                                <ComboBox Width="130" SelectedIndex="0" Style="{StaticResource MahApps.Styles.ComboBox}">
+                                <ComboBox MinWidth="100" Width="130" SelectedIndex="0" Style="{StaticResource MahApps.Styles.ComboBox}">
                                     <ComboBoxItem Content="Januari"/>
                                     <ComboBoxItem Content="Februari"/>
                                     <ComboBoxItem Content="Maret"/>
                                 </ComboBox>
                             </StackPanel>
 
-                            <StackPanel Margin="0,0,20,0" VerticalAlignment="Center">
+                            <StackPanel Margin="0,0,20,0" VerticalAlignment="Top">
                                 <TextBlock Text="PRODUCTION DATE" FontSize="11" FontWeight="SemiBold" Foreground="#6C757D" Margin="0,0,0,4"/>
-                                <DatePicker Width="150" Style="{StaticResource MahApps.Styles.DatePicker}"/>
+                                <DatePicker MinWidth="120" Width="150" Style="{StaticResource MahApps.Styles.DatePicker}"/>
                             </StackPanel>
 
-                            <Button Content="FIND" Width="100" Height="38" FontSize="13" FontWeight="SemiBold" Controls:ControlsHelper.ContentCharacterCasing="Upper"
-                                    Style="{StaticResource MahApps.Styles.Button.Square.Accent}" VerticalAlignment="Bottom"/>
-                        </StackPanel>
+                            <Button Content="FIND" MinWidth="80" Width="100" Height="38" FontSize="13" FontWeight="SemiBold" Controls:ControlsHelper.ContentCharacterCasing="Upper"
+                                    Style="{StaticResource MahApps.Styles.Button.Square.Accent}" VerticalAlignment="Top" Margin="0,0,10,0"/>
+                        </WrapPanel>
 
-                        <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right">
+                        <StackPanel Grid.Column="1" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="20,0,0,0">
                             <Border Background="#FFF4E6" HorizontalAlignment="Right" CornerRadius="3" Padding="8,3" Margin="0,0,0,2">
                                 <TextBlock Text="MODE 1 ACTIVE" FontSize="10" FontWeight="Bold" Foreground="#FD7E14"/>
                             </Border>
-                            <TextBlock Text="COA Busbar Strip" FontSize="24" FontWeight="Black" Foreground="#FD7E14" HorizontalAlignment="Right">
+                            <TextBlock Text="COA Busbar Strip" FontSize="16" FontWeight="Black" Foreground="#FD7E14" HorizontalAlignment="Right">
                                 <TextBlock.Effect>
                                     <DropShadowEffect Color="#FFDAC0" BlurRadius="0" ShadowDepth="2" Direction="315" Opacity="0.5"/>
                                 </TextBlock.Effect>
@@ -302,7 +298,7 @@
             <Grid Grid.Row="1">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="1*"/>
-                    <ColumnDefinition Width="20"/>
+                    <ColumnDefinition Width="15"/>
                     <ColumnDefinition Width="1*"/>
                 </Grid.ColumnDefinitions>
 
@@ -330,11 +326,8 @@
                                   BorderThickness="0">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="NO" Width="50" Binding="{Binding PartName}" ElementStyle="{StaticResource CenteredCellStyle}"/>
-
                                 <DataGridTextColumn Header="SIZE (SPEC)" Width="*" Binding="{Binding Specification}" ElementStyle="{StaticResource CenteredCellStyle}"/>
-
                                 <DataGridTextColumn Header="PROD DATE" Width="*" Binding="{Binding DateProd}" ElementStyle="{StaticResource CenteredCellStyle}"/>
-
                                 <DataGridTemplateColumn Header="ACTION" Width="70">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
@@ -380,11 +373,8 @@
                                   BorderThickness="0">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="NO" Width="50" Binding="{Binding PartName}" ElementStyle="{StaticResource CenteredCellStyle}"/>
-
                                 <DataGridTextColumn Header="SIZE (SPEC)" Width="*" Binding="{Binding Specification}" ElementStyle="{StaticResource CenteredCellStyle}"/>
-
                                 <DataGridTextColumn Header="PROD DATE" Width="*" Binding="{Binding DateProd}" ElementStyle="{StaticResource CenteredCellStyle}"/>
-
                                 <DataGridTemplateColumn Header="ACTION" Width="70">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
@@ -400,53 +390,59 @@
                 </Border>
             </Grid>
 
-            <Grid Grid.Row="2" Margin="0,20,0,0">
+            <Grid Grid.Row="2" Margin="0,15,0,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
                 <Border Grid.Column="0" Background="White" CornerRadius="4" BorderBrush="#DEE2E6" BorderThickness="1" 
-                        Padding="15,0" Height="55" VerticalAlignment="Center" Margin="0,0,20,0">
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        Padding="15,10" VerticalAlignment="Center" Margin="0,0,10,0">
+                    <Grid VerticalAlignment="Center">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="20"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="20"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
 
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                             <TextBlock Text="Standard:" FontSize="12" FontWeight="Bold" Foreground="#6C757D" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                            <!-- Menggunakan Template khusus agar dropdown terbuka ke atas -->
-                            <ComboBox Width="100" SelectedIndex="0" Template="{StaticResource UpComboBoxControlTemplate}" VerticalAlignment="Center">
+                            <ComboBox MinWidth="80" Width="100" SelectedIndex="0" Template="{StaticResource UpComboBoxControlTemplate}" VerticalAlignment="Center">
                                 <ComboBoxItem Content="JIS"/>
                                 <ComboBoxItem Content="DIN"/>
                                 <ComboBoxItem Content="ASTM"/>
                             </ComboBox>
                         </StackPanel>
 
-                        <Border Width="1" Height="25" Background="#DEE2E6" Margin="20,0"/>
+                        <Border Grid.Column="1" Width="1" Height="25" Background="#DEE2E6"/>
 
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="5,0,0,0">
                             <TextBlock Text="Customer:" FontSize="12" FontWeight="Bold" Foreground="#6C757D" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                            <TextBox Width="180" Style="{StaticResource MahApps.Styles.TextBox}"
+                            <TextBox MinWidth="100" Style="{StaticResource MahApps.Styles.TextBox}"
                                      Controls:TextBoxHelper.Watermark="Input Name..."
                                      Controls:TextBoxHelper.ClearTextButton="True"
                                      VerticalAlignment="Center"/>
                         </StackPanel>
 
-                        <Border Width="1" Height="25" Background="#DEE2E6" Margin="20,0"/>
+                        <Border Grid.Column="3" Width="1" Height="25" Background="#DEE2E6" Margin="5,0,0,0"/>
 
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center" Margin="5,0,0,0">
                             <TextBlock Text="PO Number:" FontSize="12" FontWeight="Bold" Foreground="#6C757D" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                            <TextBox Width="140" Style="{StaticResource MahApps.Styles.TextBox}"
+                            <TextBox MinWidth="100" Style="{StaticResource MahApps.Styles.TextBox}"
                                      Controls:TextBoxHelper.Watermark="e.g. PO-1234"
                                      Controls:TextBoxHelper.ClearTextButton="True"
                                      VerticalAlignment="Center"/>
                         </StackPanel>
-                    </StackPanel>
+                    </Grid>
                 </Border>
 
                 <Button Grid.Column="1" Content="PRINT COA"
                         Controls:ControlsHelper.ContentCharacterCasing="Upper"
-                        Width="200" Height="55" FontSize="16" FontWeight="Bold"
+                        MinWidth="150" Width="200" Height="Auto" FontSize="16" FontWeight="Bold"
                         Style="{StaticResource MahApps.Styles.Button.Square.Accent}"
-                        ToolTip="Export data terpilih ke Excel"/>
+                        ToolTip="Export data terpilih ke Excel" Padding="15,10"/>
             </Grid>
         </Grid>
     </Grid>
