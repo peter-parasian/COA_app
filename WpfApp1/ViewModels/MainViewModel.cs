@@ -1,21 +1,44 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Windows;
 using WpfApp1.Core.Services;
 using WpfApp1.Data.Database;
 using WpfApp1.Data.Repositories;
 
 namespace WpfApp1.ViewModels
 {
-    public class MainViewModel
+    public class MainViewModel : BaseViewModel
     {
         private SqliteContext _dbContext;
         private BusbarRepository _repository;
         private ExcelImportService _importService;
 
-        private int _totalFilesFound;
-        private int _totalRowsInserted;
-        private string _debugLog;
+        private readonly object _lockObject = new object();
+
+        private string _debugLog = string.Empty;
+        public string DebugLog
+        {
+            get => _debugLog;
+            set { _debugLog = value; OnPropertyChanged(); }
+        }
+
+        public int TotalFilesFound { get; private set; }
+        public int TotalRowsInserted { get; private set; }
+
+        private bool _isBusy = false;
+        public bool IsBusy
+        {
+            get => _isBusy;
+            set
+            {
+                _isBusy = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(IsNotBusy)); // Notify helper property change
+            }
+        }
+
+        public bool IsNotBusy => !IsBusy;
+
+        public event Action<string> OnShowMessage;
 
         public MainViewModel()
         {
@@ -23,11 +46,11 @@ namespace WpfApp1.ViewModels
             _repository = new BusbarRepository();
             _importService = new ExcelImportService(_repository);
 
-            // Subscribe to debug logs from service
             _importService.OnDebugMessage += (msg) => {
-                lock (_debugLog)
+                lock (_lockObject)
                 {
-                    if (_debugLog.Length < 1000) _debugLog += msg + System.Environment.NewLine;
+                    if (DebugLog.Length > 5000) DebugLog = string.Empty;
+                    DebugLog += msg + System.Environment.NewLine;
                 }
             };
         }
@@ -37,7 +60,6 @@ namespace WpfApp1.ViewModels
             try
             {
                 _dbContext.EnsureDatabaseFolderExists();
-
                 ResetCounters();
 
                 using var connection = _dbContext.CreateConnection();
@@ -47,58 +69,38 @@ namespace WpfApp1.ViewModels
 
                 transaction.Commit();
 
-                _totalFilesFound = _importService.TotalFilesFound;
-                _totalRowsInserted = _importService.TotalRowsInserted;
+                TotalFilesFound = _importService.TotalFilesFound;
+                TotalRowsInserted = _importService.TotalRowsInserted;
 
-                ShowFinalReport();
+                OnShowMessage?.Invoke($"IMPORT SELESAI\n\nFile ditemukan : {TotalFilesFound}\nBaris disimpan : {TotalRowsInserted}\n\nDebug Log:\n{DebugLog}");
             }
             catch (System.Exception ex)
             {
-                throw; // Bubble up to View to show MessageBox
+                // Bubble up exception agar View yang menangani error message
+                throw;
             }
         }
 
         public void ButtonMode2_Click()
         {
-            System.Windows.MessageBox.Show(
-                "MODE 2 belum diimplementasikan",
-                "Info",
-                System.Windows.MessageBoxButton.OK,
-                System.Windows.MessageBoxImage.Information);
+            OnShowMessage?.Invoke("MODE 2 belum diimplementasikan");
         }
 
         public void ButtonMode3_Click()
         {
-            System.Windows.MessageBox.Show(
-                "MODE 3 belum diimplementasikan",
-                "Info",
-                System.Windows.MessageBoxButton.OK,
-                System.Windows.MessageBoxImage.Information);
+            OnShowMessage?.Invoke("MODE 3 belum diimplementasikan");
         }
 
         public void ButtonMode4_Click()
         {
-            System.Windows.MessageBox.Show(
-                "MODE 4 belum diimplementasikan",
-                "Info",
-                System.Windows.MessageBoxButton.OK,
-                System.Windows.MessageBoxImage.Information);
+            OnShowMessage?.Invoke("MODE 4 belum diimplementasikan");
         }
 
         private void ResetCounters()
         {
-            _totalFilesFound = 0;
-            _totalRowsInserted = 0;
-            _debugLog = "";
-        }
-
-        private void ShowFinalReport()
-        {
-            System.Windows.MessageBox.Show(
-                $"IMPORT SELESAI\n\nFile ditemukan : {_totalFilesFound}\nBaris disimpan : {_totalRowsInserted}\n\nDebug Log:\n{_debugLog}",
-                "Laporan Import",
-                System.Windows.MessageBoxButton.OK,
-                System.Windows.MessageBoxImage.Information);
+            TotalFilesFound = 0;
+            TotalRowsInserted = 0;
+            DebugLog = "";
         }
     }
 }

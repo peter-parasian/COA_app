@@ -25,6 +25,9 @@ namespace WpfApp1.Core.Services
 
         public void Import(Microsoft.Data.Sqlite.SqliteConnection connection, Microsoft.Data.Sqlite.SqliteTransaction transaction)
         {
+            TotalFilesFound = 0;
+            TotalRowsInserted = 0;
+
             _repository.CreateBusbarTable(connection);
             TraverseFoldersAndImport(connection, transaction);
 

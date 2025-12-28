@@ -16,6 +16,10 @@ namespace WpfApp1.Data.Repositories
 
         public void CreateBusbarTable(Microsoft.Data.Sqlite.SqliteConnection connection)
         {
+            _busbarBatchBuffer.Clear();
+            _tlj350BatchBuffer.Clear();
+            _tlj500BatchBuffer.Clear();
+
             using var cmd = connection.CreateCommand();
 
             cmd.CommandText = @"
