@@ -1,47 +1,58 @@
-﻿<mah:MetroWindow x:Class="WpfApp1.Views.MainWindow"
-                 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-                 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-                 xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
-                 xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
-                 xmlns:local="clr-namespace:WpfApp1"
-                 mc:Ignorable="d"
-                 Title="Indowire Plant 2 - Quality Control System"
-                 MinWidth="1000"
-                 MinHeight="700"
-                 GlowBrush="{StaticResource MahApps.Brushes.Accent}"
-                 BorderThickness="1"
-                 TitleCharacterCasing="Normal"
-                 WindowStartupLocation="CenterScreen"
-                 WindowState="Maximized">
+﻿<Controls:MetroWindow x:Class="WpfApp1.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:Controls="http://metro.mahapps.com/winfx/xaml/controls"
+        xmlns:local="clr-namespace:WpfApp1"
+        mc:Ignorable="d"
+        Title="Indowire Plant 2 - Quality Control System"
+        MinWidth="1000"
+        MinHeight="700"
+        Background="#F4F7F6"
+        FontFamily="Segoe UI"
+        WindowState="Maximized"
+        SaveWindowPosition="True"
+        GlowBrush="{DynamicResource MahApps.Brushes.Accent}"
+        ShowTitleBar="False"
+        WindowTitleBrush="{DynamicResource MahApps.Brushes.Accent}"
+        NonActiveWindowTitleBrush="Gray"
+        NonActiveGlowBrush="Gray">
 
     <Window.Resources>
-        <SolidColorBrush x:Key="PrimaryGreen" Color="#28A745"/>
-        <SolidColorBrush x:Key="PrimaryOrange" Color="#FD7E14"/>
-        <SolidColorBrush x:Key="TextLight" Color="#6C757D"/>
-
-        <Style x:Key="BigMenuButton" TargetType="Button" BasedOn="{StaticResource MahApps.Styles.Button.Square}">
-            <Setter Property="Background" Value="{StaticResource PrimaryGreen}"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding" Value="10"/>
-            <Setter Property="mah:ControlsHelper.ContentCharacterCasing" Value="Normal"/>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="{StaticResource PrimaryOrange}"/>
-                </Trigger>
-            </Style.Triggers>
+        <Style x:Key="IndowireMetroBtn" TargetType="Button" BasedOn="{StaticResource MahApps.Styles.Button.Square}">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Height" Value="Auto"/>
         </Style>
 
-        <Style x:Key="ModernCard" TargetType="Border">
-            <Setter Property="Background" Value="White"/>
-            <Setter Property="CornerRadius" Value="5"/>
-            <Setter Property="Effect">
-                <Setter.Value>
-                    <DropShadowEffect BlurRadius="15" Direction="270" ShadowDepth="2" Opacity="0.1" Color="Black"/>
-                </Setter.Value>
-            </Setter>
+        <Style x:Key="IndowireMetroBtnAccent" TargetType="Button" BasedOn="{StaticResource MahApps.Styles.Button.Square.Accent}">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Height" Value="Auto"/>
+        </Style>
+
+        <Style x:Key="CircleBackBtnStyle" TargetType="Button" BasedOn="{StaticResource MahApps.Styles.Button.Circle}">
+            <Setter Property="Background" Value="#6C757D"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Width" Value="50"/>
+            <Setter Property="Height" Value="50"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#FD7E14"/>
+                    <Setter Property="Foreground" Value="White"/>
+                    <Setter Property="RenderTransform">
+                        <Setter.Value>
+                            <ScaleTransform ScaleX="1.1" ScaleY="1.1" CenterX="25" CenterY="25"/>
+                        </Setter.Value>
+                    </Setter>
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="#D35400"/>
+                </Trigger>
+            </Style.Triggers>
         </Style>
     </Window.Resources>
 
@@ -70,13 +81,15 @@
                             VerticalAlignment="Center"
                             HorizontalAlignment="Center"
                             Margin="0,0,0,10">
+
                     <Image Source="pack://application:,,,/Images/company_logo.png"
-                           Height="60" Margin="0,0,15,0" RenderOptions.BitmapScalingMode="HighQuality"/>
+                           Height="60"
+                           Margin="0,0,15,0"/>
 
                     <TextBlock Text="PT. Indowire Prima Industrindo (Plan 2)"
                                FontSize="28"
                                FontWeight="Bold"
-                               Foreground="{DynamicResource MahApps.Brushes.Text}"
+                               Foreground="#343A40"
                                VerticalAlignment="Center"/>
                 </StackPanel>
             </Viewbox>
@@ -85,7 +98,7 @@
                        Text="SUPER TEAM"
                        FontSize="22"
                        FontWeight="SemiBold"
-                       Foreground="{StaticResource PrimaryOrange}"
+                       Foreground="#FD7E14"
                        HorizontalAlignment="Center"
                        Margin="0,5,0,20"/>
 
@@ -100,53 +113,70 @@
                 </Grid.ColumnDefinitions>
 
                 <Button Grid.Row="0" Grid.Column="0" 
-                        Margin="15" 
+                        Margin="10" 
                         Click="ButtonMode1_Click"
                         IsEnabled="{Binding IsNotBusy}"
-                        Style="{StaticResource BigMenuButton}">
+                        Style="{StaticResource IndowireMetroBtnAccent}">
                     <Viewbox Stretch="Uniform">
                         <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
-                            <Image Source="pack://application:,,,/Images/logo1.jpg" Height="80" Margin="0,0,0,10"/>
-                            <TextBlock Text="Busbar Copper Strip" FontSize="18" FontWeight="SemiBold"/>
+                            <Image Source="pack://application:,,,/Images/logo1.jpg" Height="80"/>
+                            <TextBlock Text="Busbar Copper Strip"
+                                       FontSize="16"
+                                       FontWeight="SemiBold"
+                                       Foreground="White"
+                                       HorizontalAlignment="Center"
+                                       Margin="0,5,0,0"/>
                         </StackPanel>
                     </Viewbox>
                 </Button>
 
                 <Button Grid.Row="0" Grid.Column="1" 
-                        Margin="15" 
+                        Margin="10" 
                         Click="ButtonMode2_Click"
                         IsEnabled="{Binding IsNotBusy}"
-                        Style="{StaticResource BigMenuButton}">
+                        Style="{StaticResource IndowireMetroBtnAccent}">
                     <Viewbox Stretch="Uniform">
                         <StackPanel Orientation="Vertical">
-                            <Image Source="pack://application:,,,/Images/logo2.png" Height="80" Margin="0,0,0,10"/>
-                            <TextBlock Text="MODE 2" FontSize="18" FontWeight="SemiBold"/>
+                            <Image Source="pack://application:,,,/Images/logo2.png" Height="80"/>
+                            <TextBlock Text="MODE 2" 
+                                       FontSize="16" 
+                                       Foreground="White"
+                                       HorizontalAlignment="Center"
+                                       Margin="0,5,0,0"/>
                         </StackPanel>
                     </Viewbox>
                 </Button>
 
                 <Button Grid.Row="1" Grid.Column="0" 
-                        Margin="15" 
+                        Margin="10" 
                         Click="ButtonMode3_Click"
                         IsEnabled="{Binding IsNotBusy}"
-                        Style="{StaticResource BigMenuButton}">
+                        Style="{StaticResource IndowireMetroBtnAccent}">
                     <Viewbox Stretch="Uniform">
                         <StackPanel Orientation="Vertical">
-                            <Image Source="pack://application:,,,/Images/logo3.png" Height="80" Margin="0,0,0,10"/>
-                            <TextBlock Text="MODE 3" FontSize="18" FontWeight="SemiBold"/>
+                            <Image Source="pack://application:,,,/Images/logo3.png" Height="80"/>
+                            <TextBlock Text="MODE 3" 
+                                       FontSize="16" 
+                                       Foreground="White"
+                                       HorizontalAlignment="Center"
+                                       Margin="0,5,0,0"/>
                         </StackPanel>
                     </Viewbox>
                 </Button>
 
                 <Button Grid.Row="1" Grid.Column="1" 
-                        Margin="15" 
+                        Margin="10" 
                         Click="ButtonMode4_Click"
                         IsEnabled="{Binding IsNotBusy}"
-                        Style="{StaticResource BigMenuButton}">
+                        Style="{StaticResource IndowireMetroBtnAccent}">
                     <Viewbox Stretch="Uniform">
                         <StackPanel Orientation="Vertical">
-                            <Image Source="pack://application:,,,/Images/logo4.png" Height="80" Margin="0,0,0,10"/>
-                            <TextBlock Text="MODE 4" FontSize="18" FontWeight="SemiBold"/>
+                            <Image Source="pack://application:,,,/Images/logo4.png" Height="80"/>
+                            <TextBlock Text="MODE 4" 
+                                       FontSize="16" 
+                                       Foreground="White"
+                                       HorizontalAlignment="Center"
+                                       Margin="0,5,0,0"/>
                         </StackPanel>
                     </Viewbox>
                 </Button>
@@ -178,61 +208,101 @@
                 </Grid.ColumnDefinitions>
 
                 <Button Click="ButtonBack_Click"
-                        Width="45" Height="45"
-                        Style="{StaticResource MahApps.Styles.Button.Circle}"
-                        Background="{DynamicResource MahApps.Brushes.Gray7}"
-                        BorderThickness="0"
+                        Style="{StaticResource CircleBackBtnStyle}"
                         ToolTip="Kembali ke Menu Utama"
                         Margin="0,0,20,0">
-                    <iconPacks:PackIconModern Kind="ArrowLeft" Width="20" Height="20" Foreground="White" />
+                    <TextBlock Text="&#xE72B;" FontFamily="Segoe MDL2 Assets" FontSize="20" FontWeight="Bold"/>
                 </Button>
 
-                <Border Grid.Column="1" Style="{StaticResource ModernCard}">
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="20,15">
+                <Border Grid.Column="1" 
+                        Background="White" 
+                        CornerRadius="2" 
+                        BorderBrush="#DEE2E6"
+                        BorderThickness="1">
 
-                        <StackPanel VerticalAlignment="Center" Margin="0,0,25,0">
-                            <TextBlock Text="FILTER DATA" 
-                                       FontSize="14"
-                                       FontWeight="Bold" 
-                                       Foreground="{StaticResource PrimaryGreen}"/>
-                            <TextBlock Text="Pencarian Database"
-                                       FontSize="12"
-                                       Foreground="{StaticResource TextLight}"/>
+                    <Grid Margin="20,15">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                            <StackPanel VerticalAlignment="Center" Margin="0,0,25,0">
+                                <TextBlock Text="FILTER DATA" 
+                                           FontSize="14"
+                                           FontWeight="Bold" 
+                                           Foreground="#28A745"/>
+                                <TextBlock Text="Pencarian Database"
+                                           FontSize="11"
+                                           Foreground="#6C757D"/>
+                            </StackPanel>
+
+                            <Border Width="1" Height="35" Background="#CED4DA" Margin="0,0,20,0"/>
+
+                            <StackPanel Margin="0,0,15,0" VerticalAlignment="Center">
+                                <TextBlock Text="Tahun" FontSize="11" FontWeight="SemiBold" Foreground="#6C757D" Margin="0,0,0,4"/>
+                                <ComboBox Width="110" SelectedIndex="0" Style="{StaticResource MahApps.Styles.ComboBox}">
+                                    <ComboBoxItem Content="2025"/>
+                                    <ComboBoxItem Content="2024"/>
+                                </ComboBox>
+                            </StackPanel>
+
+                            <StackPanel Margin="0,0,15,0" VerticalAlignment="Center">
+                                <TextBlock Text="Bulan" FontSize="11" FontWeight="SemiBold" Foreground="#6C757D" Margin="0,0,0,4"/>
+                                <ComboBox Width="140" SelectedIndex="0" Style="{StaticResource MahApps.Styles.ComboBox}">
+                                    <ComboBoxItem Content="Januari"/>
+                                    <ComboBoxItem Content="Februari"/>
+                                    <ComboBoxItem Content="Maret"/>
+                                </ComboBox>
+                            </StackPanel>
+
+                            <StackPanel Margin="0,0,20,0" VerticalAlignment="Center">
+                                <TextBlock Text="Tanggal Produksi" FontSize="11" FontWeight="SemiBold" Foreground="#6C757D" Margin="0,0,0,4"/>
+                                <DatePicker Width="160" Style="{StaticResource MahApps.Styles.DatePicker}"/>
+                            </StackPanel>
+
+                            <Button Content="Find" 
+                                    Controls:ControlsHelper.ContentCharacterCasing="Upper"
+                                    Width="130" Height="38"
+                                    FontSize="12"
+                                    Style="{StaticResource MahApps.Styles.Button.Square.Accent}"
+                                    VerticalAlignment="Bottom"/>
                         </StackPanel>
 
-                        <Border Width="1" Height="30" Background="{DynamicResource MahApps.Brushes.Gray8}" Margin="0,0,20,0"/>
-                        
-                        <StackPanel Margin="0,0,15,0" VerticalAlignment="Center">
-                            <TextBlock Text="Tahun" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextLight}" Margin="0,0,0,4"/>
-                            <ComboBox Width="110" SelectedIndex="0" Style="{StaticResource MahApps.Styles.ComboBox}">
-                                <ComboBoxItem Content="2025"/>
-                                <ComboBoxItem Content="2024"/>
-                            </ComboBox>
+                        <StackPanel Grid.Column="2" 
+                                    VerticalAlignment="Center" 
+                                    HorizontalAlignment="Right"
+                                    Orientation="Vertical">
+
+                            <Border Background="#FFF4E6" 
+                                    HorizontalAlignment="Right" 
+                                    CornerRadius="3" 
+                                    Padding="8,3" 
+                                    Margin="0,0,0,2">
+                                <TextBlock Text="MODE 1 ACTIVE" 
+                                           FontSize="10" 
+                                           FontWeight="Bold" 
+                                           Foreground="#FD7E14"/>
+                            </Border>
+
+                            <TextBlock Text="COA Busbar Strip" 
+                                       FontSize="24" 
+                                       FontWeight="Black" 
+                                       Foreground="#FD7E14"
+                                       HorizontalAlignment="Right"
+                                       TextOptions.TextFormattingMode="Ideal">
+                                <TextBlock.Effect>
+                                    <DropShadowEffect Color="#FFDAC0" BlurRadius="0" ShadowDepth="2" Direction="315" Opacity="0.5"/>
+                                </TextBlock.Effect>
+                            </TextBlock>
                         </StackPanel>
 
-                        <StackPanel Margin="0,0,15,0" VerticalAlignment="Center">
-                            <TextBlock Text="Bulan" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextLight}" Margin="0,0,0,4"/>
-                            <ComboBox Width="140" SelectedIndex="0" Style="{StaticResource MahApps.Styles.ComboBox}">
-                                <ComboBoxItem Content="Januari"/>
-                                <ComboBoxItem Content="Februari"/>
-                                <ComboBoxItem Content="Maret"/>
-                            </ComboBox>
-                        </StackPanel>
-
-                        <StackPanel Margin="0,0,20,0" VerticalAlignment="Center">
-                            <TextBlock Text="Tanggal Produksi" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextLight}" Margin="0,0,0,4"/>
-                            <DatePicker Width="160" 
-                                        Style="{StaticResource MahApps.Styles.DatePicker}" 
-                                        mah:TextBoxHelper.Watermark="Pilih Tanggal"/>
-                        </StackPanel>
-
-                        <Button Content="CARI DATA" 
-                                Width="130"
-                                Style="{StaticResource MahApps.Styles.Button.Square.Accent}"
-                                VerticalAlignment="Bottom"/>
-                    </StackPanel>
+                    </Grid>
                 </Border>
             </Grid>
+
+
 
             <Grid Grid.Row="1">
                 <Grid.ColumnDefinitions>
@@ -241,41 +311,43 @@
                     <ColumnDefinition Width="1*"/>
                 </Grid.ColumnDefinitions>
 
-                <Border Grid.Column="0" Style="{StaticResource ModernCard}" Padding="0">
+                <Border Grid.Column="0" 
+                        Background="White" 
+                        CornerRadius="2" 
+                        BorderBrush="#DEE2E6"
+                        BorderThickness="1">
                     <DockPanel>
                         <Border DockPanel.Dock="Top" 
-                                Background="Transparent" 
+                                Background="White" 
                                 Padding="20,15"
                                 BorderThickness="0,0,0,1"
-                                BorderBrush="{DynamicResource MahApps.Brushes.Gray8}">
+                                BorderBrush="#E9ECEF">
                             <TextBlock Text="HASIL PENCARIAN DATABASE" 
                                        FontWeight="Bold" 
                                        FontSize="14"
-                                       Foreground="{DynamicResource MahApps.Brushes.Text}"/>
+                                       Foreground="#343A40"/>
                         </Border>
 
                         <DataGrid x:Name="GridSearchResults"
                                   Style="{StaticResource MahApps.Styles.DataGrid}"
-                                  BorderThickness="0"
-                                  mah:DataGridHelper.CellPadding="10,5"
-                                  mah:DataGridHelper.ColumnHeaderPadding="10,10"
                                   AutoGenerateColumns="False"
                                   GridLinesVisibility="Horizontal"
                                   HeadersVisibility="Column"
-                                  SelectionMode="Single"
-                                  Margin="1">
+                                  IsReadOnly="True">
                             <DataGrid.Columns>
                                 <DataGridTemplateColumn Header="AKSI" Width="60">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <Button Style="{StaticResource MahApps.Styles.Button.Circle}"
-                                                    Width="30" Height="30"
-                                                    BorderThickness="0"
-                                                    Background="{StaticResource PrimaryGreen}"
+                                            <Button Content="+" 
+                                                    Width="30" Height="26"
+                                                    Background="#28A745"
                                                     Foreground="White"
-                                                    ToolTip="Tambahkan ke daftar">
-                                                <iconPacks:PackIconModern Kind="Add" Width="12" Height="12" />
-                                            </Button>
+                                                    FontSize="16"
+                                                    Padding="0,-2,0,0"
+                                                    BorderThickness="0"
+                                                    Cursor="Hand"
+                                                    ToolTip="Tambahkan ke daftar"
+                                                    Style="{StaticResource MahApps.Styles.Button.Square}"/>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
@@ -289,28 +361,32 @@
                     </DockPanel>
                 </Border>
 
-                <Border Grid.Column="2" Style="{StaticResource ModernCard}" Padding="0">
+                <Border Grid.Column="2" 
+                        Background="White" 
+                        CornerRadius="2" 
+                        BorderBrush="#DEE2E6"
+                        BorderThickness="1">
                     <DockPanel>
                         <Border DockPanel.Dock="Top" 
                                 Padding="15" 
-                                Background="Transparent"
+                                Background="White"
                                 BorderThickness="0,0,0,1"
-                                BorderBrush="{DynamicResource MahApps.Brushes.Gray8}">
+                                BorderBrush="#E9ECEF">
                             <Grid>
                                 <StackPanel Orientation="Vertical">
                                     <TextBlock Text="DAFTAR EXPORT" 
                                                FontWeight="Bold" 
                                                FontSize="14"
-                                               Foreground="{StaticResource PrimaryGreen}"/>
+                                               Foreground="#28A745"/>
                                     <TextBlock Text="Item Siap Diproses"
-                                               FontSize="12"
-                                               Foreground="{StaticResource TextLight}"/>
+                                               FontSize="11"
+                                               Foreground="#6C757D"/>
                                 </StackPanel>
                                 <Border HorizontalAlignment="Right" 
                                         VerticalAlignment="Top"
-                                        Background="{StaticResource PrimaryOrange}" 
+                                        Background="#FD7E14" 
                                         CornerRadius="10" 
-                                        Padding="10,2">
+                                        Padding="10,4">
                                     <TextBlock Text="0 Item" 
                                                Foreground="White" 
                                                FontSize="11" 
@@ -321,11 +397,10 @@
 
                         <DataGrid x:Name="GridBasket"
                                   Style="{StaticResource MahApps.Styles.DataGrid}"
-                                  BorderThickness="0"
-                                  mah:DataGridHelper.CellPadding="10,5"
                                   AutoGenerateColumns="False"
                                   GridLinesVisibility="Horizontal"
-                                  HeadersVisibility="Column">
+                                  HeadersVisibility="Column"
+                                  IsReadOnly="True">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="Part Name" Width="*" Binding="{Binding PartName}"/>
                                 <DataGridTextColumn Header="Qty" Width="60" Binding="{Binding Quantity}"/>
@@ -333,14 +408,15 @@
                                 <DataGridTemplateColumn Header="HAPUS" Width="60">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <Button Style="{StaticResource MahApps.Styles.Button.Circle}"
-                                                    Width="25" Height="25"
-                                                    BorderThickness="0"
+                                            <Button Content="×" 
+                                                    Width="26" Height="26"
                                                     Background="#DC3545"
                                                     Foreground="White"
-                                                    ToolTip="Hapus item">
-                                                <iconPacks:PackIconModern Kind="Close" Width="10" Height="10" />
-                                            </Button>
+                                                    FontSize="18"
+                                                    Padding="0,-3,0,0"
+                                                    BorderThickness="0"
+                                                    Cursor="Hand"
+                                                    Style="{StaticResource MahApps.Styles.Button.Square}"/>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
@@ -358,27 +434,83 @@
 
                 <Border Grid.Column="0" 
                         Background="White" 
-                        CornerRadius="4" 
-                        BorderBrush="{DynamicResource MahApps.Brushes.Gray8}"
+                        CornerRadius="2" 
+                        BorderBrush="#DEE2E6"
                         BorderThickness="1"
-                        Padding="15,0"
-                        Height="45"
+                        Padding="10,0"
+                        Height="50"
                         VerticalAlignment="Center"
                         Margin="0,0,20,0">
+
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <iconPacks:PackIconModern Kind="InformationCircle" Foreground="{StaticResource PrimaryOrange}" Margin="0,0,10,0"/>
-                        <TextBlock Text="Status System:" FontWeight="Bold" Foreground="{StaticResource TextLight}" Margin="0,0,5,0"/>
-                        <TextBlock Text="Menunggu input user..." Foreground="{DynamicResource MahApps.Brushes.Text}" FontWeight="SemiBold"/>
+
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Path Data="M21.41 11.58L12.41 2.58A2 2 0 0 0 11 2H4A2 2 0 0 0 2 4V11A2 2 0 0 0 2.59 12.42L11.59 21.42A2 2 0 0 0 13 21.42A2 2 0 0 0 14.41 21L21.41 14A2 2 0 0 0 21.41 11.58M13 20L4 11V4H11L20 13M6.5 5A1.5 1.5 0 1 1 5 6.5A1.5 1.5 0 0 1 6.5 5Z" 
+                                  Fill="#17A2B8"
+                                  Height="14" Width="14" Margin="0,0,8,0"/>
+
+                            <TextBlock Text="Standard:" 
+                                       FontSize="12"
+                                       FontWeight="Bold" 
+                                       Foreground="#6C757D" 
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,5,0"/>
+
+                            <ComboBox Width="80" 
+                                      SelectedIndex="0" 
+                                      Style="{StaticResource MahApps.Styles.ComboBox}"
+                                      VerticalAlignment="Center">
+                                <ComboBoxItem Content="JIS"/>
+                                <ComboBoxItem Content="DIN"/>
+                                <ComboBoxItem Content="ASTM"/>
+                            </ComboBox>
+                        </StackPanel>
+
+                        <Border Width="1" Height="25" Background="#DEE2E6" Margin="15,0"/>
+
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="Customer : " 
+                                       FontSize="12"
+                                       FontWeight="Bold" 
+                                       Foreground="#6C757D" 
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,5,0"/>
+
+                            <TextBox Width="150"
+                                     Style="{StaticResource MahApps.Styles.TextBox}"
+                                     Controls:TextBoxHelper.Watermark="Input Name..."
+                                     Controls:TextBoxHelper.ClearTextButton="True"
+                                     VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <Border Width="1" Height="25" Background="#DEE2E6" Margin="15,0"/>
+
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="Purchase Order Number : " 
+                                       FontSize="12"
+                                       FontWeight="Bold" 
+                                       Foreground="#6C757D" 
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,5,0"/>
+
+                            <TextBox Width="120"
+                                     Style="{StaticResource MahApps.Styles.TextBox}"
+                                     Controls:TextBoxHelper.Watermark="e.g. PO-1234"
+                                     Controls:TextBoxHelper.ClearTextButton="True"
+                                     VerticalAlignment="Center"/>
+                        </StackPanel>
+
                     </StackPanel>
                 </Border>
 
                 <Button Grid.Column="1"
-                        Content="GENERATE EXCEL"
-                        Width="220" Height="45"
+                        Content="Print"
+                        Controls:ControlsHelper.ContentCharacterCasing="Upper"
+                        Width="200" Height="50"
+                        FontSize="14"
                         Style="{StaticResource MahApps.Styles.Button.Square.Accent}"
-                        Background="#217346" 
                         ToolTip="Export data terpilih ke Excel"/>
             </Grid>
         </Grid>
     </Grid>
-</mah:MetroWindow>
+</Controls:MetroWindow>

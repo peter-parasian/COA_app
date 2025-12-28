@@ -1,11 +1,10 @@
-﻿using MahApps.Metro.Controls;  
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using System.Windows;
+using MahApps.Metro.Controls; 
 
 namespace WpfApp1.Views
 {
-    // Ubah inheritance dari Window menjadi MetroWindow
-    public partial class MainWindow : MetroWindow
+    public partial class MainWindow : MetroWindow 
     {
         private WpfApp1.ViewModels.MainViewModel _viewModel;
 
@@ -19,7 +18,6 @@ namespace WpfApp1.Views
 
             _viewModel.OnShowMessage += (msg) =>
             {
-                // Gunakan MahApps MessageDialogStyle (Opsional, disini tetap MessageBox standar dulu)
                 System.Windows.MessageBox.Show(
                     msg,
                     "Informasi Sistem",
