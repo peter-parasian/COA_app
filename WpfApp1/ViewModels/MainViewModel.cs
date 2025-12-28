@@ -32,11 +32,18 @@ namespace WpfApp1.ViewModels
             {
                 _isBusy = value;
                 OnPropertyChanged();
-                OnPropertyChanged(nameof(IsNotBusy)); // Notify helper property change
+                OnPropertyChanged(nameof(IsNotBusy)); 
             }
         }
 
         public bool IsNotBusy => !IsBusy;
+
+        private bool _showBlankPage = false;
+        public bool ShowBlankPage
+        {
+            get => _showBlankPage;
+            set { _showBlankPage = value; OnPropertyChanged(); }
+        }
 
         public event Action<string> OnShowMessage;
 
@@ -94,6 +101,11 @@ namespace WpfApp1.ViewModels
         public void ButtonMode4_Click()
         {
             OnShowMessage?.Invoke("MODE 4 belum diimplementasikan");
+        }
+
+        public void BackToMenu()
+        {
+            ShowBlankPage = false;
         }
 
         private void ResetCounters()

@@ -53,6 +53,9 @@ namespace WpfApp1.Views
                         });
                     }
                 });
+
+                // Logika yang diminta: Setelah import selesai (dan popup ditutup), ganti ke halaman kosong
+                _viewModel.ShowBlankPage = true;
             }
             finally
             {
@@ -73,6 +76,11 @@ namespace WpfApp1.Views
         private void ButtonMode4_Click(object sender, RoutedEventArgs e)
         {
             _viewModel.ButtonMode4_Click();
+        }
+
+        private void ButtonBack_Click(object sender, RoutedEventArgs e)
+        {
+            _viewModel.BackToMenu();
         }
     }
 }

@@ -49,129 +49,169 @@
     </Window.Resources>
 
     <Grid Margin="20">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+        <!-- PANEL 1: MENU UTAMA (Original Content) -->
+        <Grid x:Name="MainMenuPanel">
+            <Grid.Style>
+                <Style TargetType="Grid">
+                    <Setter Property="Visibility" Value="Visible"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding ShowBlankPage}" Value="True">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Grid.Style>
 
-        <!-- HEADER: Logo + Nama Perusahaan -->
-        <!-- Perbaikan 1: Path Gambar diganti menjadi Resource Relatif -->
-        <Viewbox Stretch="Uniform" Height="80">
-            <StackPanel Orientation="Horizontal"
-                        VerticalAlignment="Center"
-                        HorizontalAlignment="Center"
-                        Margin="0,0,0,10">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
 
-                <Image Source="pack://application:,,,/Images/company_logo.png"
-                       Height="60"
-                       Margin="0,0,15,0"/>
+            <!-- HEADER: Logo + Nama Perusahaan -->
+            <Viewbox Stretch="Uniform" Height="80">
+                <StackPanel Orientation="Horizontal"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Center"
+                            Margin="0,0,0,10">
 
-                <TextBlock Text="PT. Indowire Prima Industrindo (Plan 2)"
-                           FontSize="28"
+                    <Image Source="pack://application:,,,/Images/company_logo.png"
+                           Height="60"
+                           Margin="0,0,15,0"/>
+
+                    <TextBlock Text="PT. Indowire Prima Industrindo (Plan 2)"
+                               FontSize="28"
+                               FontWeight="Bold"
+                               Foreground="{StaticResource DarkGray}"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+            </Viewbox>
+
+            <!-- SLOGAN -->
+            <TextBlock Grid.Row="1"
+                       Text="SUPER TEAM"
+                       FontSize="22"
+                       FontWeight="SemiBold"
+                       Foreground="{StaticResource PrimaryOrange}"
+                       HorizontalAlignment="Center"
+                       Margin="0,5,0,20"/>
+
+            <!-- BUTTON AREA -->
+            <Grid Grid.Row="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Button 1 -->
+                <Button Grid.Row="0" Grid.Column="0" 
+                        Margin="10" 
+                        Click="ButtonMode1_Click"
+                        IsEnabled="{Binding IsNotBusy}"
+                        Style="{StaticResource IndowireButtonStyle}">
+                    <Viewbox Stretch="Uniform">
+                        <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+                            <Image Source="pack://application:,,,/Images/logo1.jpg" Height="80"/>
+                            <TextBlock Text="Busbar Copper Strip"
+                                       FontSize="16"
+                                       FontWeight="SemiBold"
+                                       Foreground="White"
+                                       HorizontalAlignment="Center"
+                                       Margin="0,5,0,0"/>
+                        </StackPanel>
+                    </Viewbox>
+                </Button>
+
+                <!-- Button 2 -->
+                <Button Grid.Row="0" Grid.Column="1" 
+                        Margin="10" 
+                        Click="ButtonMode2_Click"
+                        IsEnabled="{Binding IsNotBusy}"
+                        Style="{StaticResource IndowireButtonStyle}">
+                    <Viewbox Stretch="Uniform">
+                        <StackPanel Orientation="Vertical">
+                            <Image Source="pack://application:,,,/Images/logo2.png" Height="80"/>
+                            <TextBlock Text="MODE 2" 
+                                       FontSize="16" 
+                                       Foreground="White"
+                                       HorizontalAlignment="Center"
+                                       Margin="0,5,0,0"/>
+                        </StackPanel>
+                    </Viewbox>
+                </Button>
+
+                <!-- Button 3 -->
+                <Button Grid.Row="1" Grid.Column="0" 
+                        Margin="10" 
+                        Click="ButtonMode3_Click"
+                        IsEnabled="{Binding IsNotBusy}"
+                        Style="{StaticResource IndowireButtonStyle}">
+                    <Viewbox Stretch="Uniform">
+                        <StackPanel Orientation="Vertical">
+                            <Image Source="pack://application:,,,/Images/logo3.png" Height="80"/>
+                            <TextBlock Text="MODE 3" 
+                                       FontSize="16" 
+                                       Foreground="White"
+                                       HorizontalAlignment="Center"
+                                       Margin="0,5,0,0"/>
+                        </StackPanel>
+                    </Viewbox>
+                </Button>
+
+                <!-- Button 4 -->
+                <Button Grid.Row="1" Grid.Column="1" 
+                        Margin="10" 
+                        Click="ButtonMode4_Click"
+                        IsEnabled="{Binding IsNotBusy}"
+                        Style="{StaticResource IndowireButtonStyle}">
+                    <Viewbox Stretch="Uniform">
+                        <StackPanel Orientation="Vertical">
+                            <Image Source="pack://application:,,,/Images/logo4.png" Height="80"/>
+                            <TextBlock Text="MODE 4" 
+                                       FontSize="16" 
+                                       Foreground="White"
+                                       HorizontalAlignment="Center"
+                                       Margin="0,5,0,0"/>
+                        </StackPanel>
+                    </Viewbox>
+                </Button>
+            </Grid>
+        </Grid>
+
+        <!-- PANEL 2: HALAMAN KOSONG (Blank Page) -->
+        <Grid x:Name="BlankPagePanel">
+            <Grid.Style>
+                <Style TargetType="Grid">
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding ShowBlankPage}" Value="True">
+                            <Setter Property="Visibility" Value="Visible"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Grid.Style>
+
+            <!-- Content Blank Page -->
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock Text="Tampilan Kosong Mode 1"
+                           FontSize="24"
                            FontWeight="Bold"
                            Foreground="{StaticResource DarkGray}"
-                           VerticalAlignment="Center"/>
+                           HorizontalAlignment="Center"
+                           Margin="0,0,0,20"/>
+
+                <Button Content="KEMBALI KE MENU UTAMA"
+                        Click="ButtonBack_Click"
+                        Width="200"
+                        Height="50"
+                        FontSize="16"
+                        Style="{StaticResource IndowireButtonStyle}"/>
             </StackPanel>
-        </Viewbox>
-
-        <!-- SLOGAN -->
-        <TextBlock Grid.Row="1"
-                   Text="SUPER TEAM"
-                   FontSize="22"
-                   FontWeight="SemiBold"
-                   Foreground="{StaticResource PrimaryOrange}"
-                   HorizontalAlignment="Center"
-                   Margin="0,5,0,20"/>
-
-        <!-- BUTTON AREA -->
-        <Grid Grid.Row="2">
-            <Grid.RowDefinitions>
-                <RowDefinition/>
-                <RowDefinition/>
-            </Grid.RowDefinitions>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition/>
-                <ColumnDefinition/>
-            </Grid.ColumnDefinitions>
-
-            <!-- Button 1 -->
-            <!-- Perbaikan 3: Binding IsEnabled ke IsNotBusy dari ViewModel -->
-            <Button Grid.Row="0" Grid.Column="0" 
-                    Margin="10" 
-                    Click="ButtonMode1_Click"
-                    IsEnabled="{Binding IsNotBusy}"
-                    Style="{StaticResource IndowireButtonStyle}">
-                <Viewbox Stretch="Uniform">
-                    <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
-                        <!-- Perbaikan 1: Path Gambar Relatif -->
-                        <Image Source="pack://application:,,,/Images/logo1.jpg" Height="80"/>
-                        <TextBlock Text="Busbar Copper Strip"
-                                   FontSize="16"
-                                   FontWeight="SemiBold"
-                                   Foreground="White"
-                                   HorizontalAlignment="Center"
-                                   Margin="0,5,0,0"/>
-                    </StackPanel>
-                </Viewbox>
-            </Button>
-
-            <!-- Button 2 -->
-            <Button Grid.Row="0" Grid.Column="1" 
-                    Margin="10" 
-                    Click="ButtonMode2_Click"
-                    IsEnabled="{Binding IsNotBusy}"
-                    Style="{StaticResource IndowireButtonStyle}">
-                <Viewbox Stretch="Uniform">
-                    <StackPanel Orientation="Vertical">
-                        <!-- Perbaikan 1: Path Gambar Relatif -->
-                        <Image Source="pack://application:,,,/Images/logo2.png" Height="80"/>
-                        <TextBlock Text="MODE 2" 
-                                   FontSize="16" 
-                                   Foreground="White"
-                                   HorizontalAlignment="Center"
-                                   Margin="0,5,0,0"/>
-                    </StackPanel>
-                </Viewbox>
-            </Button>
-
-            <!-- Button 3 -->
-            <Button Grid.Row="1" Grid.Column="0" 
-                    Margin="10" 
-                    Click="ButtonMode3_Click"
-                    IsEnabled="{Binding IsNotBusy}"
-                    Style="{StaticResource IndowireButtonStyle}">
-                <Viewbox Stretch="Uniform">
-                    <StackPanel Orientation="Vertical">
-                        <!-- Perbaikan 1: Path Gambar Relatif -->
-                        <Image Source="pack://application:,,,/Images/logo3.png" Height="80"/>
-                        <TextBlock Text="MODE 3" 
-                                   FontSize="16" 
-                                   Foreground="White"
-                                   HorizontalAlignment="Center"
-                                   Margin="0,5,0,0"/>
-                    </StackPanel>
-                </Viewbox>
-            </Button>
-
-            <!-- Button 4 -->
-            <Button Grid.Row="1" Grid.Column="1" 
-                    Margin="10" 
-                    Click="ButtonMode4_Click"
-                    IsEnabled="{Binding IsNotBusy}"
-                    Style="{StaticResource IndowireButtonStyle}">
-                <Viewbox Stretch="Uniform">
-                    <StackPanel Orientation="Vertical">
-                        <!-- Perbaikan 1: Path Gambar Relatif -->
-                        <Image Source="pack://application:,,,/Images/logo4.png" Height="80"/>
-                        <TextBlock Text="MODE 4" 
-                                   FontSize="16" 
-                                   Foreground="White"
-                                   HorizontalAlignment="Center"
-                                   Margin="0,5,0,0"/>
-                    </StackPanel>
-                </Viewbox>
-            </Button>
         </Grid>
+
     </Grid>
 </Window>
