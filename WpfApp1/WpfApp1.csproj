@@ -14,6 +14,8 @@
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.1" />
 		<PackageReference Include="ClosedXML" Version="0.104.2" />
+		<PackageReference Include="MahApps.Metro" Version="2.4.10" />
+		<PackageReference Include="MahApps.Metro.IconPacks" Version="4.11.0" />
 		<Resource Include="Images\**\*" />
 	</ItemGroup>
 

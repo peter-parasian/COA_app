@@ -1,9 +1,11 @@
-﻿using System.Threading.Tasks;
+﻿using MahApps.Metro.Controls;  
+using System.Threading.Tasks;
 using System.Windows;
 
 namespace WpfApp1.Views
 {
-    public partial class MainWindow : System.Windows.Window
+    // Ubah inheritance dari Window menjadi MetroWindow
+    public partial class MainWindow : MetroWindow
     {
         private WpfApp1.ViewModels.MainViewModel _viewModel;
 
@@ -17,6 +19,7 @@ namespace WpfApp1.Views
 
             _viewModel.OnShowMessage += (msg) =>
             {
+                // Gunakan MahApps MessageDialogStyle (Opsional, disini tetap MessageBox standar dulu)
                 System.Windows.MessageBox.Show(
                     msg,
                     "Informasi Sistem",
@@ -52,7 +55,6 @@ namespace WpfApp1.Views
                     }
                 });
 
-                // Set flag to show BlankPagePanel after import
                 _viewModel.ShowBlankPage = true;
             }
             finally
