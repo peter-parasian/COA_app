@@ -349,7 +349,7 @@ namespace WpfApp1.Data.Repositories
 
                 fullRecord.Thickness = ParseDoubleSafe(reader["Thickness_mm"]);
                 fullRecord.Width = ParseDoubleSafe(reader["Width_mm"]);
-                fullRecord.Length = ParseDoubleSafe(reader["Length"]);
+                fullRecord.Length = ParseIntSafe(reader["Length"]);
                 fullRecord.Radius = ParseDoubleSafe(reader["Radius"]);
                 fullRecord.Chamber = ParseDoubleSafe(reader["Chamber_mm"]);
                 fullRecord.Electric = ParseDoubleSafe(reader["Electric_IACS"]);
@@ -380,6 +380,17 @@ namespace WpfApp1.Data.Repositories
             if (value is long l) return (double)l;
             if (value is string s && double.TryParse(s, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double result)) return result;
             return 0.0;
+        }
+
+        private int ParseIntSafe(object value)
+        {
+            if (value == null || value == System.DBNull.Value) return 0;
+            if (value is long l) return (int)l;
+            if (value is int i) return i;
+            if (value is string s && int.TryParse(s, out int result)) return result;
+            if (value is double d) return (int)d;
+            if (value is float f) return (int)f;
+            return 0;
         }
 
         public System.Collections.Generic.List<string> GetAvailableYears()

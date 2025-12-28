@@ -13,7 +13,7 @@ namespace WpfApp1.Core.Services
 
         private BusbarRepository _repository;
 
-        public event System.Action<string> OnDebugMessage;
+        public event System.Action<string> ? OnDebugMessage;
 
         public ExcelImportService(BusbarRepository repository)
         {
@@ -125,7 +125,7 @@ namespace WpfApp1.Core.Services
                         record.Spectro = StringHelper.ParseCustomDecimal(sheet_YLB.Cell(row, "Y").GetString());
                         record.Resistivity = StringHelper.ParseCustomDecimal(sheet_YLB.Cell(row, "T").GetString());
 
-                        record.Length = System.Math.Round(StringHelper.ParseCustomDecimal(sheet_YLB.Cell(row, "K").GetString()), 0);
+                        record.Length = (int)System.Math.Round(StringHelper.ParseCustomDecimal(sheet_YLB.Cell(row, "K").GetString()), 0);
 
                         record.Elongation = System.Math.Round(MathHelper.GetMergedOrAverageValue(sheet_YLB, row, "R"), 2);
                         record.Tensile = System.Math.Round(MathHelper.GetMergedOrAverageValue(sheet_YLB, row, "Q"), 2);

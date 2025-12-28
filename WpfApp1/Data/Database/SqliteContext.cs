@@ -10,8 +10,7 @@ namespace WpfApp1.Data.Database
 
         public void EnsureDatabaseFolderExists()
         {
-            string folder = System.IO.Path.GetDirectoryName(DbPath);
-
+            string? folder = System.IO.Path.GetDirectoryName(DbPath);
             if (!string.IsNullOrEmpty(folder) && !System.IO.Directory.Exists(folder))
             {
                 System.IO.Directory.CreateDirectory(folder);
@@ -28,7 +27,6 @@ namespace WpfApp1.Data.Database
                 pragmaCmd.CommandText = "PRAGMA synchronous = OFF; PRAGMA journal_mode = MEMORY;";
                 pragmaCmd.ExecuteNonQuery();
             }
-
             return conn;
         }
     }
