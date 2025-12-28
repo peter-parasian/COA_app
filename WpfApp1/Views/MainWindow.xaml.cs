@@ -1,10 +1,10 @@
 ﻿using System.Threading.Tasks;
 using System.Windows;
-using MahApps.Metro.Controls; 
+using MahApps.Metro.Controls;
 
 namespace WpfApp1.Views
 {
-    public partial class MainWindow : MetroWindow 
+    public partial class MainWindow : MetroWindow
     {
         private WpfApp1.ViewModels.MainViewModel _viewModel;
 
