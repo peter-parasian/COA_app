@@ -229,11 +229,11 @@
 
                         <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                             <StackPanel VerticalAlignment="Center" Margin="0,0,25,0">
-                                <TextBlock Text="FILTER DATA" 
+                                <TextBlock Text="DATA FILTER" 
                                            FontSize="14"
                                            FontWeight="Bold" 
                                            Foreground="#28A745"/>
-                                <TextBlock Text="Pencarian Database"
+                                <TextBlock Text="DATABASE SEARCH"
                                            FontSize="11"
                                            Foreground="#6C757D"/>
                             </StackPanel>
@@ -241,7 +241,7 @@
                             <Border Width="1" Height="35" Background="#CED4DA" Margin="0,0,20,0"/>
 
                             <StackPanel Margin="0,0,15,0" VerticalAlignment="Center">
-                                <TextBlock Text="Tahun" FontSize="11" FontWeight="SemiBold" Foreground="#6C757D" Margin="0,0,0,4"/>
+                                <TextBlock Text="YEAR" FontSize="11" FontWeight="SemiBold" Foreground="#6C757D" Margin="0,0,0,4"/>
                                 <ComboBox Width="110" SelectedIndex="0" Style="{StaticResource MahApps.Styles.ComboBox}">
                                     <ComboBoxItem Content="2025"/>
                                     <ComboBoxItem Content="2024"/>
@@ -249,7 +249,7 @@
                             </StackPanel>
 
                             <StackPanel Margin="0,0,15,0" VerticalAlignment="Center">
-                                <TextBlock Text="Bulan" FontSize="11" FontWeight="SemiBold" Foreground="#6C757D" Margin="0,0,0,4"/>
+                                <TextBlock Text="MONTH" FontSize="11" FontWeight="SemiBold" Foreground="#6C757D" Margin="0,0,0,4"/>
                                 <ComboBox Width="140" SelectedIndex="0" Style="{StaticResource MahApps.Styles.ComboBox}">
                                     <ComboBoxItem Content="Januari"/>
                                     <ComboBoxItem Content="Februari"/>
@@ -258,7 +258,7 @@
                             </StackPanel>
 
                             <StackPanel Margin="0,0,20,0" VerticalAlignment="Center">
-                                <TextBlock Text="Tanggal Produksi" FontSize="11" FontWeight="SemiBold" Foreground="#6C757D" Margin="0,0,0,4"/>
+                                <TextBlock Text="PRODUCTION DATE" FontSize="11" FontWeight="SemiBold" Foreground="#6C757D" Margin="0,0,0,4"/>
                                 <DatePicker Width="160" Style="{StaticResource MahApps.Styles.DatePicker}"/>
                             </StackPanel>
 
@@ -322,7 +322,7 @@
                                 Padding="20,15"
                                 BorderThickness="0,0,0,1"
                                 BorderBrush="#E9ECEF">
-                            <TextBlock Text="HASIL PENCARIAN DATABASE" 
+                            <TextBlock Text="SEARCH RESULTS" 
                                        FontWeight="Bold" 
                                        FontSize="14"
                                        Foreground="#343A40"/>
@@ -335,7 +335,10 @@
                                   HeadersVisibility="Column"
                                   IsReadOnly="True">
                             <DataGrid.Columns>
-                                <DataGridTemplateColumn Header="AKSI" Width="60">
+                                <DataGridTextColumn Header="NO" Width="*" Binding="{Binding PartName}"/>
+                                <DataGridTextColumn Header="SIZE" Width="1.5*" Binding="{Binding Specification}"/>
+                                <DataGridTextColumn Header="PRODUCTION DATE" Width="120" Binding="{Binding DateProd}"/>
+                                <DataGridTemplateColumn Header="ADD" Width="60">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <Button Content="+" 
@@ -352,10 +355,7 @@
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
-                                <DataGridTextColumn Header="Part Name" Width="*" Binding="{Binding PartName}"/>
-                                <DataGridTextColumn Header="Spesifikasi" Width="1.5*" Binding="{Binding Specification}"/>
-                                <DataGridTextColumn Header="Qty" Width="80" Binding="{Binding Quantity}"/>
-                                <DataGridTextColumn Header="Tanggal" Width="120" Binding="{Binding DateProd}"/>
+
                             </DataGrid.Columns>
                         </DataGrid>
                     </DockPanel>
@@ -374,11 +374,11 @@
                                 BorderBrush="#E9ECEF">
                             <Grid>
                                 <StackPanel Orientation="Vertical">
-                                    <TextBlock Text="DAFTAR EXPORT" 
+                                    <TextBlock Text="EXPORT LIST" 
                                                FontWeight="Bold" 
                                                FontSize="14"
                                                Foreground="#28A745"/>
-                                    <TextBlock Text="Item Siap Diproses"
+                                    <TextBlock Text="Items Ready for Processing"
                                                FontSize="11"
                                                Foreground="#6C757D"/>
                                 </StackPanel>
@@ -402,10 +402,10 @@
                                   HeadersVisibility="Column"
                                   IsReadOnly="True">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="Part Name" Width="*" Binding="{Binding PartName}"/>
-                                <DataGridTextColumn Header="Qty" Width="60" Binding="{Binding Quantity}"/>
-
-                                <DataGridTemplateColumn Header="HAPUS" Width="60">
+                                <DataGridTextColumn Header="NO" Width="*" Binding="{Binding PartName}"/>
+                                <DataGridTextColumn Header="SIZE" Width="60" Binding="{Binding Quantity}"/>
+                                <DataGridTextColumn Header="PRODUCTION DATE" Width="60" Binding="{Binding Quantity}"/>
+                                <DataGridTemplateColumn Header="DELETE" Width="60">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <Button Content="×" 
