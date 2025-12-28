@@ -1,33 +1,31 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using System.Windows;
-using WpfApp1.ViewModels;
 
 namespace WpfApp1.Views
 {
-    public partial class MainWindow : Window
+    public partial class MainWindow : System.Windows.Window
     {
-        private MainViewModel _viewModel;
+        private WpfApp1.ViewModels.MainViewModel _viewModel;
 
         public MainWindow()
         {
             InitializeComponent();
 
-            _viewModel = new MainViewModel();
+            _viewModel = new WpfApp1.ViewModels.MainViewModel();
 
             this.DataContext = _viewModel;
 
             _viewModel.OnShowMessage += (msg) =>
             {
-                MessageBox.Show(
+                System.Windows.MessageBox.Show(
                     msg,
                     "Informasi Sistem",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Information);
             };
         }
 
-        private async void ButtonMode1_Click(object sender, RoutedEventArgs e)
+        private async void ButtonMode1_Click(object sender, System.Windows.RoutedEventArgs e)
         {
             if (_viewModel.IsBusy) return;
 
@@ -35,26 +33,26 @@ namespace WpfApp1.Views
             {
                 _viewModel.IsBusy = true;
 
-                await Task.Run(() =>
+                await System.Threading.Tasks.Task.Run(() =>
                 {
                     try
                     {
                         _viewModel.ImportExcelToSQLite();
                     }
-                    catch (Exception ex)
+                    catch (System.Exception ex)
                     {
                         this.Dispatcher.Invoke(() =>
                         {
-                            MessageBox.Show(
+                            System.Windows.MessageBox.Show(
                                 $"ERROR FATAL:\n{ex.Message}\n\nStack Trace:\n{ex.StackTrace}",
                                 "Import Gagal",
-                                MessageBoxButton.OK,
-                                MessageBoxImage.Error);
+                                System.Windows.MessageBoxButton.OK,
+                                System.Windows.MessageBoxImage.Error);
                         });
                     }
                 });
 
-                // Logika yang diminta: Setelah import selesai (dan popup ditutup), ganti ke halaman kosong
+                // Set flag to show BlankPagePanel after import
                 _viewModel.ShowBlankPage = true;
             }
             finally
@@ -63,22 +61,22 @@ namespace WpfApp1.Views
             }
         }
 
-        private void ButtonMode2_Click(object sender, RoutedEventArgs e)
+        private void ButtonMode2_Click(object sender, System.Windows.RoutedEventArgs e)
         {
             _viewModel.ButtonMode2_Click();
         }
 
-        private void ButtonMode3_Click(object sender, RoutedEventArgs e)
+        private void ButtonMode3_Click(object sender, System.Windows.RoutedEventArgs e)
         {
             _viewModel.ButtonMode3_Click();
         }
 
-        private void ButtonMode4_Click(object sender, RoutedEventArgs e)
+        private void ButtonMode4_Click(object sender, System.Windows.RoutedEventArgs e)
         {
             _viewModel.ButtonMode4_Click();
         }
 
-        private void ButtonBack_Click(object sender, RoutedEventArgs e)
+        private void ButtonBack_Click(object sender, System.Windows.RoutedEventArgs e)
         {
             _viewModel.BackToMenu();
         }

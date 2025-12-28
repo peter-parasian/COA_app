@@ -1,45 +1,71 @@
 ﻿<Window x:Class="WpfApp1.Views.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WpfApp1"
+        mc:Ignorable="d"
         Title="Indowire Plant 2 - Quality Control System"
         MinWidth="1000"
-        MinHeight="600"
-        Background="#F8F9FA"
+        MinHeight="700"
+        Background="#F4F7F6"
+        FontFamily="Segoe UI"
         WindowState="Maximized">
 
     <Window.Resources>
+        <!-- COLORS -->
         <SolidColorBrush x:Key="PrimaryGreen" Color="#28A745"/>
+        <SolidColorBrush x:Key="PrimaryGreenHover" Color="#218838"/>
         <SolidColorBrush x:Key="PrimaryOrange" Color="#FD7E14"/>
-        <SolidColorBrush x:Key="LightGray" Color="#F8F9FA"/>
+
+        <!-- Warna Merah untuk efek ditekan -->
+        <SolidColorBrush x:Key="PressedRed" Color="#DC3545"/>
+
+        <!-- Alias untuk mendukung MainMenuPanel lama -->
         <SolidColorBrush x:Key="DarkGray" Color="#343A40"/>
+        <SolidColorBrush x:Key="LightGray" Color="#F8F9FA"/>
+
+        <SolidColorBrush x:Key="TextDark" Color="#343A40"/>
+        <SolidColorBrush x:Key="TextLight" Color="#6C757D"/>
+        <SolidColorBrush x:Key="BorderColor" Color="#CED4DA"/>
+        <SolidColorBrush x:Key="PanelBackground" Color="#FFFFFF"/>
         <SolidColorBrush x:Key="BorderGray" Color="#DEE2E6"/>
 
+        <!-- BUTTON STYLE (Updated sesuai request) -->
         <Style x:Key="IndowireButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="{StaticResource PrimaryGreen}"/>
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Padding" Value="15,8"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="border" 
                                 Background="{TemplateBinding Background}"
-                                CornerRadius="8"
-                                Padding="10">
+                                CornerRadius="6"
+                                Padding="{TemplateBinding Padding}"
+                                Effect="{DynamicResource BtnShadow}">
                             <ContentPresenter HorizontalAlignment="Center" 
                                             VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
+                            <!-- HOVER: Berubah menjadi ORANGE -->
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="border" Property="Background" Value="{StaticResource PrimaryOrange}"/>
                             </Trigger>
+
+                            <!-- PRESSED: Berubah menjadi MERAH -->
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#E56A00"/>
+                                <Setter TargetName="border" Property="Background" Value="{StaticResource PressedRed}"/>
+                                <Setter TargetName="border" Property="Effect" Value="{x:Null}"/>
                             </Trigger>
+
                             <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="border" Property="Background" Value="#6C757D"/>
-                                <Setter TargetName="border" Property="Opacity" Value="0.6"/>
+                                <Setter TargetName="border" Property="Background" Value="#E2E6EA"/>
+                                <Setter Property="Foreground" Value="#ADB5BD"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -47,17 +73,247 @@
             </Setter>
         </Style>
 
-        <Style TargetType="DataGridColumnHeader">
-            <Setter Property="Padding" Value="10,8"/>
-            <Setter Property="Background" Value="#E9ECEF"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="BorderBrush" Value="#DEE2E6"/>
-            <Setter Property="BorderThickness" Value="0,0,1,1"/>
+        <!-- BACK BUTTON STYLE (Updated sesuai request) -->
+        <Style x:Key="BackButtonEffect" TargetType="Button" BasedOn="{StaticResource IndowireButtonStyle}">
+            <Setter Property="Background" Value="#6C757D"/>
+            <!-- Awalnya Abu-abu -->
+            <Style.Triggers>
+                <!-- Hover Tetap Orange -->
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{StaticResource PrimaryOrange}"/>
+                </Trigger>
+            </Style.Triggers>
         </Style>
+
+        <!-- SHADOW EFFECT -->
+        <DropShadowEffect x:Key="CardShadow" BlurRadius="10" ShadowDepth="2" Direction="270" Color="#000000" Opacity="0.05"/>
+        <DropShadowEffect x:Key="BtnShadow" BlurRadius="4" ShadowDepth="1" Direction="270" Color="#000000" Opacity="0.15"/>
+
+        <!-- MODERN COMBOBOX -->
+        <Style x:Key="ModernComboBox" TargetType="ComboBox">
+            <Setter Property="Padding" Value="10,6"/>
+            <Setter Property="Height" Value="38"/>
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderColor}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Foreground" Value="{StaticResource TextDark}"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="30"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Border x:Name="Border" Grid.ColumnSpan="2"
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    CornerRadius="4"/>
+
+                            <ContentPresenter Grid.Column="0"
+                                              Content="{TemplateBinding SelectionBoxItem}"
+                                              ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                              IsHitTestVisible="False"
+                                              VerticalAlignment="Center"
+                                              Margin="10,0,0,0"/>
+
+                            <Path Grid.Column="1" 
+                                  Data="M 0 0 L 4 4 L 8 0 Z" 
+                                  Fill="{StaticResource TextLight}"
+                                  HorizontalAlignment="Center" 
+                                  VerticalAlignment="Center"
+                                  IsHitTestVisible="False"/>
+
+                            <ToggleButton Grid.ColumnSpan="2" 
+                                          Background="Transparent" 
+                                          BorderThickness="0"
+                                          Focusable="False"
+                                          IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border Background="Transparent"/>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                            </ToggleButton>
+
+                            <Popup x:Name="Popup" 
+                                   IsOpen="{TemplateBinding IsDropDownOpen}"
+                                   Placement="Bottom"
+                                   AllowsTransparency="True" 
+                                   PopupAnimation="Slide">
+                                <Border x:Name="DropDownBorder"
+                                        Background="White"
+                                        BorderThickness="1"
+                                        BorderBrush="{StaticResource PrimaryGreen}"
+                                        CornerRadius="4"
+                                        MinWidth="{Binding ActualWidth, ElementName=Border}"
+                                        MaxHeight="{TemplateBinding MaxDropDownHeight}"
+                                        Margin="0,2,0,0">
+                                    <Border.Effect>
+                                        <DropShadowEffect BlurRadius="5" ShadowDepth="2" Opacity="0.1"/>
+                                    </Border.Effect>
+                                    <ScrollViewer SnapsToDevicePixels="True">
+                                        <StackPanel IsItemsHost="True" />
+                                    </ScrollViewer>
+                                </Border>
+                            </Popup>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Border" Property="BorderBrush" Value="{StaticResource PrimaryGreen}"/>
+                            </Trigger>
+                            <Trigger Property="IsDropDownOpen" Value="True">
+                                <Setter TargetName="Border" Property="BorderBrush" Value="{StaticResource PrimaryGreen}"/>
+                                <Setter TargetName="Border" Property="Background" Value="#F8FDF9"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- MODERN DATEPICKER -->
+        <Style x:Key="ModernDatePicker" TargetType="DatePicker">
+            <Setter Property="Height" Value="38"/>
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderColor}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10,0"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="CalendarStyle">
+                <Setter.Value>
+                    <Style TargetType="Calendar">
+                        <Setter Property="Background" Value="White"/>
+                        <Setter Property="BorderBrush" Value="{StaticResource PrimaryGreen}"/>
+                        <Setter Property="BorderThickness" Value="1"/>
+                    </Style>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DatePicker">
+                        <Border x:Name="Border"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="4">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="30"/>
+                                </Grid.ColumnDefinitions>
+
+                                <DatePickerTextBox x:Name="PART_TextBox" 
+                                                 Grid.Column="0"
+                                                 Background="Transparent" 
+                                                 BorderThickness="0"
+                                                 VerticalAlignment="Center"
+                                                 Padding="{TemplateBinding Padding}"
+                                                 IsReadOnly="True"/>
+
+                                <Button x:Name="PART_Button" 
+                                        Grid.Column="1"
+                                        Width="30"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        Cursor="Hand">
+                                    <Path Data="M0,0 H14 V14 H0 Z M2,4 H12 M2,7 H12 M2,10 H12 M5,2 V12 M9,2 V12" 
+                                          Stroke="{StaticResource TextLight}" 
+                                          StrokeThickness="1.5"
+                                          HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"/>
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border Background="Transparent">
+                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                </Button>
+
+                                <Popup x:Name="PART_Popup" 
+                                       AllowsTransparency="True" 
+                                       Placement="Bottom" 
+                                       StaysOpen="False"/>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Border" Property="BorderBrush" Value="{StaticResource PrimaryGreen}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- DATAGRID STYLE -->
+        <Style TargetType="DataGrid">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="RowHeight" Value="40"/>
+            <Setter Property="GridLinesVisibility" Value="Horizontal"/>
+            <Setter Property="HorizontalGridLinesBrush" Value="#E9ECEF"/>
+            <Setter Property="VerticalGridLinesBrush" Value="Transparent"/>
+            <Setter Property="HeadersVisibility" Value="Column"/>
+            <Setter Property="AutoGenerateColumns" Value="False"/>
+            <Setter Property="CanUserAddRows" Value="False"/>
+            <Setter Property="CanUserReorderColumns" Value="False"/>
+            <Setter Property="CanUserResizeRows" Value="False"/>
+        </Style>
+
+        <Style TargetType="DataGridColumnHeader">
+            <Setter Property="Padding" Value="15,12"/>
+            <Setter Property="Background" Value="#F8F9FA"/>
+            <Setter Property="Foreground" Value="{StaticResource TextDark}"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderColor}"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+        </Style>
+
+        <Style TargetType="DataGridRow">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="Foreground" Value="#495057"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Padding" Value="0,4"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#F1F3F5"/>
+                </Trigger>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="#E8F5E9"/>
+                    <Setter Property="Foreground" Value="#1E7E34"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style TargetType="DataGridCell">
+            <Setter Property="Padding" Value="15,0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridCell">
+                        <Border Padding="{TemplateBinding Padding}" 
+                                Background="Transparent" 
+                                BorderThickness="0">
+                            <ContentPresenter VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
     </Window.Resources>
 
-    <Grid Margin="20">
-        <Grid x:Name="MainMenuPanel">
+    <!-- Main Container Grid -->
+    <Grid Margin="0">
+
+        <!-- MENU UTAMA -->
+        <Grid x:Name="MainMenuPanel" Margin="20">
             <Grid.Style>
                 <Style TargetType="Grid">
                     <Setter Property="Visibility" Value="Visible"/>
@@ -182,7 +438,8 @@
             </Grid>
         </Grid>
 
-        <Grid x:Name="BlankPagePanel">
+        <!-- BLANK PAGE PANEL -->
+        <Grid x:Name="BlankPagePanel" Margin="25">
             <Grid.Style>
                 <Style TargetType="Grid">
                     <Setter Property="Visibility" Value="Collapsed"/>
@@ -200,182 +457,265 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <Grid Grid.Row="0" Margin="0,0,0,15">
+            <!-- ROW 0: Header & Filters -->
+            <Grid Grid.Row="0" Margin="0,0,0,25">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
+                <!-- Modern Back Button -->
                 <Button Click="ButtonBack_Click"
-                        Width="45" Height="45"
-                        Style="{StaticResource IndowireButtonStyle}"
-                        Background="#6C757D"
-                        ToolTip="Kembali ke Menu Utama">
-                    <TextBlock Text="←" FontSize="24" FontWeight="Bold" Margin="0,-4,0,0"/>
+                        Width="50" Height="50"
+                        Style="{StaticResource BackButtonEffect}"
+                        ToolTip="Kembali ke Menu Utama"
+                        Margin="0,0,20,0">
+                    <TextBlock Text="&#xE72B;" FontFamily="Segoe MDL2 Assets" FontSize="20" FontWeight="Bold"/>
                 </Button>
 
-                <Border Grid.Column="1" Margin="15,0,0,0" 
-                        Background="White" 
+                <!-- Modern Filter Card -->
+                <Border Grid.Column="1" 
+                        Background="{StaticResource PanelBackground}" 
                         CornerRadius="8" 
-                        BorderBrush="{StaticResource BorderGray}" 
-                        BorderThickness="1"
-                        Padding="10">
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        Effect="{StaticResource CardShadow}">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="20,15">
 
-                        <TextBlock Text="FILTER DATA:" 
-                                   VerticalAlignment="Center" 
-                                   FontWeight="Bold" 
-                                   Foreground="{StaticResource DarkGray}"
-                                   Margin="0,0,15,0"/>
+                        <StackPanel VerticalAlignment="Center" Margin="0,0,25,0">
+                            <TextBlock Text="FILTER DATA" 
+                                       FontSize="14"
+                                       FontWeight="Bold" 
+                                       Foreground="{StaticResource PrimaryGreen}"/>
+                            <TextBlock Text="Pencarian Database"
+                                       FontSize="11"
+                                       Foreground="{StaticResource TextLight}"/>
+                        </StackPanel>
 
-                        <StackPanel Margin="0,0,10,0">
-                            <TextBlock Text="Tahun" FontSize="10" Foreground="Gray"/>
-                            <ComboBox Width="100" Height="30" SelectedIndex="0">
+                        <Border Width="1" Height="35" Background="{StaticResource BorderColor}" Margin="0,0,20,0"/>
+
+                        <!-- Year -->
+                        <StackPanel Margin="0,0,15,0" VerticalAlignment="Center">
+                            <TextBlock Text="Tahun" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextLight}" Margin="0,0,0,4"/>
+                            <ComboBox Width="110" SelectedIndex="0" Style="{StaticResource ModernComboBox}">
                                 <ComboBoxItem Content="2025"/>
                                 <ComboBoxItem Content="2024"/>
                             </ComboBox>
                         </StackPanel>
 
-                        <StackPanel Margin="0,0,10,0">
-                            <TextBlock Text="Bulan" FontSize="10" Foreground="Gray"/>
-                            <ComboBox Width="120" Height="30" SelectedIndex="0">
+                        <!-- Month -->
+                        <StackPanel Margin="0,0,15,0" VerticalAlignment="Center">
+                            <TextBlock Text="Bulan" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextLight}" Margin="0,0,0,4"/>
+                            <ComboBox Width="140" SelectedIndex="0" Style="{StaticResource ModernComboBox}">
                                 <ComboBoxItem Content="Januari"/>
                                 <ComboBoxItem Content="Februari"/>
                                 <ComboBoxItem Content="Maret"/>
                             </ComboBox>
                         </StackPanel>
 
-                        <StackPanel Margin="0,0,10,0">
-                            <TextBlock Text="Tanggal Produksi" FontSize="10" Foreground="Gray"/>
-                            <DatePicker Width="150" Height="30"/>
+                        <!-- Date -->
+                        <StackPanel Margin="0,0,20,0" VerticalAlignment="Center">
+                            <TextBlock Text="Tanggal Produksi" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextLight}" Margin="0,0,0,4"/>
+                            <DatePicker Width="160" Style="{StaticResource ModernDatePicker}"/>
                         </StackPanel>
 
-                        <Border Width="1" Height="30" Background="{StaticResource BorderGray}" Margin="10,0"/>
-
                         <Button Content="CARI DATA" 
-                                Width="120" Height="35"
-                                FontSize="12" FontWeight="Bold"
+                                Width="130" Height="38"
+                                FontSize="12"
                                 Style="{StaticResource IndowireButtonStyle}"
-                                Margin="10,0,0,0"/>
+                                VerticalAlignment="Bottom"/>
                     </StackPanel>
                 </Border>
             </Grid>
 
+            <!-- ROW 1: Content Grids -->
             <Grid Grid.Row="1">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="2*"/>
-                    <ColumnDefinition Width="15"/>
+                    <ColumnDefinition Width="2.2*"/>
+                    <ColumnDefinition Width="25"/>
                     <ColumnDefinition Width="1*"/>
                 </Grid.ColumnDefinitions>
 
-                <DockPanel Grid.Column="0">
-                    <TextBlock DockPanel.Dock="Top" 
-                               Text="HASIL PENCARIAN DATABASE" 
-                               FontWeight="Bold" 
-                               Foreground="{StaticResource DarkGray}" 
-                               Margin="0,0,0,5"/>
-
-                    <DataGrid x:Name="GridSearchResults"
-                              AutoGenerateColumns="False"
-                              CanUserAddRows="False"
-                              HeadersVisibility="Column"
-                              GridLinesVisibility="Horizontal"
-                              Background="White"
-                              BorderBrush="{StaticResource BorderGray}"
-                              BorderThickness="1"
-                              AlternatingRowBackground="#F8F9FA"
-                              RowHeight="35">
-                        <DataGrid.Columns>
-                            <DataGridTemplateColumn Header="ADD" Width="50">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <Button Content="+" 
-                                                Width="30" Height="25"
-                                                Background="{StaticResource PrimaryGreen}"
-                                                Foreground="White"
-                                                BorderThickness="0"
-                                                Cursor="Hand"
-                                                ToolTip="Tambahkan ke daftar sementara"/>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-
-                            <DataGridTextColumn Header="Part Name" Width="*" Binding="{Binding PartName}"/>
-                            <DataGridTextColumn Header="Spesifikasi" Width="1.5*" Binding="{Binding Specification}"/>
-                            <DataGridTextColumn Header="Qty" Width="60" Binding="{Binding Quantity}"/>
-                            <DataGridTextColumn Header="Tanggal" Width="100" Binding="{Binding DateProd}"/>
-                        </DataGrid.Columns>
-                    </DataGrid>
-                </DockPanel>
-
-                <DockPanel Grid.Column="2">
-                    <Grid DockPanel.Dock="Top" Margin="0,0,0,5">
-                        <TextBlock Text="DAFTAR SIAP EXPORT" 
-                                   FontWeight="Bold" 
-                                   Foreground="{StaticResource PrimaryGreen}" 
-                                   VerticalAlignment="Center"/>
-
-                        <Border HorizontalAlignment="Right" 
-                                Background="{StaticResource PrimaryOrange}" 
-                                CornerRadius="10" 
-                                Padding="8,2">
-                            <TextBlock Text="0 Item" 
-                                       Foreground="White" 
-                                       FontSize="11" 
-                                       FontWeight="Bold"/>
+                <!-- Left: Search Results -->
+                <Border Grid.Column="0" 
+                        Background="{StaticResource PanelBackground}" 
+                        CornerRadius="8" 
+                        Effect="{StaticResource CardShadow}"
+                        Padding="0">
+                    <DockPanel>
+                        <Border DockPanel.Dock="Top" 
+                                Background="Transparent" 
+                                Padding="20,15"
+                                BorderThickness="0,0,0,1"
+                                BorderBrush="#E9ECEF">
+                            <TextBlock Text="HASIL PENCARIAN DATABASE" 
+                                       FontWeight="Bold" 
+                                       FontSize="14"
+                                       Foreground="{StaticResource TextDark}"/>
                         </Border>
-                    </Grid>
 
-                    <DataGrid x:Name="GridBasket"
-                              AutoGenerateColumns="False"
-                              CanUserAddRows="False"
-                              HeadersVisibility="Column"
-                              Background="White"
-                              BorderBrush="{StaticResource PrimaryGreen}"
-                              BorderThickness="1">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="Part Name" Width="*" Binding="{Binding PartName}"/>
-                            <DataGridTextColumn Header="Qty" Width="50" Binding="{Binding Quantity}"/>
+                        <DataGrid x:Name="GridSearchResults"
+                                  BorderThickness="0"
+                                  Margin="1">
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn Header="AKSI" Width="60">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Content="+" 
+                                                    Width="30" Height="26"
+                                                    Background="{StaticResource PrimaryGreen}"
+                                                    Foreground="White"
+                                                    FontSize="16"
+                                                    Padding="0,-2,0,0"
+                                                    BorderThickness="0"
+                                                    Cursor="Hand"
+                                                    ToolTip="Tambahkan ke daftar">
+                                                <Button.Style>
+                                                    <Style TargetType="Button">
+                                                        <Setter Property="Template">
+                                                            <Setter.Value>
+                                                                <ControlTemplate TargetType="Button">
+                                                                    <Border Background="{TemplateBinding Background}" CornerRadius="4">
+                                                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                                    </Border>
+                                                                    <ControlTemplate.Triggers>
+                                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                                            <Setter Property="Opacity" Value="0.8"/>
+                                                                        </Trigger>
+                                                                    </ControlTemplate.Triggers>
+                                                                </ControlTemplate>
+                                                            </Setter.Value>
+                                                        </Setter>
+                                                    </Style>
+                                                </Button.Style>
+                                            </Button>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
 
-                            <DataGridTemplateColumn Header="DEL" Width="40">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <Button Content="x" 
-                                                Width="25" Height="25"
-                                                Background="#DC3545"
-                                                Foreground="White"
-                                                BorderThickness="0"
-                                                Cursor="Hand"/>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                        </DataGrid.Columns>
-                    </DataGrid>
-                </DockPanel>
+                                <DataGridTextColumn Header="Part Name" Width="*" Binding="{Binding PartName}"/>
+                                <DataGridTextColumn Header="Spesifikasi" Width="1.5*" Binding="{Binding Specification}"/>
+                                <DataGridTextColumn Header="Qty" Width="80" Binding="{Binding Quantity}"/>
+                                <DataGridTextColumn Header="Tanggal" Width="120" Binding="{Binding DateProd}"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
+                </Border>
+
+                <!-- Right: Basket -->
+                <Border Grid.Column="2" 
+                        Background="{StaticResource PanelBackground}" 
+                        CornerRadius="8" 
+                        Effect="{StaticResource CardShadow}">
+                    <DockPanel>
+                        <Border DockPanel.Dock="Top" 
+                                Padding="15" 
+                                Background="Transparent"
+                                BorderThickness="0,0,0,1"
+                                BorderBrush="#E9ECEF">
+                            <Grid>
+                                <StackPanel Orientation="Vertical">
+                                    <TextBlock Text="DAFTAR EXPORT" 
+                                               FontWeight="Bold" 
+                                               FontSize="14"
+                                               Foreground="{StaticResource PrimaryGreen}"/>
+                                    <TextBlock Text="Item Siap Diproses"
+                                               FontSize="11"
+                                               Foreground="{StaticResource TextLight}"/>
+                                </StackPanel>
+                                <Border HorizontalAlignment="Right" 
+                                        VerticalAlignment="Top"
+                                        Background="{StaticResource PrimaryOrange}" 
+                                        CornerRadius="10" 
+                                        Padding="10,4">
+                                    <TextBlock Text="0 Item" 
+                                               Foreground="White" 
+                                               FontSize="11" 
+                                               FontWeight="Bold"/>
+                                </Border>
+                            </Grid>
+                        </Border>
+
+                        <DataGrid x:Name="GridBasket"
+                                  BorderThickness="0">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Part Name" Width="*" Binding="{Binding PartName}"/>
+                                <DataGridTextColumn Header="Qty" Width="60" Binding="{Binding Quantity}"/>
+
+                                <DataGridTemplateColumn Header="HAPUS" Width="60">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Content="×" 
+                                                    Width="26" Height="26"
+                                                    Background="#DC3545"
+                                                    Foreground="White"
+                                                    FontSize="18"
+                                                    Padding="0,-3,0,0"
+                                                    BorderThickness="0"
+                                                    Cursor="Hand">
+                                                <Button.Style>
+                                                    <Style TargetType="Button">
+                                                        <Setter Property="Template">
+                                                            <Setter.Value>
+                                                                <ControlTemplate TargetType="Button">
+                                                                    <Border Background="{TemplateBinding Background}" CornerRadius="13">
+                                                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                                    </Border>
+                                                                    <ControlTemplate.Triggers>
+                                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                                            <Setter Property="Opacity" Value="0.8"/>
+                                                                        </Trigger>
+                                                                    </ControlTemplate.Triggers>
+                                                                </ControlTemplate>
+                                                            </Setter.Value>
+                                                        </Setter>
+                                                    </Style>
+                                                </Button.Style>
+                                            </Button>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
+                </Border>
             </Grid>
 
-            <Grid Grid.Row="2" Margin="0,15,0,0">
+            <!-- ROW 2: Bottom Status & Actions -->
+            <Grid Grid.Row="2" Margin="0,20,0,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="Status:" FontWeight="Bold" Foreground="Gray" Margin="0,0,5,0"/>
-                    <TextBlock Text="Menunggu input user..." Foreground="{StaticResource DarkGray}"/>
-                </StackPanel>
+                <Border Grid.Column="0" 
+                        Background="{StaticResource PanelBackground}" 
+                        CornerRadius="6" 
+                        BorderBrush="{StaticResource BorderColor}"
+                        BorderThickness="1"
+                        Padding="15,0"
+                        Height="45"
+                        VerticalAlignment="Center"
+                        Margin="0,0,20,0">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Path Data="M11,9H13V7H11M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z" 
+                              Fill="{StaticResource PrimaryOrange}"
+                              Height="16" Width="16" Margin="0,0,10,0"/>
+                        <TextBlock Text="Status System:" FontWeight="Bold" Foreground="{StaticResource TextLight}" Margin="0,0,5,0"/>
+                        <TextBlock Text="Menunggu input user..." Foreground="{StaticResource TextDark}" FontWeight="SemiBold"/>
+                    </StackPanel>
+                </Border>
 
                 <Button Grid.Column="1"
                         Content="GENERATE EXCEL"
-                        Width="200" Height="45"
-                        FontSize="14" FontWeight="Bold"
+                        Width="220" Height="50"
+                        FontSize="14"
                         Style="{StaticResource IndowireButtonStyle}"
                         Background="#217346" 
                         ToolTip="Export data terpilih ke Excel">
+                    <Button.Effect>
+                        <DropShadowEffect BlurRadius="8" ShadowDepth="2" Opacity="0.2"/>
+                    </Button.Effect>
                 </Button>
             </Grid>
-
         </Grid>
-
     </Grid>
 </Window>
