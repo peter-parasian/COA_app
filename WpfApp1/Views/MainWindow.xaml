@@ -3,18 +3,18 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:WpfApp1"
         Title="Indowire Plant 2 - Quality Control System"
-        MinWidth="700"
-        MinHeight="450"
-        Background="#F8F9FA">
+        MinWidth="1000"
+        MinHeight="600"
+        Background="#F8F9FA"
+        WindowState="Maximized">
 
     <Window.Resources>
-        <!-- TEMA WARNA INDOWIRE PLANT 2 -->
         <SolidColorBrush x:Key="PrimaryGreen" Color="#28A745"/>
         <SolidColorBrush x:Key="PrimaryOrange" Color="#FD7E14"/>
         <SolidColorBrush x:Key="LightGray" Color="#F8F9FA"/>
         <SolidColorBrush x:Key="DarkGray" Color="#343A40"/>
+        <SolidColorBrush x:Key="BorderGray" Color="#DEE2E6"/>
 
-        <!-- STYLE BUTTON DENGAN HOVER EFFECT -->
         <Style x:Key="IndowireButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="{StaticResource PrimaryGreen}"/>
             <Setter Property="Foreground" Value="White"/>
@@ -46,10 +46,17 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <Style TargetType="DataGridColumnHeader">
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="Background" Value="#E9ECEF"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="BorderBrush" Value="#DEE2E6"/>
+            <Setter Property="BorderThickness" Value="0,0,1,1"/>
+        </Style>
     </Window.Resources>
 
     <Grid Margin="20">
-        <!-- PANEL 1: MENU UTAMA (Original Content) -->
         <Grid x:Name="MainMenuPanel">
             <Grid.Style>
                 <Style TargetType="Grid">
@@ -68,7 +75,6 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <!-- HEADER: Logo + Nama Perusahaan -->
             <Viewbox Stretch="Uniform" Height="80">
                 <StackPanel Orientation="Horizontal"
                             VerticalAlignment="Center"
@@ -87,16 +93,14 @@
                 </StackPanel>
             </Viewbox>
 
-            <!-- SLOGAN -->
             <TextBlock Grid.Row="1"
-                       Text="SUPER TEAM"
-                       FontSize="22"
-                       FontWeight="SemiBold"
-                       Foreground="{StaticResource PrimaryOrange}"
-                       HorizontalAlignment="Center"
-                       Margin="0,5,0,20"/>
+                        Text="SUPER TEAM"
+                        FontSize="22"
+                        FontWeight="SemiBold"
+                        Foreground="{StaticResource PrimaryOrange}"
+                        HorizontalAlignment="Center"
+                        Margin="0,5,0,20"/>
 
-            <!-- BUTTON AREA -->
             <Grid Grid.Row="2">
                 <Grid.RowDefinitions>
                     <RowDefinition/>
@@ -107,7 +111,6 @@
                     <ColumnDefinition/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Button 1 -->
                 <Button Grid.Row="0" Grid.Column="0" 
                         Margin="10" 
                         Click="ButtonMode1_Click"
@@ -126,7 +129,6 @@
                     </Viewbox>
                 </Button>
 
-                <!-- Button 2 -->
                 <Button Grid.Row="0" Grid.Column="1" 
                         Margin="10" 
                         Click="ButtonMode2_Click"
@@ -144,7 +146,6 @@
                     </Viewbox>
                 </Button>
 
-                <!-- Button 3 -->
                 <Button Grid.Row="1" Grid.Column="0" 
                         Margin="10" 
                         Click="ButtonMode3_Click"
@@ -162,7 +163,6 @@
                     </Viewbox>
                 </Button>
 
-                <!-- Button 4 -->
                 <Button Grid.Row="1" Grid.Column="1" 
                         Margin="10" 
                         Click="ButtonMode4_Click"
@@ -182,7 +182,6 @@
             </Grid>
         </Grid>
 
-        <!-- PANEL 2: HALAMAN KOSONG (Blank Page) -->
         <Grid x:Name="BlankPagePanel">
             <Grid.Style>
                 <Style TargetType="Grid">
@@ -195,22 +194,187 @@
                 </Style>
             </Grid.Style>
 
-            <!-- Content Blank Page -->
-            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                <TextBlock Text="Tampilan Kosong Mode 1"
-                           FontSize="24"
-                           FontWeight="Bold"
-                           Foreground="{StaticResource DarkGray}"
-                           HorizontalAlignment="Center"
-                           Margin="0,0,0,20"/>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
 
-                <Button Content="KEMBALI KE MENU UTAMA"
-                        Click="ButtonBack_Click"
-                        Width="200"
-                        Height="50"
-                        FontSize="16"
-                        Style="{StaticResource IndowireButtonStyle}"/>
-            </StackPanel>
+            <Grid Grid.Row="0" Margin="0,0,0,15">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Button Click="ButtonBack_Click"
+                        Width="45" Height="45"
+                        Style="{StaticResource IndowireButtonStyle}"
+                        Background="#6C757D"
+                        ToolTip="Kembali ke Menu Utama">
+                    <TextBlock Text="←" FontSize="24" FontWeight="Bold" Margin="0,-4,0,0"/>
+                </Button>
+
+                <Border Grid.Column="1" Margin="15,0,0,0" 
+                        Background="White" 
+                        CornerRadius="8" 
+                        BorderBrush="{StaticResource BorderGray}" 
+                        BorderThickness="1"
+                        Padding="10">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+
+                        <TextBlock Text="FILTER DATA:" 
+                                   VerticalAlignment="Center" 
+                                   FontWeight="Bold" 
+                                   Foreground="{StaticResource DarkGray}"
+                                   Margin="0,0,15,0"/>
+
+                        <StackPanel Margin="0,0,10,0">
+                            <TextBlock Text="Tahun" FontSize="10" Foreground="Gray"/>
+                            <ComboBox Width="100" Height="30" SelectedIndex="0">
+                                <ComboBoxItem Content="2025"/>
+                                <ComboBoxItem Content="2024"/>
+                            </ComboBox>
+                        </StackPanel>
+
+                        <StackPanel Margin="0,0,10,0">
+                            <TextBlock Text="Bulan" FontSize="10" Foreground="Gray"/>
+                            <ComboBox Width="120" Height="30" SelectedIndex="0">
+                                <ComboBoxItem Content="Januari"/>
+                                <ComboBoxItem Content="Februari"/>
+                                <ComboBoxItem Content="Maret"/>
+                            </ComboBox>
+                        </StackPanel>
+
+                        <StackPanel Margin="0,0,10,0">
+                            <TextBlock Text="Tanggal Produksi" FontSize="10" Foreground="Gray"/>
+                            <DatePicker Width="150" Height="30"/>
+                        </StackPanel>
+
+                        <Border Width="1" Height="30" Background="{StaticResource BorderGray}" Margin="10,0"/>
+
+                        <Button Content="CARI DATA" 
+                                Width="120" Height="35"
+                                FontSize="12" FontWeight="Bold"
+                                Style="{StaticResource IndowireButtonStyle}"
+                                Margin="10,0,0,0"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition Width="15"/>
+                    <ColumnDefinition Width="1*"/>
+                </Grid.ColumnDefinitions>
+
+                <DockPanel Grid.Column="0">
+                    <TextBlock DockPanel.Dock="Top" 
+                               Text="HASIL PENCARIAN DATABASE" 
+                               FontWeight="Bold" 
+                               Foreground="{StaticResource DarkGray}" 
+                               Margin="0,0,0,5"/>
+
+                    <DataGrid x:Name="GridSearchResults"
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False"
+                              HeadersVisibility="Column"
+                              GridLinesVisibility="Horizontal"
+                              Background="White"
+                              BorderBrush="{StaticResource BorderGray}"
+                              BorderThickness="1"
+                              AlternatingRowBackground="#F8F9FA"
+                              RowHeight="35">
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Header="ADD" Width="50">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Content="+" 
+                                                Width="30" Height="25"
+                                                Background="{StaticResource PrimaryGreen}"
+                                                Foreground="White"
+                                                BorderThickness="0"
+                                                Cursor="Hand"
+                                                ToolTip="Tambahkan ke daftar sementara"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTextColumn Header="Part Name" Width="*" Binding="{Binding PartName}"/>
+                            <DataGridTextColumn Header="Spesifikasi" Width="1.5*" Binding="{Binding Specification}"/>
+                            <DataGridTextColumn Header="Qty" Width="60" Binding="{Binding Quantity}"/>
+                            <DataGridTextColumn Header="Tanggal" Width="100" Binding="{Binding DateProd}"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+
+                <DockPanel Grid.Column="2">
+                    <Grid DockPanel.Dock="Top" Margin="0,0,0,5">
+                        <TextBlock Text="DAFTAR SIAP EXPORT" 
+                                   FontWeight="Bold" 
+                                   Foreground="{StaticResource PrimaryGreen}" 
+                                   VerticalAlignment="Center"/>
+
+                        <Border HorizontalAlignment="Right" 
+                                Background="{StaticResource PrimaryOrange}" 
+                                CornerRadius="10" 
+                                Padding="8,2">
+                            <TextBlock Text="0 Item" 
+                                       Foreground="White" 
+                                       FontSize="11" 
+                                       FontWeight="Bold"/>
+                        </Border>
+                    </Grid>
+
+                    <DataGrid x:Name="GridBasket"
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False"
+                              HeadersVisibility="Column"
+                              Background="White"
+                              BorderBrush="{StaticResource PrimaryGreen}"
+                              BorderThickness="1">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Part Name" Width="*" Binding="{Binding PartName}"/>
+                            <DataGridTextColumn Header="Qty" Width="50" Binding="{Binding Quantity}"/>
+
+                            <DataGridTemplateColumn Header="DEL" Width="40">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Content="x" 
+                                                Width="25" Height="25"
+                                                Background="#DC3545"
+                                                Foreground="White"
+                                                BorderThickness="0"
+                                                Cursor="Hand"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </Grid>
+
+            <Grid Grid.Row="2" Margin="0,15,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="Status:" FontWeight="Bold" Foreground="Gray" Margin="0,0,5,0"/>
+                    <TextBlock Text="Menunggu input user..." Foreground="{StaticResource DarkGray}"/>
+                </StackPanel>
+
+                <Button Grid.Column="1"
+                        Content="GENERATE EXCEL"
+                        Width="200" Height="45"
+                        FontSize="14" FontWeight="Bold"
+                        Style="{StaticResource IndowireButtonStyle}"
+                        Background="#217346" 
+                        ToolTip="Export data terpilih ke Excel">
+                </Button>
+            </Grid>
+
         </Grid>
 
     </Grid>

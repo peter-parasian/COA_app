@@ -32,7 +32,7 @@ namespace WpfApp1.ViewModels
             {
                 _isBusy = value;
                 OnPropertyChanged();
-                OnPropertyChanged(nameof(IsNotBusy)); 
+                OnPropertyChanged(nameof(IsNotBusy));
             }
         }
 
