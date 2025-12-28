@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using WpfApp1.Core.Models;
 using WpfApp1.Shared.Helpers;
+using WpfApp1.Data.Database;
 
 namespace WpfApp1.Data.Repositories
 {
@@ -13,6 +14,13 @@ namespace WpfApp1.Data.Repositories
         private System.Collections.Generic.List<BusbarRecord> _busbarBatchBuffer = new System.Collections.Generic.List<BusbarRecord>();
         private System.Collections.Generic.List<TLJRecord> _tlj350BatchBuffer = new System.Collections.Generic.List<TLJRecord>();
         private System.Collections.Generic.List<TLJRecord> _tlj500BatchBuffer = new System.Collections.Generic.List<TLJRecord>();
+
+        private readonly SqliteContext _dbContext;
+
+        public BusbarRepository(SqliteContext dbContext)
+        {
+            _dbContext = dbContext;
+        }
 
         public void CreateBusbarTable(Microsoft.Data.Sqlite.SqliteConnection connection)
         {
@@ -222,9 +230,9 @@ namespace WpfApp1.Data.Repositories
                     }
                 }
             }
-            catch (System.Exception ex)
+            catch (System.Exception)
             {
-                throw; // Let ViewModel handle logging
+                throw;
             }
         }
 
@@ -304,6 +312,66 @@ namespace WpfApp1.Data.Repositories
             }
 
             return string.Empty;
+        }
+
+        // LOGIKA PENCARIAN: Filter berdasarkan Year, Month, dan Prod_date
+        public System.Collections.Generic.List<BusbarSearchItem> SearchBusbarRecords(string year, string month, string prodDate)
+        {
+            var results = new System.Collections.Generic.List<BusbarSearchItem>();
+
+            using var conn = _dbContext.CreateConnection();
+
+            using var command = conn.CreateCommand();
+            command.CommandText = @"
+                SELECT Id, Size_mm, Prod_date 
+                FROM Busbar 
+                WHERE Year_folder = @year 
+                  AND Month_folder = @month 
+                  AND Prod_date = @prodDate";
+
+            command.Parameters.AddWithValue("@year", year);
+            command.Parameters.AddWithValue("@month", month);
+            command.Parameters.AddWithValue("@prodDate", prodDate);
+
+            using var reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                results.Add(new BusbarSearchItem
+                {
+                    No = reader.GetInt32(0),
+                    Specification = reader.GetString(1),
+                    DateProd = reader.GetString(2)
+                });
+            }
+
+            return results;
+        }
+
+        // METODE UNTUK MENGAMBIL DAFTAR TAHUN UNIK DARI DATABASE
+        public System.Collections.Generic.List<string> GetAvailableYears()
+        {
+            var years = new System.Collections.Generic.List<string>();
+
+            try
+            {
+                using var conn = _dbContext.CreateConnection();
+                using var command = conn.CreateCommand();
+
+                // Ambil tahun yang unik dan urutkan
+                command.CommandText = "SELECT DISTINCT Year_folder FROM Busbar ORDER BY Year_folder DESC";
+
+                using var reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    years.Add(reader.GetString(0));
+                }
+            }
+            catch (System.Exception)
+            {
+                // Return list kosong jika error
+            }
+
+            return years;
         }
     }
 }

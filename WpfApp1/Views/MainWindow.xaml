@@ -70,17 +70,17 @@
         <ControlTemplate x:Key="UpComboBoxControlTemplate" TargetType="ComboBox">
             <Grid>
                 <ToggleButton Name="ToggleButton" 
-                              Grid.Column="2" 
-                              Background="White"
-                              BorderBrush="#DEE2E6"
-                              IsChecked="{Binding Path=IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
-                              ClickMode="Press"
-                              Focusable="false">
+                      Grid.Column="2" 
+                      Background="White"
+                      BorderBrush="#DEE2E6"
+                      IsChecked="{Binding Path=IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                      ClickMode="Press"
+                      Focusable="false">
                     <ToggleButton.Template>
                         <ControlTemplate TargetType="ToggleButton">
                             <Border Background="{TemplateBinding Background}" 
-                                    BorderBrush="{TemplateBinding BorderBrush}" 
-                                    BorderThickness="1">
+                            BorderBrush="{TemplateBinding BorderBrush}" 
+                            BorderThickness="1">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
@@ -95,35 +95,45 @@
                 </ToggleButton>
 
                 <ContentPresenter Name="ContentSite" 
-                                  IsHitTestVisible="False" 
-                                  HorizontalAlignment="Left" 
-                                  VerticalAlignment="Center"
-                                  Margin="5,0,0,0" 
-                                  Content="{TemplateBinding SelectionBoxItem}"
-                                  ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
-                                  ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"/>
+                          IsHitTestVisible="False" 
+                          HorizontalAlignment="Left" 
+                          VerticalAlignment="Center"
+                          Margin="5,0,0,0" 
+                          Content="{TemplateBinding SelectionBoxItem}"
+                          ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                          ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"/>
+
+                <TextBlock x:Name="WatermarkScope"
+                   Text="{Binding Path=(Controls:TextBoxHelper.Watermark), RelativeSource={RelativeSource TemplatedParent}}"
+                   Foreground="{DynamicResource MahApps.Brushes.Text.Watermark}"
+                   FontSize="{TemplateBinding FontSize}"
+                   HorizontalAlignment="Left"
+                   VerticalAlignment="Center"
+                   Margin="5,0,0,0"
+                   IsHitTestVisible="False"
+                   Visibility="Collapsed"/>
 
                 <TextBox Name="PART_EditableTextBox" 
-                         Style="{x:Null}" 
-                         Template="{DynamicResource ComboBoxTextBox}" 
-                         HorizontalAlignment="Left" 
-                         VerticalAlignment="Center" 
-                         Margin="3,3,23,3"
-                         Focusable="True" 
-                         Background="Transparent"
-                         Visibility="Hidden"
-                         IsReadOnly="{TemplateBinding IsReadOnly}"/>
+                 Style="{x:Null}" 
+                 Template="{DynamicResource ComboBoxTextBox}" 
+                 HorizontalAlignment="Left" 
+                 VerticalAlignment="Center" 
+                 Margin="3,3,23,3"
+                 Focusable="True" 
+                 Background="Transparent"
+                 Visibility="Hidden"
+                 IsReadOnly="{TemplateBinding IsReadOnly}"/>
 
                 <Popup Name="Popup" 
-                       Placement="Top" 
-                       IsOpen="{TemplateBinding IsDropDownOpen}" 
-                       AllowsTransparency="True" 
-                       Focusable="False" 
-                       PopupAnimation="Slide">
+               Placement="Top" 
+               IsOpen="{TemplateBinding IsDropDownOpen}" 
+               AllowsTransparency="True" 
+               Focusable="False" 
+               PopupAnimation="Slide">
                     <Grid Name="DropDown" 
-                          SnapsToDevicePixels="True" 
-                          MinWidth="{TemplateBinding ActualWidth}" 
-                          MaxHeight="200">
+                  SnapsToDevicePixels="True" 
+                  MinWidth="{TemplateBinding ActualWidth}" 
+                  MaxHeight="200">
                         <Border Background="White" BorderBrush="#DEE2E6" BorderThickness="1">
                             <ScrollViewer Margin="4,6,4,6" SnapsToDevicePixels="True">
                                 <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Contained"/>
@@ -132,8 +142,16 @@
                     </Grid>
                 </Popup>
             </Grid>
-        </ControlTemplate>
 
+            <ControlTemplate.Triggers>
+                <Trigger Property="SelectedItem" Value="{x:Null}">
+                    <Setter TargetName="WatermarkScope" Property="Visibility" Value="Visible"/>
+                </Trigger>
+                <Trigger Property="SelectedIndex" Value="-1">
+                    <Setter TargetName="WatermarkScope" Property="Visibility" Value="Visible"/>
+                </Trigger>
+            </ControlTemplate.Triggers>
+        </ControlTemplate>
     </Window.Resources>
 
     <Grid Margin="0">
@@ -257,28 +275,37 @@
 
                             <StackPanel Margin="0,0,15,0" VerticalAlignment="Top">
                                 <TextBlock Text="YEAR" FontSize="11" FontWeight="SemiBold" Foreground="#6C757D" Margin="0,0,0,4"/>
-                                <ComboBox MinWidth="80" Width="100" SelectedIndex="0" Style="{StaticResource MahApps.Styles.ComboBox}">
-                                    <ComboBoxItem Content="2025"/>
-                                    <ComboBoxItem Content="2024"/>
-                                </ComboBox>
+                                <ComboBox MinWidth="80" Width="100" 
+                                  ItemsSource="{Binding Years}" 
+                                  SelectedItem="{Binding SelectedYear}"
+                                  Controls:TextBoxHelper.Watermark="Select Year"
+                                  Style="{StaticResource MahApps.Styles.ComboBox}"/>
                             </StackPanel>
 
                             <StackPanel Margin="0,0,15,0" VerticalAlignment="Top">
                                 <TextBlock Text="MONTH" FontSize="11" FontWeight="SemiBold" Foreground="#6C757D" Margin="0,0,0,4"/>
-                                <ComboBox MinWidth="100" Width="130" SelectedIndex="0" Style="{StaticResource MahApps.Styles.ComboBox}">
-                                    <ComboBoxItem Content="Januari"/>
-                                    <ComboBoxItem Content="Februari"/>
-                                    <ComboBoxItem Content="Maret"/>
-                                </ComboBox>
+                                <ComboBox MinWidth="100" Width="130" 
+                                  ItemsSource="{Binding Months}" 
+                                  SelectedItem="{Binding SelectedMonth}"
+                                  Controls:TextBoxHelper.Watermark="Select Month"
+                                  Style="{StaticResource MahApps.Styles.ComboBox}"/>
                             </StackPanel>
 
                             <StackPanel Margin="0,0,20,0" VerticalAlignment="Top">
                                 <TextBlock Text="PRODUCTION DATE" FontSize="11" FontWeight="SemiBold" Foreground="#6C757D" Margin="0,0,0,4"/>
-                                <DatePicker MinWidth="120" Width="150" Style="{StaticResource MahApps.Styles.DatePicker}"/>
+                                <DatePicker MinWidth="120" Width="150" 
+                                  SelectedDate="{Binding SelectedDate}"
+                                  Controls:TextBoxHelper.Watermark="Select Date"
+                                  Style="{StaticResource MahApps.Styles.DatePicker}"/>
                             </StackPanel>
 
-                            <Button Content="FIND" MinWidth="80" Width="100" Height="38" FontSize="13" FontWeight="SemiBold" Controls:ControlsHelper.ContentCharacterCasing="Upper"
-                                    Style="{StaticResource MahApps.Styles.Button.Square.Accent}" VerticalAlignment="Top" Margin="0,0,10,0"/>
+                            <Button Content="FIND" 
+                                MinWidth="80" Width="100" Height="38" 
+                                FontSize="13" FontWeight="SemiBold" 
+                                Command="{Binding FindCommand}"
+                                Controls:ControlsHelper.ContentCharacterCasing="Upper"
+                                Style="{StaticResource MahApps.Styles.Button.Square.Accent}" 
+                                VerticalAlignment="Top" Margin="0,0,10,0"/>
                         </WrapPanel>
 
                         <StackPanel Grid.Column="1" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="20,0,0,0">
@@ -312,28 +339,30 @@
                         </Border>
 
                         <DataGrid x:Name="GridSearchResults"
-                                  Style="{StaticResource MahApps.Styles.DataGrid}"
-                                  AutoGenerateColumns="False"
-                                  GridLinesVisibility="Horizontal"
-                                  HeadersVisibility="Column"
-                                  IsReadOnly="True"
-                                  CanUserResizeColumns="False"
-                                  CanUserReorderColumns="False"
-                                  CanUserSortColumns="True"
-                                  ScrollViewer.VerticalScrollBarVisibility="Auto"
-                                  ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                                  ColumnHeaderStyle="{StaticResource CenteredColumnHeaderStyle}"
-                                  BorderThickness="0">
+                              ItemsSource="{Binding SearchResults}"
+                              Style="{StaticResource MahApps.Styles.DataGrid}"
+                              AutoGenerateColumns="False"
+                              GridLinesVisibility="Horizontal"
+                              HeadersVisibility="Column"
+                              IsReadOnly="True"
+                              CanUserResizeColumns="False"
+                              CanUserReorderColumns="False"
+                              CanUserSortColumns="True"
+                              ScrollViewer.VerticalScrollBarVisibility="Auto"
+                              ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                              ColumnHeaderStyle="{StaticResource CenteredColumnHeaderStyle}"
+                              BorderThickness="0">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="NO" Width="50" Binding="{Binding PartName}" ElementStyle="{StaticResource CenteredCellStyle}"/>
+                                <DataGridTextColumn Header="NO" Width="50" Binding="{Binding No}" ElementStyle="{StaticResource CenteredCellStyle}"/>
                                 <DataGridTextColumn Header="SIZE (SPEC)" Width="*" Binding="{Binding Specification}" ElementStyle="{StaticResource CenteredCellStyle}"/>
                                 <DataGridTextColumn Header="PROD DATE" Width="*" Binding="{Binding DateProd}" ElementStyle="{StaticResource CenteredCellStyle}"/>
+
                                 <DataGridTemplateColumn Header="ACTION" Width="70">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <Button Content="+" Width="30" Height="26" Background="#28A745" Foreground="White"
-                                                    FontSize="16" Padding="0,-2,0,0" BorderThickness="0" Cursor="Hand"
-                                                    ToolTip="Tambahkan ke daftar" Style="{StaticResource MahApps.Styles.Button.Square}"/>
+                                            FontSize="16" Padding="0,-2,0,0" BorderThickness="0" Cursor="Hand"
+                                            ToolTip="Tambahkan ke daftar" Style="{StaticResource MahApps.Styles.Button.Square}"/>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
@@ -409,11 +438,12 @@
 
                         <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                             <TextBlock Text="Standard:" FontSize="12" FontWeight="Bold" Foreground="#6C757D" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                            <ComboBox MinWidth="80" Width="100" SelectedIndex="0" Template="{StaticResource UpComboBoxControlTemplate}" VerticalAlignment="Center">
-                                <ComboBoxItem Content="JIS"/>
-                                <ComboBoxItem Content="DIN"/>
-                                <ComboBoxItem Content="ASTM"/>
-                            </ComboBox>
+                            <ComboBox MinWidth="80" Width="100" 
+                                      ItemsSource="{Binding Standards}" 
+                                      SelectedItem="{Binding SelectedStandard}"
+                                      Controls:TextBoxHelper.Watermark="Select Standart"
+                                      Template="{StaticResource UpComboBoxControlTemplate}" 
+                                      VerticalAlignment="Center"/>
                         </StackPanel>
 
                         <Border Grid.Column="1" Width="1" Height="25" Background="#DEE2E6"/>
@@ -421,7 +451,7 @@
                         <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="5,0,0,0">
                             <TextBlock Text="Customer:" FontSize="12" FontWeight="Bold" Foreground="#6C757D" VerticalAlignment="Center" Margin="0,0,10,0"/>
                             <TextBox MinWidth="100" Style="{StaticResource MahApps.Styles.TextBox}"
-                                     Controls:TextBoxHelper.Watermark="Input Name..."
+                                     Controls:TextBoxHelper.Watermark="Input Name Company"
                                      Controls:TextBoxHelper.ClearTextButton="True"
                                      VerticalAlignment="Center"/>
                         </StackPanel>
@@ -431,7 +461,7 @@
                         <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center" Margin="5,0,0,0">
                             <TextBlock Text="PO Number:" FontSize="12" FontWeight="Bold" Foreground="#6C757D" VerticalAlignment="Center" Margin="0,0,10,0"/>
                             <TextBox MinWidth="100" Style="{StaticResource MahApps.Styles.TextBox}"
-                                     Controls:TextBoxHelper.Watermark="e.g. PO-1234"
+                                     Controls:TextBoxHelper.Watermark="Input PO Number"
                                      Controls:TextBoxHelper.ClearTextButton="True"
                                      VerticalAlignment="Center"/>
                         </StackPanel>
