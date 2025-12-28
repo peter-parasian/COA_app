@@ -97,6 +97,22 @@ namespace WpfApp1.ViewModels
             set { _selectedStandard = value; OnPropertyChanged(); }
         }
 
+        // --- NEW PROPERTIES FOR PRINT COA ---
+        private string _customerName = string.Empty;
+        public string CustomerName
+        {
+            get => _customerName;
+            set { _customerName = value; OnPropertyChanged(); }
+        }
+
+        private string _poNumber = string.Empty;
+        public string PoNumber
+        {
+            get => _poNumber;
+            set { _poNumber = value; OnPropertyChanged(); }
+        }
+        // -----------------------------------
+
         private System.Collections.ObjectModel.ObservableCollection<BusbarSearchItem> _searchResults = new System.Collections.ObjectModel.ObservableCollection<BusbarSearchItem>();
         public System.Collections.ObjectModel.ObservableCollection<BusbarSearchItem> SearchResults
         {
@@ -110,6 +126,7 @@ namespace WpfApp1.ViewModels
         public System.Windows.Input.ICommand FindCommand { get; }
         public System.Windows.Input.ICommand AddToExportCommand { get; }
         public System.Windows.Input.ICommand RemoveFromExportCommand { get; }
+        public System.Windows.Input.ICommand PrintCoaCommand { get; }
 
         public MainViewModel()
         {
@@ -132,6 +149,7 @@ namespace WpfApp1.ViewModels
             FindCommand = new RelayCommand(ExecuteFind);
             AddToExportCommand = new RelayCommand(ExecuteAddToExport);
             RemoveFromExportCommand = new RelayCommand(ExecuteRemoveFromExport);
+            PrintCoaCommand = new RelayCommand(ExecutePrintCoa);
         }
 
         public void ImportExcelToSQLite()
@@ -182,6 +200,8 @@ namespace WpfApp1.ViewModels
         public void BackToMenu()
         {
             ResetSearchData();
+            CustomerName = string.Empty;
+            PoNumber = string.Empty;
             ExportList.Clear();
             ShowBlankPage = false;
         }
@@ -330,6 +350,124 @@ namespace WpfApp1.ViewModels
                 ExportList.Remove(itemToRemove);
             }
         }
+
+        // --- UPDATED LOGIC FOR PRINT COA ---
+        private void ExecutePrintCoa(object? parameter)
+        {
+            if (ExportList.Count == 0)
+            {
+                System.Windows.MessageBox.Show("Export List kosong. Silakan pilih data terlebih dahulu.", "Peringatan", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(SelectedStandard))
+            {
+                System.Windows.MessageBox.Show("Silakan pilih Standard terlebih dahulu.", "Peringatan", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(CustomerName))
+            {
+                System.Windows.MessageBox.Show("Silakan input Nama Perusahaan.", "Peringatan", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(PoNumber))
+            {
+                System.Windows.MessageBox.Show("Silakan input Nomor PO.", "Peringatan", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                return;
+            }
+
+            try
+            {
+                // Tentukan nilai standar (Prototype Logic)
+                int standardValue = 0;
+                switch (SelectedStandard?.ToUpper())
+                {
+                    case "JIS":
+                        standardValue = 10;
+                        break;
+                    case "DIN":
+                        standardValue = 20;
+                        break;
+                    case "ASTM":
+                        standardValue = 30;
+                        break;
+                    default:
+                        standardValue = 0;
+                        break;
+                }
+
+                using (var workbook = new ClosedXML.Excel.XLWorkbook())
+                {
+                    var worksheet = workbook.Worksheets.Add("COA");
+
+                    worksheet.Cell("B2").Value = "Standard Code (Value):";
+                    worksheet.Cell("C2").Value = standardValue;
+
+                    worksheet.Cell("B3").Value = "Company Name:";
+                    worksheet.Cell("C3").Value = CustomerName;
+
+                    worksheet.Cell("B4").Value = "PO Number:";
+                    worksheet.Cell("C4").Value = PoNumber;
+
+                    int startRow = 6;
+                    worksheet.Cell(startRow, 1).Value = "Batch_no";
+                    worksheet.Cell(startRow, 2).Value = "Size_mm";
+                    worksheet.Cell(startRow, 3).Value = "Thickness_mm";
+                    worksheet.Cell(startRow, 4).Value = "Width_mm";
+                    worksheet.Cell(startRow, 5).Value = "Length";
+                    worksheet.Cell(startRow, 6).Value = "Radius";
+                    worksheet.Cell(startRow, 7).Value = "Chamber_mm";
+                    worksheet.Cell(startRow, 8).Value = "Electric_IACS";
+                    worksheet.Cell(startRow, 9).Value = "Weight"; 
+                    worksheet.Cell(startRow, 10).Value = "Elongation";
+                    worksheet.Cell(startRow, 11).Value = "Tensile";
+                    worksheet.Cell(startRow, 12).Value = "Bend_test";
+                    worksheet.Cell(startRow, 13).Value = "Spectro_Cu";
+
+                    int currentRow = startRow + 1;
+                    foreach (var item in ExportList)
+                    {
+                        var rec = item.RecordData;
+
+                        worksheet.Cell(currentRow, 1).Value = rec.BatchNo;
+                        worksheet.Cell(currentRow, 2).Value = rec.Size;
+                        worksheet.Cell(currentRow, 3).Value = rec.Thickness;
+                        worksheet.Cell(currentRow, 4).Value = rec.Width;
+                        worksheet.Cell(currentRow, 5).Value = rec.Length;
+                        worksheet.Cell(currentRow, 6).Value = rec.Radius;
+                        worksheet.Cell(currentRow, 7).Value = rec.Chamber;
+                        worksheet.Cell(currentRow, 8).Value = rec.Electric;
+                        worksheet.Cell(currentRow, 9).Value = rec.Resistivity;
+                        worksheet.Cell(currentRow, 10).Value = rec.Elongation;
+                        worksheet.Cell(currentRow, 11).Value = rec.Tensile;
+                        worksheet.Cell(currentRow, 12).Value = rec.BendTest;
+                        worksheet.Cell(currentRow, 13).Value = rec.Spectro;
+
+                        currentRow++;
+                    }
+
+                    string desktopPath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop);
+                    string fileName = $"COA_{System.DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+                    string fullPath = System.IO.Path.Combine(desktopPath, fileName);
+
+                    workbook.SaveAs(fullPath);
+
+                    System.Windows.MessageBox.Show($"Data berhasil diexport ke:\n{fullPath}", "Sukses", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+
+                    CustomerName = string.Empty;
+                    PoNumber = string.Empty;
+                    SelectedStandard = null;
+                    ExportList.Clear();
+                }
+            }
+            catch (System.Exception ex)
+            {
+                System.Windows.MessageBox.Show($"Gagal membuat Excel:\n{ex.Message}", "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            }
+        }
+        // -----------------------------------
 
         private string ConvertMonthToEnglish(string indoMonth)
         {

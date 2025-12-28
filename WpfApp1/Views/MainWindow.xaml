@@ -456,7 +456,9 @@
 
                         <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="5,0,0,0">
                             <TextBlock Text="Customer:" FontSize="12" FontWeight="Bold" Foreground="#6C757D" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                            <!-- Added Binding Here -->
                             <TextBox MinWidth="100" Style="{StaticResource MahApps.Styles.TextBox}"
+                                     Text="{Binding CustomerName, UpdateSourceTrigger=PropertyChanged}"
                                      Controls:TextBoxHelper.Watermark="Input Company"
                                      Controls:TextBoxHelper.ClearTextButton="True"
                                      VerticalAlignment="Center"/>
@@ -466,7 +468,9 @@
 
                         <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center" Margin="5,0,0,0">
                             <TextBlock Text="PO Number:" FontSize="12" FontWeight="Bold" Foreground="#6C757D" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                            <!-- Added Binding Here -->
                             <TextBox MinWidth="100" Style="{StaticResource MahApps.Styles.TextBox}"
+                                     Text="{Binding PoNumber, UpdateSourceTrigger=PropertyChanged}"
                                      Controls:TextBoxHelper.Watermark="Input PO Number"
                                      Controls:TextBoxHelper.ClearTextButton="True"
                                      VerticalAlignment="Center"/>
@@ -475,6 +479,7 @@
                 </Border>
 
                 <Button Grid.Column="1" Content="PRINT COA"
+                        Command="{Binding PrintCoaCommand}"
                         Controls:ControlsHelper.ContentCharacterCasing="Upper"
                         MinWidth="150" Width="200" Height="Auto" FontSize="16" FontWeight="Bold"
                         Style="{StaticResource MahApps.Styles.Button.Square.Accent}"
