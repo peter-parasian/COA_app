@@ -97,7 +97,6 @@ namespace WpfApp1.ViewModels
             set { _selectedStandard = value; OnPropertyChanged(); }
         }
 
-        // --- NEW PROPERTIES FOR PRINT COA ---
         private string _customerName = string.Empty;
         public string CustomerName
         {
@@ -106,12 +105,20 @@ namespace WpfApp1.ViewModels
         }
 
         private string _poNumber = string.Empty;
+
         public string PoNumber
         {
             get => _poNumber;
             set { _poNumber = value; OnPropertyChanged(); }
         }
-        // -----------------------------------
+
+        private string _numberDO = string.Empty;
+
+        public string DoNumber
+        {
+            get => _numberDO;
+            set { _numberDO = value; OnPropertyChanged(); }
+        }
 
         private System.Collections.ObjectModel.ObservableCollection<BusbarSearchItem> _searchResults = new System.Collections.ObjectModel.ObservableCollection<BusbarSearchItem>();
         public System.Collections.ObjectModel.ObservableCollection<BusbarSearchItem> SearchResults
@@ -202,6 +209,7 @@ namespace WpfApp1.ViewModels
             ResetSearchData();
             CustomerName = string.Empty;
             PoNumber = string.Empty;
+            DoNumber = string.Empty;
             ExportList.Clear();
             ShowBlankPage = false;
         }
@@ -351,7 +359,6 @@ namespace WpfApp1.ViewModels
             }
         }
 
-        // --- UPDATED LOGIC FOR PRINT COA ---
         private void ExecutePrintCoa(object? parameter)
         {
             if (ExportList.Count == 0)
@@ -378,9 +385,14 @@ namespace WpfApp1.ViewModels
                 return;
             }
 
+            if (string.IsNullOrWhiteSpace(DoNumber))
+            {
+                System.Windows.MessageBox.Show("Silakan input Nomor DO (Delivery Order).", "Peringatan", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                return;
+            }
+
             try
             {
-                // Tentukan nilai standar (Prototype Logic)
                 int standardValue = 0;
                 switch (SelectedStandard?.ToUpper())
                 {
@@ -411,6 +423,9 @@ namespace WpfApp1.ViewModels
                     worksheet.Cell("B4").Value = "PO Number:";
                     worksheet.Cell("C4").Value = PoNumber;
 
+                    worksheet.Cell("E4").Value = "Do:";
+                    worksheet.Cell("E4").Value = DoNumber;
+
                     int startRow = 6;
                     worksheet.Cell(startRow, 1).Value = "Batch_no";
                     worksheet.Cell(startRow, 2).Value = "Size_mm";
@@ -425,6 +440,8 @@ namespace WpfApp1.ViewModels
                     worksheet.Cell(startRow, 11).Value = "Tensile";
                     worksheet.Cell(startRow, 12).Value = "Bend_test";
                     worksheet.Cell(startRow, 13).Value = "Spectro_Cu";
+                    worksheet.Cell(startRow, 14).Value = "Oxygen";
+
 
                     int currentRow = startRow + 1;
                     foreach (var item in ExportList)
@@ -444,6 +461,7 @@ namespace WpfApp1.ViewModels
                         worksheet.Cell(currentRow, 11).Value = rec.Tensile;
                         worksheet.Cell(currentRow, 12).Value = rec.BendTest;
                         worksheet.Cell(currentRow, 13).Value = rec.Spectro;
+                        worksheet.Cell(currentRow, 14).Value = rec.Oxygen; 
 
                         currentRow++;
                     }
@@ -467,7 +485,6 @@ namespace WpfApp1.ViewModels
                 System.Windows.MessageBox.Show($"Gagal membuat Excel:\n{ex.Message}", "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             }
         }
-        // -----------------------------------
 
         private string ConvertMonthToEnglish(string indoMonth)
         {

@@ -359,6 +359,11 @@ namespace WpfApp1.Data.Repositories
                 fullRecord.Spectro = ParseDoubleSafe(reader["Spectro_Cu"]);
                 fullRecord.Oxygen = ParseDoubleSafe(reader["Oxygen"]);
 
+                if (!IsRecordComplete(fullRecord))
+                {
+                    continue;
+                }
+
                 results.Add(new BusbarSearchItem
                 {
                     No = fullRecord.Id,
@@ -369,6 +374,30 @@ namespace WpfApp1.Data.Repositories
             }
 
             return results;
+        }
+
+        private bool IsRecordComplete(BusbarRecord record)
+        {
+            if (string.IsNullOrWhiteSpace(record.BatchNo)) return false;
+            if (string.IsNullOrWhiteSpace(record.Size)) return false;
+            if (string.IsNullOrWhiteSpace(record.BendTest)) return false;
+            if (string.IsNullOrWhiteSpace(record.Year)) return false;
+            if (string.IsNullOrWhiteSpace(record.Month)) return false;
+            if (string.IsNullOrWhiteSpace(record.ProdDate)) return false;
+
+            if (record.Length <= 0) return false;
+            if (record.Thickness <= 0) return false;
+            if (record.Width <= 0) return false;
+            if (record.Radius <= 0) return false;
+            if (record.Chamber <= 0) return false;
+            if (record.Electric <= 0) return false;
+            if (record.Resistivity <= 0) return false;
+            if (record.Elongation <= 0) return false;
+            if (record.Tensile <= 0) return false;
+            if (record.Spectro <= 0) return false;
+            if (record.Oxygen <= 0) return false;
+
+            return true;
         }
 
         private double ParseDoubleSafe(object value)
