@@ -514,21 +514,36 @@ namespace WpfApp1.ViewModels
                         worksheet.Cell(r2, 9).Value = rec.Spectro;    // I
                         worksheet.Cell(r2, 10).Value = rec.Oxygen;    // J
 
-                        // STYLE TABEL 2 (B sampai J): Bold, Middle Align, Middle Center
-                        var rangeT2 = worksheet.Range(r2, 2, r2, 10);
+                        // Kolom K: OK (Ditambahkan agar ada K30 kebawah)
+                        var cellK2 = worksheet.Cell(r2, 11); // K
+                        cellK2.Value = "OK";
+
+                        // STYLE TABEL 2 (B sampai K): Bold, Middle Align, Middle Center
+                        // Rentang diperluas sampai kolom 11 (K) agar OK ikut diformat
+                        var rangeT2 = worksheet.Range(r2, 2, r2, 11);
                         rangeT2.Style.Font.Bold = true;
                         rangeT2.Style.Alignment.Horizontal = ClosedXML.Excel.XLAlignmentHorizontalValues.Center;
                         rangeT2.Style.Alignment.Vertical = ClosedXML.Excel.XLAlignmentVerticalValues.Center;
                     }
 
-                    // --- 3. FORMATTING BORDER ---
+                    // --- 3. FORMATTING FULL BORDER ---
 
+                    // Border Table 1 (B sampai K)
                     var rangeBorder1 = worksheet.Range(startRowTable1, 2, startRowTable1 + dataCount - 1, 11);
-                    rangeBorder1.Style.Border.OutsideBorder = ClosedXML.Excel.XLBorderStyleValues.Thin;
+                    rangeBorder1.Style.Border.TopBorder = ClosedXML.Excel.XLBorderStyleValues.Thin;
+                    rangeBorder1.Style.Border.BottomBorder = ClosedXML.Excel.XLBorderStyleValues.Thin;
+                    rangeBorder1.Style.Border.LeftBorder = ClosedXML.Excel.XLBorderStyleValues.Thin;
+                    rangeBorder1.Style.Border.RightBorder = ClosedXML.Excel.XLBorderStyleValues.Thin;
+                    // Inside Border untuk garis pemisah antar sel
                     rangeBorder1.Style.Border.InsideBorder = ClosedXML.Excel.XLBorderStyleValues.Thin;
 
-                    var rangeBorder2 = worksheet.Range(startRowTable2, 2, startRowTable2 + dataCount - 1, 10);
-                    rangeBorder2.Style.Border.OutsideBorder = ClosedXML.Excel.XLBorderStyleValues.Thin;
+                    // Border Table 2 (B sampai K)
+                    var rangeBorder2 = worksheet.Range(startRowTable2, 2, startRowTable2 + dataCount - 1, 11);
+                    rangeBorder2.Style.Border.TopBorder = ClosedXML.Excel.XLBorderStyleValues.Thin;
+                    rangeBorder2.Style.Border.BottomBorder = ClosedXML.Excel.XLBorderStyleValues.Thin;
+                    rangeBorder2.Style.Border.LeftBorder = ClosedXML.Excel.XLBorderStyleValues.Thin;
+                    rangeBorder2.Style.Border.RightBorder = ClosedXML.Excel.XLBorderStyleValues.Thin;
+                    // Inside Border untuk garis pemisah antar sel
                     rangeBorder2.Style.Border.InsideBorder = ClosedXML.Excel.XLBorderStyleValues.Thin;
 
                     // Fit to Page
