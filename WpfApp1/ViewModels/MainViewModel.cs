@@ -435,7 +435,7 @@ namespace WpfApp1.ViewModels
                     worksheet.Cell(startRow, 6).Value = "Radius";
                     worksheet.Cell(startRow, 7).Value = "Chamber_mm";
                     worksheet.Cell(startRow, 8).Value = "Electric_IACS";
-                    worksheet.Cell(startRow, 9).Value = "Weight"; 
+                    worksheet.Cell(startRow, 9).Value = "Weight";
                     worksheet.Cell(startRow, 10).Value = "Elongation";
                     worksheet.Cell(startRow, 11).Value = "Tensile";
                     worksheet.Cell(startRow, 12).Value = "Bend_test";
@@ -461,14 +461,34 @@ namespace WpfApp1.ViewModels
                         worksheet.Cell(currentRow, 11).Value = rec.Tensile;
                         worksheet.Cell(currentRow, 12).Value = rec.BendTest;
                         worksheet.Cell(currentRow, 13).Value = rec.Spectro;
-                        worksheet.Cell(currentRow, 14).Value = rec.Oxygen; 
+                        worksheet.Cell(currentRow, 14).Value = rec.Oxygen;
 
                         currentRow++;
                     }
 
-                    string desktopPath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop);
-                    string fileName = $"COA_{System.DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
-                    string fullPath = System.IO.Path.Combine(desktopPath, fileName);
+                    System.DateTime now = System.DateTime.Now;
+
+                    string basePath = @"C:\Users\mrrx\Documents\My Web Sites\H\COA";
+
+                    string yearFolder = now.ToString("yyyy");
+
+                    var cultureIndo = new System.Globalization.CultureInfo("id-ID");
+                    string monthName = cultureIndo.DateTimeFormat.GetMonthName(now.Month);
+                    monthName = cultureIndo.TextInfo.ToTitleCase(monthName);
+
+                    string monthFolder = $"{now.Month}. {monthName}";
+
+                    string finalDirectory = System.IO.Path.Combine(basePath, yearFolder, monthFolder);
+
+                    if (!System.IO.Directory.Exists(finalDirectory))
+                    {
+                        System.IO.Directory.CreateDirectory(finalDirectory);
+                    }
+
+                    string[] existingFiles = System.IO.Directory.GetFiles(finalDirectory, "*.xlsx");
+                    int nomorFile = existingFiles.Length + 1;
+                    string fileName = $"{nomorFile}. COA {CustomerName} {DoNumber}.xlsx";
+                    string fullPath = System.IO.Path.Combine(finalDirectory, fileName);
 
                     workbook.SaveAs(fullPath);
 
@@ -476,6 +496,7 @@ namespace WpfApp1.ViewModels
 
                     CustomerName = string.Empty;
                     PoNumber = string.Empty;
+                    DoNumber = string.Empty;
                     SelectedStandard = null;
                     ExportList.Clear();
                 }

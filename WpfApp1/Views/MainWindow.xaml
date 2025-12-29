@@ -73,6 +73,7 @@
                       Grid.Column="2" 
                       Background="White"
                       BorderBrush="#DEE2E6"
+                      BorderThickness="1"
                       IsChecked="{Binding Path=IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
                       ClickMode="Press"
                       Focusable="false">
@@ -384,7 +385,7 @@
                                     </StackPanel>
                                 </StackPanel>
                                 <Border HorizontalAlignment="Right" Background="#FD7E14" CornerRadius="10" Padding="10,2" VerticalAlignment="Center">
-                                    <TextBlock Text="0 Items" Foreground="White" FontSize="11" FontWeight="Bold"/>
+                                    <TextBlock Text="{Binding ExportList.Count, StringFormat='{}{0} Items'}" Foreground="White" FontSize="11" FontWeight="Bold"/>
                                 </Border>
                             </Grid>
                         </Border>
@@ -431,25 +432,18 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Container Kiri: Area Input -->
                 <Border Grid.Column="0" Background="White" CornerRadius="4" BorderBrush="#DEE2E6" BorderThickness="1" 
             Padding="15,10" VerticalAlignment="Center" Margin="0,0,10,0">
 
                     <DockPanel LastChildFill="True">
-                        <!-- WrapPanel: Elemen akan pindah baris otomatis jika ruang habis -->
                         <WrapPanel DockPanel.Dock="Left" Orientation="Horizontal">
-
-                            <!-- Group 1: Standard -->
                             <StackPanel Orientation="Horizontal" Margin="0,0,25,0">
                                 <TextBlock Text="Standard:" FontSize="12" FontWeight="Bold" Foreground="#6C757D" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                <!-- MINWIDTH DIPERBESAR JADI 130 AGAR TIDAK KEPOTONG (Teks & Panah) -->
                                 <ComboBox MinWidth="130" VerticalAlignment="Center"
                               ItemsSource="{Binding Standards}" SelectedItem="{Binding SelectedStandard}"
                               Controls:TextBoxHelper.Watermark="Select Standart"
                               Template="{StaticResource UpComboBoxControlTemplate}" />
                             </StackPanel>
-
-                            <!-- Group 2: Customer -->
                             <StackPanel Orientation="Horizontal" Margin="0,0,25,0">
                                 <TextBlock Text="Customer:" FontSize="12" FontWeight="Bold" Foreground="#6C757D" VerticalAlignment="Center" Margin="0,0,8,0"/>
                                 <TextBox MinWidth="140" VerticalAlignment="Center"
@@ -457,8 +451,6 @@
                              Controls:TextBoxHelper.Watermark="Input Company"
                              Controls:TextBoxHelper.ClearTextButton="True"/>
                             </StackPanel>
-
-                            <!-- Group 3: DO Number -->
                             <StackPanel Orientation="Horizontal" Margin="0,0,25,0">
                                 <TextBlock Text="DO Number:" FontSize="12" FontWeight="Bold" Foreground="#6C757D" VerticalAlignment="Center" Margin="0,0,8,0"/>
                                 <TextBox MinWidth="140" VerticalAlignment="Center"
@@ -466,8 +458,6 @@
                              Controls:TextBoxHelper.Watermark="Input DO Number"
                              Controls:TextBoxHelper.ClearTextButton="True"/>
                             </StackPanel>
-
-                            <!-- Group 4: PO Number -->
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,0">
                                 <TextBlock Text="PO Number:" FontSize="12" FontWeight="Bold" Foreground="#6C757D" VerticalAlignment="Center" Margin="0,0,8,0"/>
                                 <TextBox MinWidth="140" VerticalAlignment="Center"
@@ -475,19 +465,17 @@
                              Controls:TextBoxHelper.Watermark="Input PO Number"
                              Controls:TextBoxHelper.ClearTextButton="True"/>
                             </StackPanel>
-
                         </WrapPanel>
                     </DockPanel>
                 </Border>
 
-                <!-- Container Kanan: Tombol Print -->
                 <Button Grid.Column="1" Content="PRINT COA"
-            Command="{Binding PrintCoaCommand}"
-            Controls:ControlsHelper.ContentCharacterCasing="Upper"
-            MinWidth="150" Width="200" Height="Auto" FontSize="16" FontWeight="Bold"
-            Style="{StaticResource MahApps.Styles.Button.Square.Accent}"
-            ToolTip="Export data terpilih ke Excel" Padding="15,10"
-            VerticalAlignment="Center"/>
+                        Command="{Binding PrintCoaCommand}"
+                        Controls:ControlsHelper.ContentCharacterCasing="Upper"
+                        MinWidth="150" Width="200" Height="Auto" FontSize="16" FontWeight="Bold"
+                        Style="{StaticResource MahApps.Styles.Button.Square.Accent}"
+                        ToolTip="Export data terpilih ke Excel" Padding="15,10"
+                        VerticalAlignment="Center"/>
             </Grid>
         </Grid>
     </Grid>
