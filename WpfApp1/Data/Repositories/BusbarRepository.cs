@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using WpfApp1.Core.Models;
 using WpfApp1.Shared.Helpers;
 using WpfApp1.Data.Database;
@@ -360,6 +359,11 @@ namespace WpfApp1.Data.Repositories
                 fullRecord.Oxygen = ParseDoubleSafe(reader["Oxygen"]);
 
                 if (!IsRecordComplete(fullRecord))
+                {
+                    continue;
+                }
+
+                if (!fullRecord.BendTest.Equals("OK", System.StringComparison.OrdinalIgnoreCase))
                 {
                     continue;
                 }

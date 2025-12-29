@@ -178,8 +178,6 @@ namespace WpfApp1.ViewModels
 
                 System.Windows.Application.Current.Dispatcher.Invoke(() =>
                 {
-                    //OnShowMessage?.Invoke($"IMPORT SELESAI\n\nFile ditemukan : {TotalFilesFound}\nBaris disimpan : {TotalRowsInserted}\n\nDebug Log:\n{DebugLog}");
-
                     LoadAvailableYears();
                 });
             }
@@ -322,10 +320,6 @@ namespace WpfApp1.ViewModels
                 {
                     OnShowMessage?.Invoke("Data tidak ditemukan untuk kriteria tersebut.");
                 }
-                //else
-                //{
-                //    OnShowMessage?.Invoke($"Ditemukan {SearchResults.Count} data.");
-                //}
             }
             catch (System.Exception ex)
             {
@@ -356,6 +350,26 @@ namespace WpfApp1.ViewModels
             if (parameter is WpfApp1.Core.Models.BusbarExportItem itemToRemove)
             {
                 ExportList.Remove(itemToRemove);
+            }
+        }
+
+        private string GetRomanMonth(int month)
+        {
+            switch (month)
+            {
+                case 1: return "I";
+                case 2: return "II";
+                case 3: return "III";
+                case 4: return "IV";
+                case 5: return "V";
+                case 6: return "VI";
+                case 7: return "VII";
+                case 8: return "VIII";
+                case 9: return "IX";
+                case 10: return "X";
+                case 11: return "XI";
+                case 12: return "XII";
+                default: return "";
             }
         }
 
@@ -393,91 +407,33 @@ namespace WpfApp1.ViewModels
 
             try
             {
-                int standardValue = 0;
-                switch (SelectedStandard?.ToUpper())
+                string templatePath = @"C:\Users\mrrx\Documents\My Web Sites\H\TEMPLATE_COA_BUSBAR.xlsx";
+
+                if (!System.IO.File.Exists(templatePath))
                 {
-                    case "JIS":
-                        standardValue = 10;
-                        break;
-                    case "DIN":
-                        standardValue = 20;
-                        break;
-                    case "ASTM":
-                        standardValue = 30;
-                        break;
-                    default:
-                        standardValue = 0;
-                        break;
+                    System.Windows.MessageBox.Show($"File template tidak ditemukan:\n{templatePath}", "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                    return;
                 }
 
-                using (var workbook = new ClosedXML.Excel.XLWorkbook())
+                // Membuka Template Excel
+                using (var workbook = new ClosedXML.Excel.XLWorkbook(templatePath))
                 {
-                    var worksheet = workbook.Worksheets.Add("COA");
+                    var worksheet = workbook.Worksheet(1);
 
-                    worksheet.Cell("B2").Value = "Standard Code (Value):";
-                    worksheet.Cell("C2").Value = standardValue;
-
-                    worksheet.Cell("B3").Value = "Company Name:";
-                    worksheet.Cell("C3").Value = CustomerName;
-
-                    worksheet.Cell("B4").Value = "PO Number:";
-                    worksheet.Cell("C4").Value = PoNumber;
-
-                    worksheet.Cell("E4").Value = "Do:";
-                    worksheet.Cell("E4").Value = DoNumber;
-
-                    int startRow = 6;
-                    worksheet.Cell(startRow, 1).Value = "Batch_no";
-                    worksheet.Cell(startRow, 2).Value = "Size_mm";
-                    worksheet.Cell(startRow, 3).Value = "Thickness_mm";
-                    worksheet.Cell(startRow, 4).Value = "Width_mm";
-                    worksheet.Cell(startRow, 5).Value = "Length";
-                    worksheet.Cell(startRow, 6).Value = "Radius";
-                    worksheet.Cell(startRow, 7).Value = "Chamber_mm";
-                    worksheet.Cell(startRow, 8).Value = "Electric_IACS";
-                    worksheet.Cell(startRow, 9).Value = "Weight";
-                    worksheet.Cell(startRow, 10).Value = "Elongation";
-                    worksheet.Cell(startRow, 11).Value = "Tensile";
-                    worksheet.Cell(startRow, 12).Value = "Bend_test";
-                    worksheet.Cell(startRow, 13).Value = "Spectro_Cu";
-                    worksheet.Cell(startRow, 14).Value = "Oxygen";
-
-
-                    int currentRow = startRow + 1;
-                    foreach (var item in ExportList)
-                    {
-                        var rec = item.RecordData;
-
-                        worksheet.Cell(currentRow, 1).Value = rec.BatchNo;
-                        worksheet.Cell(currentRow, 2).Value = rec.Size;
-                        worksheet.Cell(currentRow, 3).Value = rec.Thickness;
-                        worksheet.Cell(currentRow, 4).Value = rec.Width;
-                        worksheet.Cell(currentRow, 5).Value = rec.Length;
-                        worksheet.Cell(currentRow, 6).Value = rec.Radius;
-                        worksheet.Cell(currentRow, 7).Value = rec.Chamber;
-                        worksheet.Cell(currentRow, 8).Value = rec.Electric;
-                        worksheet.Cell(currentRow, 9).Value = rec.Resistivity;
-                        worksheet.Cell(currentRow, 10).Value = rec.Elongation;
-                        worksheet.Cell(currentRow, 11).Value = rec.Tensile;
-                        worksheet.Cell(currentRow, 12).Value = rec.BendTest;
-                        worksheet.Cell(currentRow, 13).Value = rec.Spectro;
-                        worksheet.Cell(currentRow, 14).Value = rec.Oxygen;
-
-                        currentRow++;
-                    }
+                    // --- 1. PENGISIAN HEADER ---
+                    worksheet.Cell("C12").Value = ": " + PoNumber;
+                    worksheet.Cell("J12").Value = ": " + CustomerName;
 
                     System.DateTime now = System.DateTime.Now;
+                    worksheet.Cell("J13").Value = ": " + now.ToString("dd/MM/yyyy");
 
                     string basePath = @"C:\Users\mrrx\Documents\My Web Sites\H\COA";
-
                     string yearFolder = now.ToString("yyyy");
 
                     var cultureIndo = new System.Globalization.CultureInfo("id-ID");
                     string monthName = cultureIndo.DateTimeFormat.GetMonthName(now.Month);
                     monthName = cultureIndo.TextInfo.ToTitleCase(monthName);
-
                     string monthFolder = $"{now.Month}. {monthName}";
-
                     string finalDirectory = System.IO.Path.Combine(basePath, yearFolder, monthFolder);
 
                     if (!System.IO.Directory.Exists(finalDirectory))
@@ -487,6 +443,99 @@ namespace WpfApp1.ViewModels
 
                     string[] existingFiles = System.IO.Directory.GetFiles(finalDirectory, "*.xlsx");
                     int nomorFile = existingFiles.Length + 1;
+
+                    string romanMonth = GetRomanMonth(now.Month);
+                    worksheet.Cell("J14").Value = ": " + $"{nomorFile}/{romanMonth}/{now.Year}";
+
+                    // --- 2. PENGISIAN DATA GRID ---
+
+                    int dataCount = ExportList.Count;
+                    int startRowTable1 = 20;
+                    int originalStartRowTable2 = 30;
+                    int startRowTable2 = originalStartRowTable2;
+
+                    // Insert baris jika data > 3
+                    if (dataCount > 3)
+                    {
+                        int rowsToInsert = dataCount - 3;
+                        worksheet.Row(22).InsertRowsBelow(rowsToInsert);
+                        startRowTable2 = originalStartRowTable2 + rowsToInsert;
+                    }
+
+                    // --- LOOP PENGISIAN DATA ---
+                    for (int i = 0; i < dataCount; i++)
+                    {
+                        var rec = ExportList[i].RecordData;
+
+                        // --- ISI TABEL 1 (ATAS) ---
+                        int r1 = startRowTable1 + i;
+
+                        // Data
+                        worksheet.Cell(r1, 2).Value = rec.BatchNo;  // B
+                        worksheet.Cell(r1, 3).Value = rec.Size;     // C
+
+                        // Merge D & E + Text Multiline
+                        var cellD = worksheet.Cell(r1, 4);
+                        cellD.Value = "No Dirty\nNo Blackspot\nNo Blisters";
+                        cellD.Style.Alignment.WrapText = true;
+                        worksheet.Range(r1, 4, r1, 5).Merge(); // Merge D dan E
+
+                        worksheet.Cell(r1, 6).Value = rec.Thickness; // F
+                        worksheet.Cell(r1, 7).Value = rec.Width;     // G
+                        worksheet.Cell(r1, 8).Value = rec.Length;    // H
+                        worksheet.Cell(r1, 9).Value = rec.Radius;    // I
+                        worksheet.Cell(r1, 10).Value = rec.Chamber; // J
+
+                        // Kolom K: OK
+                        var cellK = worksheet.Cell(r1, 11); // K
+                        cellK.Value = "OK";
+
+                        // STYLE TABEL 1 (B sampai K): Bold, Middle Align, Middle Center
+                        var rangeT1 = worksheet.Range(r1, 2, r1, 11);
+                        rangeT1.Style.Font.Bold = true;
+                        rangeT1.Style.Alignment.Horizontal = ClosedXML.Excel.XLAlignmentHorizontalValues.Center;
+                        rangeT1.Style.Alignment.Vertical = ClosedXML.Excel.XLAlignmentVerticalValues.Center;
+
+
+                        // --- ISI TABEL 2 (BAWAH) ---
+                        int r2 = startRowTable2 + i;
+
+                        // Data
+                        worksheet.Cell(r2, 2).Value = rec.BatchNo;    // B
+                        worksheet.Cell(r2, 3).Value = rec.Size;       // C
+                        worksheet.Cell(r2, 4).Value = rec.Electric;    // D
+                        worksheet.Cell(r2, 5).Value = rec.Resistivity;// E
+                        worksheet.Cell(r2, 6).Value = rec.Elongation;  // F
+                        worksheet.Cell(r2, 7).Value = rec.Tensile;    // G
+
+                        // Kolom H: No Crack
+                        worksheet.Cell(r2, 8).Value = "No Crack";
+
+                        worksheet.Cell(r2, 9).Value = rec.Spectro;    // I
+                        worksheet.Cell(r2, 10).Value = rec.Oxygen;    // J
+
+                        // STYLE TABEL 2 (B sampai J): Bold, Middle Align, Middle Center
+                        var rangeT2 = worksheet.Range(r2, 2, r2, 10);
+                        rangeT2.Style.Font.Bold = true;
+                        rangeT2.Style.Alignment.Horizontal = ClosedXML.Excel.XLAlignmentHorizontalValues.Center;
+                        rangeT2.Style.Alignment.Vertical = ClosedXML.Excel.XLAlignmentVerticalValues.Center;
+                    }
+
+                    // --- 3. FORMATTING BORDER ---
+
+                    var rangeBorder1 = worksheet.Range(startRowTable1, 2, startRowTable1 + dataCount - 1, 11);
+                    rangeBorder1.Style.Border.OutsideBorder = ClosedXML.Excel.XLBorderStyleValues.Thin;
+                    rangeBorder1.Style.Border.InsideBorder = ClosedXML.Excel.XLBorderStyleValues.Thin;
+
+                    var rangeBorder2 = worksheet.Range(startRowTable2, 2, startRowTable2 + dataCount - 1, 10);
+                    rangeBorder2.Style.Border.OutsideBorder = ClosedXML.Excel.XLBorderStyleValues.Thin;
+                    rangeBorder2.Style.Border.InsideBorder = ClosedXML.Excel.XLBorderStyleValues.Thin;
+
+                    // Fit to Page
+                    worksheet.PageSetup.PagesTall = 1;
+                    worksheet.PageSetup.PagesWide = 1;
+
+                    // --- 4. SIMPAN FILE ---
                     string fileName = $"{nomorFile}. COA {CustomerName} {DoNumber}.xlsx";
                     string fullPath = System.IO.Path.Combine(finalDirectory, fileName);
 
