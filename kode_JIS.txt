@@ -1,3 +1,5 @@
+// Ini pendekatan Hard-coded in-memory (Object / Map + IF)
+// Alternatif In-memory cache (load sekali dari DB)
 // ==========================================
 // 1. KODE LOGIKA ANDA (ORIGINAL)
 // ==========================================
