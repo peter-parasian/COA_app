@@ -13,6 +13,7 @@ namespace WpfApp1.ViewModels
         private SqliteContext _dbContext;
         private BusbarRepository _repository;
         private ExcelImportService _importService;
+        private CoaPrintService _printService; // Service baru
 
         private readonly object _lockObject = new object();
 
@@ -105,7 +106,6 @@ namespace WpfApp1.ViewModels
         }
 
         private string _poNumber = string.Empty;
-
         public string PoNumber
         {
             get => _poNumber;
@@ -113,7 +113,6 @@ namespace WpfApp1.ViewModels
         }
 
         private string _numberDO = string.Empty;
-
         public string DoNumber
         {
             get => _numberDO;
@@ -140,6 +139,7 @@ namespace WpfApp1.ViewModels
             _dbContext = new SqliteContext();
             _repository = new BusbarRepository(_dbContext);
             _importService = new ExcelImportService(_repository);
+            _printService = new CoaPrintService(); // Inisialisasi Service
 
             _importService.OnDebugMessage += (msg) => {
                 lock (_lockObject)
@@ -167,11 +167,27 @@ namespace WpfApp1.ViewModels
                 ResetCounters();
 
                 using var connection = _dbContext.CreateConnection();
+
+                if (connection.State != System.Data.ConnectionState.Open)
+                    connection.Open();
+
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = "PRAGMA synchronous = OFF; PRAGMA journal_mode = MEMORY; PRAGMA temp_store = MEMORY;";
+                    command.ExecuteNonQuery();
+                }
+
                 using var transaction = connection.BeginTransaction();
 
-                _importService.Import(connection, transaction);
-
-                transaction.Commit();
+                try
+                {
+                    _importService.Import(connection, transaction);
+                    transaction.Commit();
+                }
+                catch
+                {
+                    throw;
+                }
 
                 TotalFilesFound = _importService.TotalFilesFound;
                 TotalRowsInserted = _importService.TotalRowsInserted;
@@ -353,24 +369,16 @@ namespace WpfApp1.ViewModels
             }
         }
 
-        private string GetRomanMonth(int month)
+        private string FormatDoNumber(string doNumber)
         {
-            switch (month)
+            if (int.TryParse(doNumber, out int doVal))
             {
-                case 1: return "I";
-                case 2: return "II";
-                case 3: return "III";
-                case 4: return "IV";
-                case 5: return "V";
-                case 6: return "VI";
-                case 7: return "VII";
-                case 8: return "VIII";
-                case 9: return "IX";
-                case 10: return "X";
-                case 11: return "XI";
-                case 12: return "XII";
-                default: return "";
+                if (doVal < 10)
+                {
+                    return "0" + doVal.ToString();
+                }
             }
+            return doNumber;
         }
 
         private void ExecutePrintCoa(object? parameter)
@@ -405,165 +413,21 @@ namespace WpfApp1.ViewModels
                 return;
             }
 
+            DoNumber = FormatDoNumber(DoNumber);
+
             try
             {
-                string templatePath = @"C:\Users\mrrx\Documents\My Web Sites\H\TEMPLATE_COA_BUSBAR.xlsx";
+                var itemsToExport = new System.Collections.Generic.List<WpfApp1.Core.Models.BusbarExportItem>(ExportList);
 
-                if (!System.IO.File.Exists(templatePath))
-                {
-                    System.Windows.MessageBox.Show($"File template tidak ditemukan:\n{templatePath}", "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
-                    return;
-                }
+                string savedPath = _printService.GenerateCoaExcel(CustomerName, PoNumber, DoNumber, itemsToExport);
 
-                // Membuka Template Excel
-                using (var workbook = new ClosedXML.Excel.XLWorkbook(templatePath))
-                {
-                    var worksheet = workbook.Worksheet(1);
+                System.Windows.MessageBox.Show($"Data berhasil diexport ke:\n{savedPath}", "Sukses", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
 
-                    // --- 1. PENGISIAN HEADER ---
-                    worksheet.Cell("C12").Value = ": " + PoNumber;
-                    worksheet.Cell("J12").Value = ": " + CustomerName;
-
-                    System.DateTime now = System.DateTime.Now;
-                    worksheet.Cell("J13").Value = ": " + now.ToString("dd/MM/yyyy");
-
-                    string basePath = @"C:\Users\mrrx\Documents\My Web Sites\H\COA";
-                    string yearFolder = now.ToString("yyyy");
-
-                    var cultureIndo = new System.Globalization.CultureInfo("id-ID");
-                    string monthName = cultureIndo.DateTimeFormat.GetMonthName(now.Month);
-                    monthName = cultureIndo.TextInfo.ToTitleCase(monthName);
-                    string monthFolder = $"{now.Month}. {monthName}";
-                    string finalDirectory = System.IO.Path.Combine(basePath, yearFolder, monthFolder);
-
-                    if (!System.IO.Directory.Exists(finalDirectory))
-                    {
-                        System.IO.Directory.CreateDirectory(finalDirectory);
-                    }
-
-                    string[] existingFiles = System.IO.Directory.GetFiles(finalDirectory, "*.xlsx");
-                    int nomorFile = existingFiles.Length + 1;
-
-                    string romanMonth = GetRomanMonth(now.Month);
-                    worksheet.Cell("J14").Value = ": " + $"{nomorFile}/{romanMonth}/{now.Year}";
-
-                    // --- 2. PENGISIAN DATA GRID ---
-
-                    int dataCount = ExportList.Count;
-                    int startRowTable1 = 20;
-                    int originalStartRowTable2 = 30;
-                    int startRowTable2 = originalStartRowTable2;
-
-                    // Insert baris jika data > 3
-                    if (dataCount > 3)
-                    {
-                        int rowsToInsert = dataCount - 3;
-                        worksheet.Row(22).InsertRowsBelow(rowsToInsert);
-                        startRowTable2 = originalStartRowTable2 + rowsToInsert;
-                    }
-
-                    // --- LOOP PENGISIAN DATA ---
-                    for (int i = 0; i < dataCount; i++)
-                    {
-                        var rec = ExportList[i].RecordData;
-
-                        // --- ISI TABEL 1 (ATAS) ---
-                        int r1 = startRowTable1 + i;
-
-                        // Data
-                        worksheet.Cell(r1, 2).Value = rec.BatchNo;  // B
-                        worksheet.Cell(r1, 3).Value = rec.Size;     // C
-
-                        // Merge D & E + Text Multiline
-                        var cellD = worksheet.Cell(r1, 4);
-                        cellD.Value = "No Dirty\nNo Blackspot\nNo Blisters";
-                        cellD.Style.Alignment.WrapText = true;
-                        worksheet.Range(r1, 4, r1, 5).Merge(); // Merge D dan E
-
-                        worksheet.Cell(r1, 6).Value = rec.Thickness; // F
-                        worksheet.Cell(r1, 7).Value = rec.Width;     // G
-                        worksheet.Cell(r1, 8).Value = rec.Length;    // H
-                        worksheet.Cell(r1, 9).Value = rec.Radius;    // I
-                        worksheet.Cell(r1, 10).Value = rec.Chamber; // J
-
-                        // Kolom K: OK
-                        var cellK = worksheet.Cell(r1, 11); // K
-                        cellK.Value = "OK";
-
-                        // STYLE TABEL 1 (B sampai K): Bold, Middle Align, Middle Center
-                        var rangeT1 = worksheet.Range(r1, 2, r1, 11);
-                        rangeT1.Style.Font.Bold = true;
-                        rangeT1.Style.Alignment.Horizontal = ClosedXML.Excel.XLAlignmentHorizontalValues.Center;
-                        rangeT1.Style.Alignment.Vertical = ClosedXML.Excel.XLAlignmentVerticalValues.Center;
-
-
-                        // --- ISI TABEL 2 (BAWAH) ---
-                        int r2 = startRowTable2 + i;
-
-                        // Data
-                        worksheet.Cell(r2, 2).Value = rec.BatchNo;    // B
-                        worksheet.Cell(r2, 3).Value = rec.Size;       // C
-                        worksheet.Cell(r2, 4).Value = rec.Electric;    // D
-                        worksheet.Cell(r2, 5).Value = rec.Resistivity;// E
-                        worksheet.Cell(r2, 6).Value = rec.Elongation;  // F
-                        worksheet.Cell(r2, 7).Value = rec.Tensile;    // G
-
-                        // Kolom H: No Crack
-                        worksheet.Cell(r2, 8).Value = "No Crack";
-
-                        worksheet.Cell(r2, 9).Value = rec.Spectro;    // I
-                        worksheet.Cell(r2, 10).Value = rec.Oxygen;    // J
-
-                        // Kolom K: OK (Ditambahkan agar ada K30 kebawah)
-                        var cellK2 = worksheet.Cell(r2, 11); // K
-                        cellK2.Value = "OK";
-
-                        // STYLE TABEL 2 (B sampai K): Bold, Middle Align, Middle Center
-                        // Rentang diperluas sampai kolom 11 (K) agar OK ikut diformat
-                        var rangeT2 = worksheet.Range(r2, 2, r2, 11);
-                        rangeT2.Style.Font.Bold = true;
-                        rangeT2.Style.Alignment.Horizontal = ClosedXML.Excel.XLAlignmentHorizontalValues.Center;
-                        rangeT2.Style.Alignment.Vertical = ClosedXML.Excel.XLAlignmentVerticalValues.Center;
-                    }
-
-                    // --- 3. FORMATTING FULL BORDER ---
-
-                    // Border Table 1 (B sampai K)
-                    var rangeBorder1 = worksheet.Range(startRowTable1, 2, startRowTable1 + dataCount - 1, 11);
-                    rangeBorder1.Style.Border.TopBorder = ClosedXML.Excel.XLBorderStyleValues.Thin;
-                    rangeBorder1.Style.Border.BottomBorder = ClosedXML.Excel.XLBorderStyleValues.Thin;
-                    rangeBorder1.Style.Border.LeftBorder = ClosedXML.Excel.XLBorderStyleValues.Thin;
-                    rangeBorder1.Style.Border.RightBorder = ClosedXML.Excel.XLBorderStyleValues.Thin;
-                    // Inside Border untuk garis pemisah antar sel
-                    rangeBorder1.Style.Border.InsideBorder = ClosedXML.Excel.XLBorderStyleValues.Thin;
-
-                    // Border Table 2 (B sampai K)
-                    var rangeBorder2 = worksheet.Range(startRowTable2, 2, startRowTable2 + dataCount - 1, 11);
-                    rangeBorder2.Style.Border.TopBorder = ClosedXML.Excel.XLBorderStyleValues.Thin;
-                    rangeBorder2.Style.Border.BottomBorder = ClosedXML.Excel.XLBorderStyleValues.Thin;
-                    rangeBorder2.Style.Border.LeftBorder = ClosedXML.Excel.XLBorderStyleValues.Thin;
-                    rangeBorder2.Style.Border.RightBorder = ClosedXML.Excel.XLBorderStyleValues.Thin;
-                    // Inside Border untuk garis pemisah antar sel
-                    rangeBorder2.Style.Border.InsideBorder = ClosedXML.Excel.XLBorderStyleValues.Thin;
-
-                    // Fit to Page
-                    worksheet.PageSetup.PagesTall = 1;
-                    worksheet.PageSetup.PagesWide = 1;
-
-                    // --- 4. SIMPAN FILE ---
-                    string fileName = $"{nomorFile}. COA {CustomerName} {DoNumber}.xlsx";
-                    string fullPath = System.IO.Path.Combine(finalDirectory, fileName);
-
-                    workbook.SaveAs(fullPath);
-
-                    System.Windows.MessageBox.Show($"Data berhasil diexport ke:\n{fullPath}", "Sukses", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
-
-                    CustomerName = string.Empty;
-                    PoNumber = string.Empty;
-                    DoNumber = string.Empty;
-                    SelectedStandard = null;
-                    ExportList.Clear();
-                }
+                CustomerName = string.Empty;
+                PoNumber = string.Empty;
+                DoNumber = string.Empty;
+                SelectedStandard = null;
+                ExportList.Clear();
             }
             catch (System.Exception ex)
             {
