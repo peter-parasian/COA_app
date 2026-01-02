@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using WpfApp1.Core.Models;
+using ClosedXML.Excel; 
 
 namespace WpfApp1.Core.Services
 {
@@ -38,7 +38,7 @@ namespace WpfApp1.Core.Services
             string[] existingFiles = System.IO.Directory.GetFiles(finalDirectory, "*.xlsx");
             int nomorFile = existingFiles.Length + 1;
 
-            string formattedFileNumber = nomorFile.ToString("00");
+            string formattedFileNumber = nomorFile.ToString("000");
             string romanMonth = GetRomanMonth(now.Month);
 
             string fileName = $"{formattedFileNumber}. COA {customerName} {doNumber}.xlsx";
@@ -54,13 +54,18 @@ namespace WpfApp1.Core.Services
                 worksheet.Cell("J14").Value = ": " + $"{formattedFileNumber}/{romanMonth}/{now.Year}";
 
                 int dataCount = dataList.Count;
+
+                int rowsPerItem = 2;
+                int totalRowsNeeded = dataCount * rowsPerItem;
+                int defaultRowsAvailable = 3; 
+
                 int startRowTable1 = 20;
-                int originalStartRowTable2 = 30;
+                int originalStartRowTable2 = 30; 
                 int startRowTable2 = originalStartRowTable2;
 
-                if (dataCount > 3)
+                if (totalRowsNeeded > defaultRowsAvailable)
                 {
-                    int rowsToInsert = dataCount - 3;
+                    int rowsToInsert = totalRowsNeeded - defaultRowsAvailable;
                     worksheet.Row(22).InsertRowsBelow(rowsToInsert);
                     startRowTable2 = originalStartRowTable2 + rowsToInsert;
                 }
@@ -69,66 +74,105 @@ namespace WpfApp1.Core.Services
 
                 for (int i = 0; i < dataCount; i++)
                 {
-                    int r1 = startRowTable1 + i;
-                    int r2 = startRowTable2 + i;
+                    int rTop = startRowTable1 + (i * rowsPerItem);
+                    int rBottom = rTop + 1;
 
-                    worksheet.Row(r1).Height = 102;
-                    worksheet.Row(r2).Height = 102;
+                    int rTable2 = startRowTable2 + i;
 
-                    // 2. JANGAN ubah Width (Hapus logika worksheet.Column(col).Width) 
-                    // agar mengikuti template yang sudah ada.
+                    worksheet.Row(rTop).Height = 51;
+                    worksheet.Row(rBottom).Height = 51;
+
+                    worksheet.Row(rTable2).Height = 102;
+
                     var rec = dataList[i].RecordData;
 
-                    worksheet.Cell(r1, 2).Value = rec.BatchNo;
-                    worksheet.Cell(r1, 3).Value = rec.Size;
+                    worksheet.Cell(rTop, 2).Value = rec.BatchNo;
+                    worksheet.Range(rTop, 2, rBottom, 2).Merge();
 
-                    var cellD = worksheet.Cell(r1, 4);
+                    worksheet.Cell(rTop, 3).Value = rec.Size;
+                    worksheet.Range(rTop, 3, rBottom, 3).Merge();
+
+                    var cellD = worksheet.Cell(rTop, 4);
                     cellD.Value = "No Dirty\nNo Blackspot\nNo Blisters";
                     cellD.Style.Alignment.WrapText = true;
-                    worksheet.Range(r1, 4, r1, 5).Merge();
+                    worksheet.Range(rTop, 4, rBottom, 5).Merge();
 
-                    worksheet.Cell(r1, 6).Value = string.Format(cultureInvariant, "{0:0.00}", rec.Thickness);
-                    worksheet.Cell(r1, 7).Value = string.Format(cultureInvariant, "{0:0.00}", rec.Width);
+                    var cellThickVal = worksheet.Cell(rTop, 6);
+                    cellThickVal.Value = string.Format(cultureInvariant, "{0:0.00}", rec.Thickness);
+                    cellThickVal.Style.Font.Bold = true; 
+                    cellThickVal.Style.Font.FontName = "Montserrat";
+                    cellThickVal.Style.Font.FontSize = 22;
+                    cellThickVal.Style.Alignment.Vertical = XLAlignmentVerticalValues.Bottom; 
+                    cellThickVal.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                    cellThickVal.Style.Border.BottomBorder = XLBorderStyleValues.None; 
+
+                    var cellThickTol = worksheet.Cell(rBottom, 6);
+                    cellThickTol.Value = "(5.00 ± 0.10)";
+                    cellThickTol.Style.Font.Bold = false; 
+                    cellThickTol.Style.Font.FontName = "Montserrat";
+                    cellThickTol.Style.Font.FontSize = 22;
+                    cellThickTol.Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
+                    cellThickTol.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                    cellThickTol.Style.Border.TopBorder = XLBorderStyleValues.None; 
+
+                    worksheet.Cell(rTop, 7).Value = string.Format(cultureInvariant, "{0:0.00}", rec.Width);
+                    worksheet.Range(rTop, 7, rBottom, 7).Merge();
 
                     if (double.TryParse(rec.Length.ToString(), out double lengthValue))
                     {
-                        worksheet.Cell(r1, 8).Value = System.Convert.ToInt32(lengthValue);
+                        worksheet.Cell(rTop, 8).Value = System.Convert.ToInt32(lengthValue);
                     }
                     else
                     {
-                        worksheet.Cell(r1, 8).Value = rec.Length;
+                        worksheet.Cell(rTop, 8).Value = rec.Length;
                     }
+                    worksheet.Range(rTop, 8, rBottom, 8).Merge();
 
-                    worksheet.Cell(r1, 9).Value = string.Format(cultureInvariant, "{0:0.00}", rec.Radius);
-                    worksheet.Cell(r1, 10).Value = string.Format(cultureInvariant, "{0:0.00}", rec.Chamber);
+                    worksheet.Cell(rTop, 9).Value = string.Format(cultureInvariant, "{0:0.00}", rec.Radius);
+                    worksheet.Range(rTop, 9, rBottom, 9).Merge();
 
-                    worksheet.Cell(r1, 11).Value = "OK";
+                    worksheet.Cell(rTop, 10).Value = string.Format(cultureInvariant, "{0:0.00}", rec.Chamber);
+                    worksheet.Range(rTop, 10, rBottom, 10).Merge();
 
-                    var rangeT1 = worksheet.Range(r1, 2, r1, 11);
-                    ApplyCustomStyle(rangeT1);
 
-                    worksheet.Cell(r2, 2).Value = rec.BatchNo;
-                    worksheet.Cell(r2, 3).Value = rec.Size;
+                    worksheet.Cell(rTop, 11).Value = "OK";
+                    worksheet.Range(rTop, 11, rBottom, 11).Merge();
 
-                    worksheet.Cell(r2, 4).Value = string.Format(cultureInvariant, "{0:0.00}", rec.Electric);
-                    //worksheet.Cell(r2, 5).Value = string.Format(cultureInvariant, "{0}", rec.Resistivity);
-                    worksheet.Cell(r2, 5).Value = string.Format(cultureInvariant, "{0:0.00000}", rec.Resistivity);
-                    worksheet.Cell(r2, 6).Value = string.Format(cultureInvariant, "{0:0.00}", rec.Elongation);
-                    worksheet.Cell(r2, 7).Value = string.Format(cultureInvariant, "{0:0.00}", rec.Tensile);
 
-                    worksheet.Cell(r2, 8).Value = "No Crack";
+                    var rangeAll = worksheet.Range(rTop, 2, rBottom, 11);
+                    ApplyCustomStyle(rangeAll);
 
-                    worksheet.Cell(r2, 9).Value = string.Format(cultureInvariant, "{0}", rec.Spectro);
-                    worksheet.Cell(r2, 10).Value = string.Format(cultureInvariant, "{0:0.00}", rec.Oxygen);
+                    cellThickVal.Style.Alignment.Vertical = XLAlignmentVerticalValues.Bottom;
+                    cellThickTol.Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
+                    cellThickTol.Style.Font.Bold = false; // Pastikan tetap tidak bold
 
-                    worksheet.Cell(r2, 11).Value = "OK";
+                    worksheet.Cell(rTable2, 2).Value = rec.BatchNo;
+                    worksheet.Cell(rTable2, 3).Value = rec.Size;
+                    worksheet.Cell(rTable2, 4).Value = string.Format(cultureInvariant, "{0:0.00}", rec.Electric);
+                    worksheet.Cell(rTable2, 5).Value = string.Format(cultureInvariant, "{0:0.00000}", rec.Resistivity);
+                    worksheet.Cell(rTable2, 6).Value = string.Format(cultureInvariant, "{0:0.00}", rec.Elongation);
+                    worksheet.Cell(rTable2, 7).Value = string.Format(cultureInvariant, "{0:0.00}", rec.Tensile);
+                    worksheet.Cell(rTable2, 8).Value = "No Crack";
+                    worksheet.Cell(rTable2, 9).Value = string.Format(cultureInvariant, "{0:0.000}", rec.Spectro);
+                    worksheet.Cell(rTable2, 10).Value = string.Format(cultureInvariant, "{0:0.00}", rec.Oxygen);
+                    worksheet.Cell(rTable2, 11).Value = "OK";
 
-                    var rangeT2 = worksheet.Range(r2, 2, r2, 11);
+                    var rangeT2 = worksheet.Range(rTable2, 2, rTable2, 11);
                     ApplyCustomStyle(rangeT2);
                 }
 
-                ApplyBorders(worksheet.Range(startRowTable1, 2, startRowTable1 + dataCount - 1, 11));
-                ApplyBorders(worksheet.Range(startRowTable2, 2, startRowTable2 + dataCount - 1, 11));
+                var table1Range = worksheet.Range(startRowTable1, 2, startRowTable1 + totalRowsNeeded - 1, 11);
+                ApplyBorders(table1Range);
+
+                for (int i = 0; i < dataCount; i++)
+                {
+                    int rTop = startRowTable1 + (i * rowsPerItem);
+                    worksheet.Cell(rTop, 6).Style.Border.BottomBorder = XLBorderStyleValues.None;
+                    worksheet.Cell(rTop + 1, 6).Style.Border.TopBorder = XLBorderStyleValues.None;
+                }
+
+                var table2Range = worksheet.Range(startRowTable2, 2, startRowTable2 + dataCount - 1, 11);
+                ApplyBorders(table2Range);
 
                 worksheet.PageSetup.PagesTall = 1;
                 worksheet.PageSetup.PagesWide = 1;
