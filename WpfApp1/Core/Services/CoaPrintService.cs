@@ -87,8 +87,8 @@ namespace WpfApp1.Core.Services
                     cellD.Style.Alignment.WrapText = true;
                     worksheet.Range(r1, 4, r1, 5).Merge();
 
-                    worksheet.Cell(r1, 6).Value = string.Format(cultureInvariant, "{0}", rec.Thickness);
-                    worksheet.Cell(r1, 7).Value = string.Format(cultureInvariant, "{0}", rec.Width);
+                    worksheet.Cell(r1, 6).Value = string.Format(cultureInvariant, "{0:0.00}", rec.Thickness);
+                    worksheet.Cell(r1, 7).Value = string.Format(cultureInvariant, "{0:0.00}", rec.Width);
 
                     if (double.TryParse(rec.Length.ToString(), out double lengthValue))
                     {
@@ -99,8 +99,9 @@ namespace WpfApp1.Core.Services
                         worksheet.Cell(r1, 8).Value = rec.Length;
                     }
 
-                    worksheet.Cell(r1, 9).Value = string.Format(cultureInvariant, "{0}", rec.Radius);
-                    worksheet.Cell(r1, 10).Value = string.Format(cultureInvariant, "{0}", rec.Chamber);
+                    worksheet.Cell(r1, 9).Value = string.Format(cultureInvariant, "{0:0.00}", rec.Radius);
+                    worksheet.Cell(r1, 10).Value = string.Format(cultureInvariant, "{0:0.00}", rec.Chamber);
+
                     worksheet.Cell(r1, 11).Value = "OK";
 
                     var rangeT1 = worksheet.Range(r1, 2, r1, 11);
@@ -108,13 +109,18 @@ namespace WpfApp1.Core.Services
 
                     worksheet.Cell(r2, 2).Value = rec.BatchNo;
                     worksheet.Cell(r2, 3).Value = rec.Size;
-                    worksheet.Cell(r2, 4).Value = string.Format(cultureInvariant, "{0}", rec.Electric);
-                    worksheet.Cell(r2, 5).Value = string.Format(cultureInvariant, "{0}", rec.Resistivity);
-                    worksheet.Cell(r2, 6).Value = string.Format(cultureInvariant, "{0}", rec.Elongation);
-                    worksheet.Cell(r2, 7).Value = string.Format(cultureInvariant, "{0}", rec.Tensile);
+
+                    worksheet.Cell(r2, 4).Value = string.Format(cultureInvariant, "{0:0.00}", rec.Electric);
+                    //worksheet.Cell(r2, 5).Value = string.Format(cultureInvariant, "{0}", rec.Resistivity);
+                    worksheet.Cell(r2, 5).Value = string.Format(cultureInvariant, "{0:0.00000}", rec.Resistivity);
+                    worksheet.Cell(r2, 6).Value = string.Format(cultureInvariant, "{0:0.00}", rec.Elongation);
+                    worksheet.Cell(r2, 7).Value = string.Format(cultureInvariant, "{0:0.00}", rec.Tensile);
+
                     worksheet.Cell(r2, 8).Value = "No Crack";
+
                     worksheet.Cell(r2, 9).Value = string.Format(cultureInvariant, "{0}", rec.Spectro);
-                    worksheet.Cell(r2, 10).Value = string.Format(cultureInvariant, "{0}", rec.Oxygen);
+                    worksheet.Cell(r2, 10).Value = string.Format(cultureInvariant, "{0:0.00}", rec.Oxygen);
+
                     worksheet.Cell(r2, 11).Value = "OK";
 
                     var rangeT2 = worksheet.Range(r2, 2, r2, 11);
