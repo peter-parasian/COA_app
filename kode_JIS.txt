@@ -1,0 +1,236 @@
+// ==========================================
+// 1. KODE LOGIKA ANDA (ORIGINAL)
+// ==========================================
+
+const WIDTH_EXCEPTION = Object.freeze({
+  // --- Exception Lama ---
+  "6x12": 1.25,
+  "9.65x152.4": 1.52,
+
+  "12x100": 1.20,
+  "12x120": 1.25,
+  "12x125": 1.00,
+
+  "12.7x76.2": 1.02,
+  "12.7x101.6": 1.27,
+  "12.7x127": 1.00,
+
+  "15x60": 1.50,
+  "15x80": 1.50,
+  "15x100": 1.50,
+  "15x150": 1.50,
+
+  // --- PERBAIKAN: PENAMBAHAN BARU BERDASARKAN DEBUG ---
+  "5x125": 1.25,      // Sebelumnya terdeteksi 1.00, harusnya 1.25
+  "6x125": 1.25,      // Sebelumnya terdeteksi 1.00, harusnya 1.25
+  "7.76x12.7": 1.02   // Sebelumnya terdeteksi 1.00, harusnya 1.02
+});
+
+function getThicknessTol(d1) {
+  if (d1 < 4) return 0.08;
+  if (d1 < 6) return 0.10;
+  if (d1 < 10) return 0.12;
+  if (d1 < 15) return 0.15;
+  return 0.20;
+}
+
+function getWidthRule(d1, d2) {
+  if (d1 < 4) return 0.80;
+  if (d1 < 6) return 1.00;
+  if (d1 < 10) return 1.00;
+
+  if (d1 === 10) {
+    if (d2 >= 200) return 2.00;
+    if (d2 >= 180) return 1.80;
+    if (d2 >= 160) return 1.60;
+    if (d2 >= 150) return 1.50;
+    if (d2 >= 140) return 1.40;
+    if (d2 >= 125) return 1.25;
+    if (d2 >= 120) return 1.20;
+    return 1.00;
+  }
+
+  if (d1 < 15) return 1.00;
+  return 1.50;
+}
+
+function getTolerance(d1, d2) {
+  const key = `${d1}x${d2}`;
+  const thickness = getThicknessTol(d1);
+  const width = WIDTH_EXCEPTION[key] ?? getWidthRule(d1, d2);
+  return { thickness, width };
+}
+
+// ==========================================
+// 2. DATASET LENGKAP (DIGABUNGKAN)
+// ==========================================
+// Data ini disusun berdasarkan urutan list yang Anda berikan
+const TEST_DATA = [
+  { size: "1.2x50", t: 0.08, w: 0.80 },
+  { size: "2x15", t: 0.08, w: 0.80 },
+  { size: "2x64", t: 0.08, w: 0.80 },
+  { size: "2.5x100", t: 0.08, w: 0.80 },
+  { size: "3x10", t: 0.08, w: 0.80 },
+  { size: "3x12", t: 0.08, w: 0.80 },
+  { size: "3x15", t: 0.08, w: 0.80 },
+  { size: "3x20", t: 0.08, w: 0.80 },
+  { size: "3x25", t: 0.08, w: 0.80 },
+  { size: "3x30", t: 0.08, w: 0.80 },
+  { size: "3x35", t: 0.08, w: 0.80 },
+  { size: "3x40", t: 0.08, w: 0.80 },
+  { size: "3x50", t: 0.08, w: 0.80 },
+  { size: "3x72", t: 0.08, w: 0.80 },
+  { size: "4x15", t: 0.10, w: 1.00 },
+  { size: "4x20", t: 0.10, w: 1.00 },
+  { size: "4x22.5", t: 0.10, w: 1.00 },
+  { size: "4x25", t: 0.10, w: 1.00 },
+  { size: "4x30", t: 0.10, w: 1.00 },
+  { size: "4x40", t: 0.10, w: 1.00 },
+  { size: "4x50", t: 0.10, w: 1.00 },
+  { size: "5x15", t: 0.10, w: 1.00 },
+  { size: "5x20", t: 0.10, w: 1.00 },
+  { size: "5x25", t: 0.10, w: 1.00 },
+  { size: "5x30", t: 0.10, w: 1.00 },
+  { size: "5x40", t: 0.10, w: 1.00 },
+  { size: "5x50", t: 0.10, w: 1.00 },
+  { size: "5x60", t: 0.10, w: 1.00 },
+  { size: "5x80", t: 0.10, w: 1.00 },
+  { size: "5x100", t: 0.10, w: 1.00 },
+  { size: "5x125", t: 0.10, w: 1.25 }, // PERHATIKAN INI
+  { size: "6x12", t: 0.12, w: 1.25 },
+  { size: "6x15", t: 0.12, w: 1.00 },
+  { size: "6x20", t: 0.12, w: 1.00 },
+  { size: "6x25", t: 0.12, w: 1.00 },
+  { size: "6x30", t: 0.12, w: 1.00 },
+  { size: "6x40", t: 0.12, w: 1.00 },
+  { size: "6x50", t: 0.12, w: 1.00 },
+  { size: "6x60", t: 0.12, w: 1.00 },
+  { size: "6x65", t: 0.12, w: 1.00 },
+  { size: "6x75", t: 0.12, w: 1.00 },
+  { size: "6x80", t: 0.12, w: 1.00 },
+  { size: "6x100", t: 0.12, w: 1.00 },
+  { size: "6x125", t: 0.12, w: 1.25 }, // Exception?
+  { size: "6.35x12.7", t: 0.12, w: 1.00 },
+  { size: "6.35x19.05", t: 0.12, w: 1.00 },
+  { size: "6.35x22.22", t: 0.12, w: 1.00 },
+  { size: "6.35x25.4", t: 0.12, w: 1.00 },
+  { size: "6.35x31.75", t: 0.12, w: 1.00 },
+  { size: "6.35x38.1", t: 0.12, w: 1.00 },
+  { size: "6.35x44.45", t: 0.12, w: 1.00 },
+  { size: "6.35x50.8", t: 0.12, w: 1.00 },
+  { size: "6.35x76.2", t: 0.12, w: 1.00 },
+  { size: "6.35x101.6", t: 0.12, w: 1.00 },
+  { size: "7.76x12.7", t: 0.12, w: 1.02 },
+  { size: "8x30", t: 0.12, w: 1.00 },
+  { size: "8x40", t: 0.12, w: 1.00 },
+  { size: "8x50", t: 0.12, w: 1.00 },
+  { size: "8x60", t: 0.12, w: 1.00 },
+  { size: "8x80", t: 0.12, w: 1.00 },
+  { size: "8x100", t: 0.12, w: 1.00 },
+  { size: "9.52x25.4", t: 0.12, w: 1.00 },
+  { size: "9.52x50.8", t: 0.12, w: 1.00 },
+  { size: "9.52x76.2", t: 0.12, w: 1.00 },
+  { size: "9.65x152.4", t: 0.12, w: 1.52 },
+  { size: "10x20", t: 0.15, w: 1.00 },
+  { size: "10x25", t: 0.15, w: 1.00 },
+  { size: "10x30", t: 0.15, w: 1.00 },
+  { size: "10x40", t: 0.15, w: 1.00 },
+  { size: "10x50", t: 0.15, w: 1.00 },
+  { size: "10x60", t: 0.15, w: 1.00 },
+  { size: "10x75", t: 0.15, w: 1.00 },
+  { size: "10x80", t: 0.15, w: 1.00 },
+  { size: "10x100", t: 0.15, w: 1.00 },
+  { size: "10x120", t: 0.15, w: 1.20 },
+  { size: "10x125", t: 0.15, w: 1.25 },
+  { size: "10x140", t: 0.15, w: 1.40 },
+  { size: "10x150", t: 0.15, w: 1.50 },
+  { size: "10x160", t: 0.15, w: 1.60 },
+  { size: "10x180", t: 0.15, w: 1.80 },
+  { size: "10x200", t: 0.15, w: 2.00 },
+  { size: "12x45", t: 0.15, w: 1.00 },
+  { size: "12x65", t: 0.15, w: 1.00 },
+  { size: "12x100", t: 0.15, w: 1.20 }, // Map says 1.20, Exception Correct
+  { size: "12x120", t: 0.15, w: 1.25 }, // Map says 1.25, Exception Correct
+  { size: "12x125", t: 0.15, w: 1.00 }, // Map says 1.00, Exception Correct
+  { size: "12.7x76.2", t: 0.15, w: 1.02 },
+  { size: "12.7x101.6", t: 0.15, w: 1.27 },
+  { size: "12.7x127", t: 0.15, w: 1.00 },
+  { size: "13x51", t: 0.15, w: 1.00 },
+  { size: "15x60", t: 0.20, w: 1.50 },
+  { size: "15x80", t: 0.20, w: 1.50 },
+  { size: "15x100", t: 0.20, w: 1.50 },
+  { size: "15x150", t: 0.20, w: 1.50 }
+];
+
+// ==========================================
+// 3. RUN TEST
+// ==========================================
+function runTests() {
+  console.log("=== MEMULAI DEBUGGING TOLERANSI ===");
+  console.log(`Total Data: ${TEST_DATA.length} baris\n`);
+
+  let failCount = 0;
+  let passCount = 0;
+
+  // Header Table Text
+  console.log(
+    "STATUS".padEnd(8) + 
+    "| SIZE".padEnd(12) + 
+    "| T (Exp)".padEnd(10) + 
+    "| T (Act)".padEnd(10) + 
+    "| W (Exp)".padEnd(10) + 
+    "| W (Act)"
+  );
+  console.log("-".repeat(70));
+
+  TEST_DATA.forEach((item, index) => {
+    // 1. Parse D1 dan D2
+    const parts = item.size.split("x");
+    const d1 = parseFloat(parts[0]);
+    const d2 = parseFloat(parts[1]);
+
+    // 2. Jalankan Fungsi
+    const result = getTolerance(d1, d2);
+
+    // 3. Bandingkan (Gunakan epsilon untuk floating point safety)
+    const tMatch = Math.abs(result.thickness - item.t) < 0.0001;
+    const wMatch = Math.abs(result.width - item.w) < 0.0001;
+
+    // 4. Output Log
+    if (tMatch && wMatch) {
+      passCount++;
+      // Optional: Uncomment baris bawah jika ingin melihat yang sukses juga
+      // console.log(`PASS    | ${item.size.padEnd(10)} | ${item.t}      | ${result.thickness}      | ${item.w}      | ${result.width}`);
+    } else {
+      failCount++;
+      const status = "FAIL ❌";
+      // Highlight mana yang salah
+      const tLog = tMatch ? `${item.t}` : `${item.t} != ${result.thickness}`;
+      const wLog = wMatch ? `${item.w}` : `${item.w} != ${result.width} <---`;
+      
+      console.log(
+        `${status.padEnd(8)}| ${item.size.padEnd(10)} | ` +
+        `${(item.t + "").padEnd(8)} | ` +
+        `${(result.thickness + "").padEnd(8)} | ` +
+        `${(item.w + "").padEnd(8)} | ` +
+        `${(result.width + "").padEnd(8)}`
+      );
+    }
+  });
+
+  console.log("-".repeat(70));
+  console.log(`\nHASIL AKHIR:`);
+  console.log(`✅ PASS: ${passCount}`);
+  console.log(`❌ FAIL: ${failCount}`);
+
+  if (failCount > 0) {
+    console.log("\nKESIMPULAN:");
+    console.log("Kode perlu diperbaiki untuk menangani kasus FAIL di atas.");
+    console.log("Biasanya karena belum masuk ke WIDTH_EXCEPTION.");
+  } else {
+    console.log("\nSELAMAT! Kode Logika sudah 100% sesuai dengan data.");
+  }
+}
+
+// JALANKAN
+runTests();
