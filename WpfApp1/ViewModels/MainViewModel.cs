@@ -321,22 +321,19 @@ namespace WpfApp1.ViewModels
 
             SearchResults.Clear();
 
-            LoadAvailableYears();
+            // FIX CS4014: Menggunakan _ = untuk menandai fire-and-forget agar warning hilang
+            _ = LoadAvailableYears();
         }
 
-        private void LoadAvailableYears()
+        private async System.Threading.Tasks.Task LoadAvailableYears()
         {
             try
             {
-                var dbYears = _repository.GetAvailableYears();
-                if (System.Windows.Application.Current.Dispatcher.CheckAccess())
-                {
-                    Years.Clear(); foreach (var year in dbYears) Years.Add(year);
-                }
-                else
-                {
-                    System.Windows.Application.Current.Dispatcher.Invoke(() => { Years.Clear(); foreach (var year in dbYears) Years.Add(year); });
-                }
+                var dbYears = await System.Threading.Tasks.Task.Run(() => _repository.GetAvailableYears());
+
+                // Updating ObservableCollection on UI thread is safe here because await captures the context
+                Years.Clear();
+                foreach (var year in dbYears) Years.Add(year);
             }
             catch (System.Exception ex)
             {
@@ -357,7 +354,7 @@ namespace WpfApp1.ViewModels
             }
         }
 
-        private void ExecuteFind(object? parameter)
+        private async void ExecuteFind(object? parameter)
         {
             if (string.IsNullOrWhiteSpace(SelectedYear)) { OnShowMessage?.Invoke("Harap memilih YEAR."); return; }
             if (string.IsNullOrWhiteSpace(SelectedMonth)) { OnShowMessage?.Invoke("Harap memilih MONTH."); return; }
@@ -367,7 +364,10 @@ namespace WpfApp1.ViewModels
             {
                 string dbMonth = ConvertMonthToEnglish(SelectedMonth);
                 string dbDate = SelectedDate.Value.ToString("dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture);
-                var data = _repository.SearchBusbarRecords(SelectedYear, dbMonth, dbDate);
+
+                // Wrap DB search in Task.Run to prevent UI blocking
+                var data = await System.Threading.Tasks.Task.Run(() => _repository.SearchBusbarRecords(SelectedYear, dbMonth, dbDate));
+
                 SearchResults.Clear();
                 foreach (var item in data) SearchResults.Add(item);
                 if (SearchResults.Count == 0) OnShowMessage?.Invoke("Data tidak ditemukan untuk kriteria tersebut.");
@@ -420,29 +420,24 @@ namespace WpfApp1.ViewModels
 
             try
             {
-                await System.Threading.Tasks.Task.Run(() =>
-                {
-                    try
-                    {
-                        var itemsToExport = new System.Collections.Generic.List<WpfApp1.Core.Models.BusbarExportItem>(ExportList);
-                        string savedExcelPath = _printService.GenerateCoaExcel(CustomerName, PoNumber, DoNumber, itemsToExport, SelectedStandard);
+                // Prepare data on UI thread before going background
+                var itemsToExport = new System.Collections.Generic.List<WpfApp1.Core.Models.BusbarExportItem>(ExportList);
+                string custName = CustomerName;
+                string po = PoNumber;
+                string doNum = DoNumber;
+                string std = SelectedStandard ?? string.Empty;
 
-                        System.Windows.Application.Current.Dispatcher.Invoke(() =>
-                        {
-                            CustomerName = string.Empty;
-                            PoNumber = string.Empty;
-                            DoNumber = string.Empty;
-                            SelectedStandard = null;
-                            ExportList.Clear();
+                // FIX CS1061: Await the Async Service method directly
+                string savedExcelPath = await _printService.GenerateCoaExcel(custName, po, doNum, itemsToExport, std);
 
-                            TriggerSuccessNotification("COA Generated Successfully!");
-                        });
-                    }
-                    catch (System.Exception ex)
-                    {
-                        throw ex;
-                    }
-                });
+                // UI updates happen automatically here after await (on UI thread)
+                CustomerName = string.Empty;
+                PoNumber = string.Empty;
+                DoNumber = string.Empty;
+                SelectedStandard = null;
+                ExportList.Clear();
+
+                TriggerSuccessNotification("COA Generated Successfully!");
             }
             catch (System.Exception ex)
             {
