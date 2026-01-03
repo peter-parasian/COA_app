@@ -383,6 +383,7 @@ namespace WpfApp1.ViewModels
 
         private void ExecutePrintCoa(object? parameter)
         {
+            // Validasi Input (Cepat, di UI Thread)
             if (ExportList.Count == 0)
             {
                 System.Windows.MessageBox.Show("Export List kosong. Silakan pilih data terlebih dahulu.", "Peringatan", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
@@ -415,29 +416,55 @@ namespace WpfApp1.ViewModels
 
             DoNumber = FormatDoNumber(DoNumber);
 
-            try
+            // 1. Kunci tombol (Set IsBusy = true) -> Mengakibatkan tombol Disabled di UI
+            if (IsBusy) return;
+            IsBusy = true;
+
+            // 2. Jalankan proses berat di Background Thread (UI tidak akan freeze, window bisa di-minimize)
+            System.Threading.Tasks.Task.Run(() =>
             {
-                var itemsToExport = new System.Collections.Generic.List<WpfApp1.Core.Models.BusbarExportItem>(ExportList);
+                try
+                {
+                    // Copy data list ke memory lokal agar aman diakses background thread
+                    var itemsToExport = new System.Collections.Generic.List<WpfApp1.Core.Models.BusbarExportItem>(ExportList);
 
-                string savedExcelPath = _printService.GenerateCoaExcel(CustomerName, PoNumber, DoNumber, itemsToExport, SelectedStandard);
-                string savedPdfPath = System.IO.Path.ChangeExtension(savedExcelPath, ".pdf");
+                    // Panggil Service berat (Excel & PDF generation)
+                    string savedExcelPath = _printService.GenerateCoaExcel(CustomerName, PoNumber, DoNumber, itemsToExport, SelectedStandard);
+                    string savedPdfPath = System.IO.Path.ChangeExtension(savedExcelPath, ".pdf");
 
-                System.Windows.MessageBox.Show(
-                    $"File berhasil dibuat!\n\nEXCEL:\n{savedExcelPath}\n\nPDF:\n{savedPdfPath}",
-                    "Sukses",
-                    System.Windows.MessageBoxButton.OK,
-                    System.Windows.MessageBoxImage.Information);
+                    // 3. Kembali ke UI Thread untuk Update Tampilan (Hanya sebentar di akhir proses)
+                    System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        System.Windows.MessageBox.Show(
+                            $"File berhasil dibuat!\n\nEXCEL:\n{savedExcelPath}\n\nPDF:\n{savedPdfPath}",
+                            "Sukses",
+                            System.Windows.MessageBoxButton.OK,
+                            System.Windows.MessageBoxImage.Information);
 
-                CustomerName = string.Empty;
-                PoNumber = string.Empty;
-                DoNumber = string.Empty;
-                SelectedStandard = null;
-                ExportList.Clear();
-            }
-            catch (System.Exception ex)
-            {
-                System.Windows.MessageBox.Show($"Gagal membuat Dokumen:\n{ex.Message}", "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
-            }
+                        CustomerName = string.Empty;
+                        PoNumber = string.Empty;
+                        DoNumber = string.Empty;
+                        SelectedStandard = null;
+                        ExportList.Clear();
+                    });
+                }
+                catch (System.Exception ex)
+                {
+                    // Handle Error di UI Thread
+                    System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        System.Windows.MessageBox.Show($"Gagal membuat Dokumen:\n{ex.Message}", "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                    });
+                }
+                finally
+                {
+                    // 4. Buka kunci tombol (Set IsBusy = false) -> Tombol jadi aktif lagi di UI
+                    System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        IsBusy = false;
+                    });
+                }
+            });
         }
 
         private string ConvertMonthToEnglish(string indoMonth)

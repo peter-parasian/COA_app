@@ -303,6 +303,7 @@
                             <Button Content="FIND" 
                                 MinWidth="80" Width="100" Height="38" 
                                 FontSize="13" FontWeight="SemiBold" 
+                                IsEnabled="{Binding IsNotBusy}"
                                 Command="{Binding FindCommand}"
                                 Controls:ControlsHelper.ContentCharacterCasing="Upper"
                                 Style="{StaticResource MahApps.Styles.Button.Square.Accent}" 
@@ -364,6 +365,7 @@
                                             <Button Content="+" Width="30" Height="26" Background="#28A745" Foreground="White"
                                             FontSize="16" Padding="0,-2,0,0" BorderThickness="0" Cursor="Hand"
                                             ToolTip="Tambahkan ke daftar" Style="{StaticResource MahApps.Styles.Button.Square}"
+                                            IsEnabled="{Binding DataContext.IsNotBusy, RelativeSource={RelativeSource AncestorType=Window}}"
                                             Command="{Binding DataContext.AddToExportCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                             CommandParameter="{Binding}"/>
                                         </DataTemplate>
@@ -415,6 +417,7 @@
                                             <Button Content="×" Width="30" Height="26" Background="#DC3545" Foreground="White"
                                                     FontSize="18" Padding="0,-4,0,0" BorderThickness="0" Cursor="Hand"
                                                     ToolTip="Hapus dari daftar" Style="{StaticResource MahApps.Styles.Button.Square}"
+                                                    IsEnabled="{Binding DataContext.IsNotBusy, RelativeSource={RelativeSource AncestorType=Window}}"
                                                     Command="{Binding DataContext.RemoveFromExportCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                     CommandParameter="{Binding}"/>
                                         </DataTemplate>
@@ -470,6 +473,7 @@
                 </Border>
 
                 <Button Grid.Column="1" Content="PRINT COA"
+                        IsEnabled="{Binding IsNotBusy}"
                         Command="{Binding PrintCoaCommand}"
                         Controls:ControlsHelper.ContentCharacterCasing="Upper"
                         MinWidth="150" Width="200" Height="Auto" FontSize="16" FontWeight="Bold"
