@@ -14,7 +14,7 @@
         WindowState="Maximized"
         SaveWindowPosition="True"
         GlowBrush="{DynamicResource MahApps.Brushes.Accent}"
-        ShowTitleBar="False"
+        ShowTitleBar="True"
         WindowTitleBrush="{DynamicResource MahApps.Brushes.Accent}"
         NonActiveWindowTitleBrush="Gray"
         NonActiveGlowBrush="Gray">
