@@ -34,46 +34,68 @@ namespace WpfApp1.Shared.Helpers
         {
             if (string.IsNullOrWhiteSpace(raw)) return string.Empty;
 
+            System.Text.StringBuilder resultBuilder = new System.Text.StringBuilder();
+
             string text = raw.ToUpper();
 
-            int start = -1;
+            int startIndex = -1;
+
             for (int i = 0; i < text.Length; i++)
             {
                 if (char.IsDigit(text[i]))
                 {
-                    start = i;
+                    startIndex = i;
                     break;
                 }
             }
 
-            if (start == -1) return string.Empty;
+            if (startIndex == -1) return string.Empty;
 
-            string substring = text.Substring(start);
+            int idx = startIndex; 
 
-            int xIndex = substring.IndexOf('X');
-            if (xIndex == -1) return string.Empty;
+            bool hasX = false;
+            int dimensionIterator = startIndex;
 
-            if (xIndex + 1 >= substring.Length || !char.IsDigit(substring[xIndex + 1]))
-                return string.Empty;
+            while (dimensionIterator < text.Length)
+            {
+                char c = text[dimensionIterator];
 
-            int end = xIndex + 1;
-            while (end < substring.Length && char.IsDigit(substring[end]))
-                end++;
+                if (char.IsDigit(c))
+                {
+                    resultBuilder.Append(c);
+                }
+                else if (c == 'X')
+                {
+                    if (dimensionIterator + 1 < text.Length && char.IsDigit(text[dimensionIterator + 1]))
+                    {
+                        resultBuilder.Append('x');
+                        hasX = true;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                else
+                {
+                    if (hasX) break;
+                }
+                dimensionIterator++;
+            }
 
-            string result = substring.Substring(0, end).Trim();
-
-            string remaining = substring.Substring(end).Trim();
+            if (!hasX || resultBuilder.Length == 0) return string.Empty;
 
             string keyword = string.Empty;
 
-            string cleanRemaining = string.Empty;
-            for (int i = 0; i < remaining.Length; i++)
+            System.Text.StringBuilder remainingBuilder = new System.Text.StringBuilder();
+            for (int k = dimensionIterator; k < text.Length; k++)
             {
-                if (char.IsLetterOrDigit(remaining[i]))
+                if (char.IsLetterOrDigit(text[k]))
                 {
-                    cleanRemaining += remaining[i];
+                    remainingBuilder.Append(text[k]);
                 }
             }
+            string cleanRemaining = remainingBuilder.ToString();
 
             if (cleanRemaining.Contains("FR"))
             {
@@ -85,13 +107,13 @@ namespace WpfApp1.Shared.Helpers
             }
             else if (!string.IsNullOrEmpty(cleanRemaining))
             {
-                for (int i = 0; i < cleanRemaining.Length; i++)
+                for (int j = 0; j < cleanRemaining.Length; j++)
                 {
-                    if (cleanRemaining[i] == 'B' && i + 1 < cleanRemaining.Length &&
-                        char.IsDigit(cleanRemaining[i + 1]))
+                    if (cleanRemaining[j] == 'B' && j + 1 < cleanRemaining.Length &&
+                        char.IsDigit(cleanRemaining[j + 1]))
                     {
-                        int bStart = i;
-                        int bEnd = i + 1;
+                        int bStart = j;
+                        int bEnd = j + 1;
                         while (bEnd < cleanRemaining.Length && char.IsDigit(cleanRemaining[bEnd]))
                         {
                             bEnd++;
@@ -108,10 +130,11 @@ namespace WpfApp1.Shared.Helpers
 
             if (!string.IsNullOrEmpty(keyword))
             {
-                result = result + " " + keyword;
+                resultBuilder.Append(' ');
+                resultBuilder.Append(keyword);
             }
 
-            return result.Trim();
+            return resultBuilder.ToString();
         }
 
         public static string DetermineTLJTable(string size_mm)

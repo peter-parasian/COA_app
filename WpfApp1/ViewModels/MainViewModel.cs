@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Windows.Input;
-using System.Windows.Threading; 
+using System.Windows.Threading;
 using WpfApp1.Core.Models;
 using WpfApp1.Core.Services;
 using WpfApp1.Data.Database;
@@ -176,7 +176,7 @@ namespace WpfApp1.ViewModels
             _printService = new CoaPrintService();
 
             _logTimer = new DispatcherTimer();
-            _logTimer.Interval = TimeSpan.FromMilliseconds(200); 
+            _logTimer.Interval = TimeSpan.FromMilliseconds(200);
             _logTimer.Tick += LogTimer_Tick;
 
             _importService.OnDebugMessage += (msg) => {
