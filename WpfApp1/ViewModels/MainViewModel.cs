@@ -393,7 +393,7 @@ namespace WpfApp1.ViewModels
             return doNumber;
         }
 
-        private void ExecutePrintCoa(object? parameter)
+        private async void ExecutePrintCoa(object? parameter)
         {
             if (ExportList.Count == 0)
             {
@@ -430,49 +430,103 @@ namespace WpfApp1.ViewModels
             if (IsBusy) return;
             IsBusy = true;
 
-            System.Threading.Tasks.Task.Run(() =>
+            bool canCloseProgress = false;
+            System.Windows.Window? progressWindow = null;
+
+            try
             {
-                try
+                progressWindow = new System.Windows.Window
                 {
-                    var itemsToExport = new System.Collections.Generic.List<WpfApp1.Core.Models.BusbarExportItem>(ExportList);
-
-                    string savedExcelPath = _printService.GenerateCoaExcel(CustomerName, PoNumber, DoNumber, itemsToExport, SelectedStandard);
-                    string savedPdfPath = System.IO.Path.ChangeExtension(savedExcelPath, ".pdf");
-
-                    System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                    Title = "Processing...",
+                    Width = 300,
+                    Height = 150,
+                    WindowStartupLocation = System.Windows.WindowStartupLocation.CenterOwner,
+                    Owner = System.Windows.Application.Current.MainWindow,
+                    ResizeMode = System.Windows.ResizeMode.NoResize,
+                    WindowStyle = System.Windows.WindowStyle.None,
+                    BorderBrush = System.Windows.Media.Brushes.Black,
+                    BorderThickness = new System.Windows.Thickness(1),
+                    Content = new System.Windows.Controls.StackPanel
                     {
-                        //System.Windows.MessageBox.Show(
-                        //    $"File berhasil dibuat!\n\nEXCEL:\n{savedExcelPath}\n\nPDF:\n{savedPdfPath}",
-                        //    "Sukses",
-                        //    System.Windows.MessageBoxButton.OK,
-                        //    System.Windows.MessageBoxImage.Information);
+                        Margin = new System.Windows.Thickness(20),
+                        Children =
+                        {
+                            new System.Windows.Controls.TextBlock
+                            {
+                                Text = "Generating COA Document...", 
+                                FontSize = 14,
+                                TextAlignment = System.Windows.TextAlignment.Center,
+                                Margin = new System.Windows.Thickness(0, 10, 0, 20)
+                            },
+                            new System.Windows.Controls.ProgressBar
+                            {
+                                IsIndeterminate = true,
+                                Height = 20
+                            },
+                            new System.Windows.Controls.TextBlock
+                            {
+                                Text = "Please wait, do not close this window...",
+                                FontSize = 10,
+                                TextAlignment = System.Windows.TextAlignment.Center,
+                                Margin = new System.Windows.Thickness(0, 20, 0, 0),
+                                Foreground = System.Windows.Media.Brushes.Gray
+                            }
+                        }
+                    }
+                };
 
-                        CustomerName = string.Empty;
-                        PoNumber = string.Empty;
-                        DoNumber = string.Empty;
-                        SelectedStandard = null;
-                        ExportList.Clear();
-                    });
-                }
-                catch (System.Exception ex)
+                progressWindow.Closing += (s, args) =>
                 {
-                    System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                    if (!canCloseProgress)
                     {
-                        System.Windows.MessageBox.Show($"Gagal membuat Dokumen:\n{ex.Message}", "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
-                    });
-                }
-                finally
+                        args.Cancel = true;
+                    }
+                };
+
+                progressWindow.Show();
+
+                await System.Threading.Tasks.Task.Run(() =>
                 {
-                    System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                    try
                     {
-                        IsBusy = false;
-                    });
+                        var itemsToExport = new System.Collections.Generic.List<WpfApp1.Core.Models.BusbarExportItem>(ExportList);
+                        string savedExcelPath = _printService.GenerateCoaExcel(CustomerName, PoNumber, DoNumber, itemsToExport, SelectedStandard);
+                        string savedPdfPath = System.IO.Path.ChangeExtension(savedExcelPath, ".pdf");
 
-                    _printService.ClearCache();
+                        System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            CustomerName = string.Empty;
+                            PoNumber = string.Empty;
+                            DoNumber = string.Empty;
+                            SelectedStandard = null;
+                            ExportList.Clear();
+                        });
+                    }
+                    catch (System.Exception ex)
+                    {
+                        throw ex;
+                    }
+                });
 
-                    System.GC.Collect();
+                canCloseProgress = true;
+                progressWindow.Close();
+            }
+            catch (System.Exception ex)
+            {
+                if (progressWindow != null)
+                {
+                    canCloseProgress = true;
+                    progressWindow.Close();
                 }
-            });
+
+                System.Windows.MessageBox.Show($"Gagal membuat Dokumen:\n{ex.Message}", "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsBusy = false;
+                _printService.ClearCache();
+                System.GC.Collect();
+            }
         }
 
         private string ConvertMonthToEnglish(string indoMonth)
