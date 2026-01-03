@@ -6,8 +6,8 @@ namespace WpfApp1.Core.Services
 {
     public class CoaPrintService
     {
-        private bool? _img1Exists = null;
-        private bool? _img2Exists = null;
+        private byte[]? _cachedImg1 = null;
+        private byte[]? _cachedImg2 = null;
 
         public string GenerateCoaExcel(
             string customerName,
@@ -200,7 +200,7 @@ namespace WpfApp1.Core.Services
                     cellThickVal.Style.Border.BottomBorder = XLBorderStyleValues.None;
 
                     var cellThickTol = worksheet.Cell(rBottom, 6);
-                    cellThickTol.Style.Font.Bold = false; 
+                    cellThickTol.Style.Font.Bold = false;
                     cellThickTol.Style.Font.Italic = true;
                     cellThickTol.Style.Font.FontSize = 22;
                     cellThickTol.Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
@@ -213,7 +213,7 @@ namespace WpfApp1.Core.Services
                     cellWidthVal.Style.Border.BottomBorder = XLBorderStyleValues.None;
 
                     var cellWidthTol = worksheet.Cell(rBottom, 7);
-                    cellWidthTol.Style.Font.Bold = false; 
+                    cellWidthTol.Style.Font.Bold = false;
                     cellWidthTol.Style.Font.Italic = true;
                     cellWidthTol.Style.Font.FontSize = 22;
                     cellWidthTol.Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
@@ -227,7 +227,7 @@ namespace WpfApp1.Core.Services
                     cellLengthVal.Style.Border.BottomBorder = XLBorderStyleValues.None;
 
                     var cellLengthTol = worksheet.Cell(rBottom, 8);
-                    cellLengthTol.Style.Font.Bold = false; 
+                    cellLengthTol.Style.Font.Bold = false;
                     cellLengthTol.Style.Font.Italic = true;
                     cellLengthTol.Style.Font.FontSize = 22;
                     cellLengthTol.Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
@@ -261,22 +261,32 @@ namespace WpfApp1.Core.Services
 
                 int imageRow = firstInsertedRow + 2;
 
-                if (!_img1Exists.HasValue)
-                    _img1Exists = System.IO.File.Exists(pathImg1);
-
-                if (!_img2Exists.HasValue)
-                    _img2Exists = System.IO.File.Exists(pathImg2);
-
-                if (_img1Exists.Value)
+                if (_cachedImg1 == null && System.IO.File.Exists(pathImg1))
                 {
-                    var pic1 = worksheet.AddPicture(pathImg1);
-                    pic1.MoveTo(worksheet.Cell(imageRow, 11));
+                    _cachedImg1 = System.IO.File.ReadAllBytes(pathImg1);
                 }
 
-                if (_img2Exists.Value)
+                if (_cachedImg2 == null && System.IO.File.Exists(pathImg2))
                 {
-                    var pic2 = worksheet.AddPicture(pathImg2);
-                    pic2.MoveTo(worksheet.Cell(imageRow, 2));
+                    _cachedImg2 = System.IO.File.ReadAllBytes(pathImg2);
+                }
+
+                if (_cachedImg1 != null)
+                {
+                    using (var imgStream1 = new System.IO.MemoryStream(_cachedImg1))
+                    {
+                        var pic1 = worksheet.AddPicture(imgStream1);
+                        pic1.MoveTo(worksheet.Cell(imageRow, 11));
+                    }
+                }
+
+                if (_cachedImg2 != null)
+                {
+                    using (var imgStream2 = new System.IO.MemoryStream(_cachedImg2))
+                    {
+                        var pic2 = worksheet.AddPicture(imgStream2);
+                        pic2.MoveTo(worksheet.Cell(imageRow, 2));
+                    }
                 }
 
                 worksheet.PageSetup.PrintAreas.Clear();
@@ -285,22 +295,28 @@ namespace WpfApp1.Core.Services
                 worksheet.PageSetup.PagesTall = 1;
                 worksheet.PageSetup.PagesWide = 1;
 
-                workbook.SaveAs(fullPath);
-            }
+                System.IO.MemoryStream excelStream = new System.IO.MemoryStream();
+                workbook.SaveAs(excelStream);
 
-            string pdfPath = System.IO.Path.ChangeExtension(fullPath, ".pdf");
-            ConvertExcelToPdf(fullPath, pdfPath);
+                workbook.SaveAs(fullPath);
+
+                excelStream.Position = 0;
+
+                string pdfPath = System.IO.Path.ChangeExtension(fullPath, ".pdf");
+
+                ConvertExcelToPdf(excelStream, pdfPath);
+            }
 
             return fullPath;
         }
 
-        private void ConvertExcelToPdf(string excelFile, string pdfFile)
+        private void ConvertExcelToPdf(System.IO.Stream excelStream, string pdfFile)
         {
             Spire.Xls.Workbook workbook = new Spire.Xls.Workbook();
 
             try
             {
-                workbook.LoadFromFile(excelFile);
+                workbook.LoadFromStream(excelStream);
 
                 foreach (Spire.Xls.Worksheet sheet in workbook.Worksheets)
                 {
@@ -314,6 +330,10 @@ namespace WpfApp1.Core.Services
             catch (System.Exception ex)
             {
                 throw new System.Exception("Gagal konversi PDF dengan Spire: " + ex.Message, ex);
+            }
+            finally
+            {
+                workbook.Dispose();
             }
         }
 
@@ -337,8 +357,8 @@ namespace WpfApp1.Core.Services
 
         public void ClearCache()
         {
-            _img1Exists = null;
-            _img2Exists = null;
+            _cachedImg1 = null;
+            _cachedImg2 = null;
         }
 
         private string GetRomanMonth(int month)
