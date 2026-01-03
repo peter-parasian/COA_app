@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using ClosedXML.Excel; 
+using ClosedXML.Excel;
 
 namespace WpfApp1.Core.Services
 {
@@ -57,10 +57,10 @@ namespace WpfApp1.Core.Services
 
                 int rowsPerItem = 2;
                 int totalRowsNeeded = dataCount * rowsPerItem;
-                int defaultRowsAvailable = 3; 
+                int defaultRowsAvailable = 3;
 
                 int startRowTable1 = 20;
-                int originalStartRowTable2 = 30; 
+                int originalStartRowTable2 = 30;
                 int startRowTable2 = originalStartRowTable2;
 
                 if (totalRowsNeeded > defaultRowsAvailable)
@@ -99,34 +99,55 @@ namespace WpfApp1.Core.Services
 
                     var cellThickVal = worksheet.Cell(rTop, 6);
                     cellThickVal.Value = string.Format(cultureInvariant, "{0:0.00}", rec.Thickness);
-                    cellThickVal.Style.Font.Bold = true; 
+                    cellThickVal.Style.Font.Bold = true;
                     cellThickVal.Style.Font.FontName = "Montserrat";
                     cellThickVal.Style.Font.FontSize = 22;
-                    cellThickVal.Style.Alignment.Vertical = XLAlignmentVerticalValues.Bottom; 
+                    cellThickVal.Style.Alignment.Vertical = XLAlignmentVerticalValues.Bottom;
                     cellThickVal.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-                    cellThickVal.Style.Border.BottomBorder = XLBorderStyleValues.None; 
 
                     var cellThickTol = worksheet.Cell(rBottom, 6);
                     cellThickTol.Value = "(5.00 ± 0.10)";
-                    cellThickTol.Style.Font.Bold = false; 
+                    cellThickTol.Style.Font.Bold = false;
                     cellThickTol.Style.Font.FontName = "Montserrat";
                     cellThickTol.Style.Font.FontSize = 22;
                     cellThickTol.Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
                     cellThickTol.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-                    cellThickTol.Style.Border.TopBorder = XLBorderStyleValues.None; 
 
-                    worksheet.Cell(rTop, 7).Value = string.Format(cultureInvariant, "{0:0.00}", rec.Width);
-                    worksheet.Range(rTop, 7, rBottom, 7).Merge();
+                    var cellWidthVal = worksheet.Cell(rTop, 7);
+                    cellWidthVal.Value = string.Format(cultureInvariant, "{0:0.00}", rec.Width);
+                    cellWidthVal.Style.Font.Bold = true;
+                    cellWidthVal.Style.Font.FontName = "Montserrat";
+                    cellWidthVal.Style.Font.FontSize = 22;
+                    cellWidthVal.Style.Alignment.Vertical = XLAlignmentVerticalValues.Bottom;
+                    cellWidthVal.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
 
+                    var cellWidhtTol = worksheet.Cell(rBottom, 7);
+                    cellWidhtTol.Value = "(5.00 ± 0.10)";
+                    cellWidhtTol.Style.Font.Bold = false;
+                    cellWidhtTol.Style.Font.FontName = "Montserrat";
+                    cellWidhtTol.Style.Font.FontSize = 22;
+                    cellWidhtTol.Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
+                    cellWidhtTol.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+                    var cellLengthVal = worksheet.Cell(rTop, 8);
                     if (double.TryParse(rec.Length.ToString(), out double lengthValue))
                     {
-                        worksheet.Cell(rTop, 8).Value = System.Convert.ToInt32(lengthValue);
+                        cellLengthVal.Value = System.Convert.ToInt32(lengthValue);
                     }
-                    else
-                    {
-                        worksheet.Cell(rTop, 8).Value = rec.Length;
-                    }
-                    worksheet.Range(rTop, 8, rBottom, 8).Merge();
+                    cellLengthVal.Value = string.Format(cultureInvariant, "{0:0.00}", rec.Length);
+                    cellLengthVal.Style.Font.Bold = true;
+                    cellLengthVal.Style.Font.FontName = "Montserrat";
+                    cellLengthVal.Style.Font.FontSize = 22;
+                    cellLengthVal.Style.Alignment.Vertical = XLAlignmentVerticalValues.Bottom;
+                    cellLengthVal.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+                    var cellLentghTol = worksheet.Cell(rBottom, 8);
+                    cellLentghTol.Value = "(5.00 ± 0.10)";
+                    cellLentghTol.Style.Font.Bold = false;
+                    cellLentghTol.Style.Font.FontName = "Montserrat";
+                    cellLentghTol.Style.Font.FontSize = 22;
+                    cellLentghTol.Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
+                    cellLentghTol.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
 
                     worksheet.Cell(rTop, 9).Value = string.Format(cultureInvariant, "{0:0.00}", rec.Radius);
                     worksheet.Range(rTop, 9, rBottom, 9).Merge();
@@ -134,17 +155,23 @@ namespace WpfApp1.Core.Services
                     worksheet.Cell(rTop, 10).Value = string.Format(cultureInvariant, "{0:0.00}", rec.Chamber);
                     worksheet.Range(rTop, 10, rBottom, 10).Merge();
 
-
                     worksheet.Cell(rTop, 11).Value = "OK";
                     worksheet.Range(rTop, 11, rBottom, 11).Merge();
-
 
                     var rangeAll = worksheet.Range(rTop, 2, rBottom, 11);
                     ApplyCustomStyle(rangeAll);
 
                     cellThickVal.Style.Alignment.Vertical = XLAlignmentVerticalValues.Bottom;
                     cellThickTol.Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
-                    cellThickTol.Style.Font.Bold = false; // Pastikan tetap tidak bold
+                    cellThickTol.Style.Font.Bold = false;
+
+                    cellWidthVal.Style.Alignment.Vertical = XLAlignmentVerticalValues.Bottom;
+                    cellWidhtTol.Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
+                    cellWidhtTol.Style.Font.Bold = false;
+
+                    cellLengthVal.Style.Alignment.Vertical = XLAlignmentVerticalValues.Bottom;
+                    cellLentghTol.Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
+                    cellLentghTol.Style.Font.Bold = false;
 
                     worksheet.Cell(rTable2, 2).Value = rec.BatchNo;
                     worksheet.Cell(rTable2, 3).Value = rec.Size;
@@ -167,8 +194,16 @@ namespace WpfApp1.Core.Services
                 for (int i = 0; i < dataCount; i++)
                 {
                     int rTop = startRowTable1 + (i * rowsPerItem);
+                    int rBottom = rTop + 1;
+
                     worksheet.Cell(rTop, 6).Style.Border.BottomBorder = XLBorderStyleValues.None;
-                    worksheet.Cell(rTop + 1, 6).Style.Border.TopBorder = XLBorderStyleValues.None;
+                    worksheet.Cell(rBottom, 6).Style.Border.TopBorder = XLBorderStyleValues.None;
+
+                    worksheet.Cell(rTop, 7).Style.Border.BottomBorder = XLBorderStyleValues.None;
+                    worksheet.Cell(rBottom, 7).Style.Border.TopBorder = XLBorderStyleValues.None;
+
+                    worksheet.Cell(rTop, 8).Style.Border.BottomBorder = XLBorderStyleValues.None;
+                    worksheet.Cell(rBottom, 8).Style.Border.TopBorder = XLBorderStyleValues.None;
                 }
 
                 var table2Range = worksheet.Range(startRowTable2, 2, startRowTable2 + dataCount - 1, 11);
