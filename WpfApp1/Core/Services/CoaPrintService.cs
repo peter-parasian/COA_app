@@ -123,6 +123,7 @@ namespace WpfApp1.Core.Services
                     var cellThickTol = worksheet.Cell(rBottom, 6);
                     cellThickTol.Value = strThickTol; 
                     cellThickTol.Style.Font.Bold = false;
+                    cellThickTol.Style.Font.Italic = true;
                     cellThickTol.Style.Font.FontName = "Montserrat";
                     cellThickTol.Style.Font.FontSize = 22;
                     cellThickTol.Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
@@ -139,6 +140,7 @@ namespace WpfApp1.Core.Services
                     var cellWidhtTol = worksheet.Cell(rBottom, 7);
                     cellWidhtTol.Value = strWidthTol; 
                     cellWidhtTol.Style.Font.Bold = false;
+                    cellWidhtTol.Style.Font.Italic = true;
                     cellWidhtTol.Style.Font.FontName = "Montserrat";
                     cellWidhtTol.Style.Font.FontSize = 22;
                     cellWidhtTol.Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
@@ -156,6 +158,7 @@ namespace WpfApp1.Core.Services
                     var cellLentghTol = worksheet.Cell(rBottom, 8);
                     cellLentghTol.Value = "(4000 ± 15)";
                     cellLentghTol.Style.Font.Bold = false;
+                    cellLentghTol.Style.Font.Italic = true;
                     cellLentghTol.Style.Font.FontName = "Montserrat";
                     cellLentghTol.Style.Font.FontSize = 22;
                     cellLentghTol.Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
