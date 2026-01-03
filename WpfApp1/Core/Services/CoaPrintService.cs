@@ -247,11 +247,12 @@ namespace WpfApp1.Core.Services
                 }
 
                 int lastRowTable2 = startRowTable2 + dataCount - 1;
-
                 var table2Range = worksheet.Range(startRowTable2, 2, lastRowTable2, 11);
+                
                 ApplyBorders(table2Range);
 
                 worksheet.Row(lastRowTable2).InsertRowsBelow(6);
+
                 int firstInsertedRow = lastRowTable2 + 1;
                 int lastInsertedRow = firstInsertedRow + 5;
 
@@ -298,9 +299,9 @@ namespace WpfApp1.Core.Services
         {
             range.Style.Font.Bold = true;
             range.Style.Font.FontSize = 22;
-
             range.Style.Alignment.Horizontal = ClosedXML.Excel.XLAlignmentHorizontalValues.Center;
             range.Style.Alignment.Vertical = ClosedXML.Excel.XLAlignmentVerticalValues.Center;
+            range.Style.Alignment.WrapText = true;
         }
 
         private void ApplyBorders(ClosedXML.Excel.IXLRange range)
