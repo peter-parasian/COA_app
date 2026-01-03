@@ -418,9 +418,15 @@ namespace WpfApp1.ViewModels
             try
             {
                 var itemsToExport = new System.Collections.Generic.List<WpfApp1.Core.Models.BusbarExportItem>(ExportList);
-                string savedPath = _printService.GenerateCoaExcel(CustomerName, PoNumber, DoNumber, itemsToExport, SelectedStandard);
 
-                System.Windows.MessageBox.Show($"Data berhasil diexport ke:\n{savedPath}", "Sukses", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+                string savedExcelPath = _printService.GenerateCoaExcel(CustomerName, PoNumber, DoNumber, itemsToExport, SelectedStandard);
+                string savedPdfPath = System.IO.Path.ChangeExtension(savedExcelPath, ".pdf");
+
+                System.Windows.MessageBox.Show(
+                    $"File berhasil dibuat!\n\nEXCEL:\n{savedExcelPath}\n\nPDF:\n{savedPdfPath}",
+                    "Sukses",
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Information);
 
                 CustomerName = string.Empty;
                 PoNumber = string.Empty;
@@ -430,7 +436,7 @@ namespace WpfApp1.ViewModels
             }
             catch (System.Exception ex)
             {
-                System.Windows.MessageBox.Show($"Gagal membuat Excel:\n{ex.Message}", "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                System.Windows.MessageBox.Show($"Gagal membuat Dokumen:\n{ex.Message}", "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             }
         }
 
@@ -462,7 +468,6 @@ namespace WpfApp1.ViewModels
             SelectedStandard = null;
             SearchResults.Clear();
         }
-
     }
 
     public class RelayCommand : System.Windows.Input.ICommand

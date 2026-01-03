@@ -248,7 +248,7 @@ namespace WpfApp1.Core.Services
 
                 int lastRowTable2 = startRowTable2 + dataCount - 1;
                 var table2Range = worksheet.Range(startRowTable2, 2, lastRowTable2, 11);
-                
+
                 ApplyBorders(table2Range);
 
                 worksheet.Row(lastRowTable2).InsertRowsBelow(6);
@@ -290,9 +290,37 @@ namespace WpfApp1.Core.Services
                 worksheet.PageSetup.AddHorizontalPageBreak(lastInsertedRow + 1);
                 worksheet.PageSetup.PagesTall = 1;
                 worksheet.PageSetup.PagesWide = 1;
+
                 workbook.SaveAs(fullPath);
             }
+
+            string pdfPath = System.IO.Path.ChangeExtension(fullPath, ".pdf");
+            ConvertExcelToPdf(fullPath, pdfPath);
+
             return fullPath;
+        }
+
+        private void ConvertExcelToPdf(string excelFile, string pdfFile)
+        {
+            Spire.Xls.Workbook workbook = new Spire.Xls.Workbook();
+
+            try
+            {
+                workbook.LoadFromFile(excelFile);
+
+                foreach (Spire.Xls.Worksheet sheet in workbook.Worksheets)
+                {
+                    Spire.Xls.PageSetup setup = sheet.PageSetup;
+                    setup.FitToPagesWide = 1;
+                    setup.FitToPagesTall = 1;
+                }
+
+                workbook.SaveToFile(pdfFile, Spire.Xls.FileFormat.PDF);
+            }
+            catch (System.Exception ex)
+            {
+                throw new System.Exception("Gagal konversi PDF dengan Spire: " + ex.Message, ex);
+            }
         }
 
         private void ApplyCustomStyle(ClosedXML.Excel.IXLRange range)

@@ -15,7 +15,7 @@
 		<PackageReference Include="MahApps.Metro" Version="2.4.10" />
 		<PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.1" />
 		<PackageReference Include="ClosedXML" Version="0.104.2" />
-		<PackageReference Include="Microsoft.Office.Interop.Excel" Version="15.0.4795.1001" />
+		<PackageReference Include="FreeSpire.XLS" Version="12.7.0" />
 		<Resource Include="Images\**\*" />
 	</ItemGroup>
 
