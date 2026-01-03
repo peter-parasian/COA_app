@@ -47,6 +47,7 @@ namespace WpfApp1.Core.Services
             using (var workbook = new ClosedXML.Excel.XLWorkbook(templatePath))
             {
                 var worksheet = workbook.Worksheet(1);
+                worksheet.Style.Font.FontName = "Montserrat";
 
                 worksheet.Cell("C12").Value = ": " + poNumber;
                 worksheet.Cell("J12").Value = ": " + customerName;
@@ -115,16 +116,14 @@ namespace WpfApp1.Core.Services
                     var cellThickVal = worksheet.Cell(rTop, 6);
                     cellThickVal.Value = string.Format(cultureInvariant, "{0:0.00}", rec.Thickness);
                     cellThickVal.Style.Font.Bold = true;
-                    cellThickVal.Style.Font.FontName = "Montserrat";
                     cellThickVal.Style.Font.FontSize = 22;
                     cellThickVal.Style.Alignment.Vertical = XLAlignmentVerticalValues.Bottom;
                     cellThickVal.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
 
                     var cellThickTol = worksheet.Cell(rBottom, 6);
-                    cellThickTol.Value = strThickTol; 
+                    cellThickTol.Value = strThickTol;
                     cellThickTol.Style.Font.Bold = false;
                     cellThickTol.Style.Font.Italic = true;
-                    cellThickTol.Style.Font.FontName = "Montserrat";
                     cellThickTol.Style.Font.FontSize = 22;
                     cellThickTol.Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
                     cellThickTol.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
@@ -132,16 +131,14 @@ namespace WpfApp1.Core.Services
                     var cellWidthVal = worksheet.Cell(rTop, 7);
                     cellWidthVal.Value = string.Format(cultureInvariant, "{0:0.00}", rec.Width);
                     cellWidthVal.Style.Font.Bold = true;
-                    cellWidthVal.Style.Font.FontName = "Montserrat";
                     cellWidthVal.Style.Font.FontSize = 22;
                     cellWidthVal.Style.Alignment.Vertical = XLAlignmentVerticalValues.Bottom;
                     cellWidthVal.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
 
                     var cellWidhtTol = worksheet.Cell(rBottom, 7);
-                    cellWidhtTol.Value = strWidthTol; 
+                    cellWidhtTol.Value = strWidthTol;
                     cellWidhtTol.Style.Font.Bold = false;
                     cellWidhtTol.Style.Font.Italic = true;
-                    cellWidhtTol.Style.Font.FontName = "Montserrat";
                     cellWidhtTol.Style.Font.FontSize = 22;
                     cellWidhtTol.Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
                     cellWidhtTol.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
@@ -150,7 +147,6 @@ namespace WpfApp1.Core.Services
                     cellLengthVal.Value = rec.Length;
                     cellLengthVal.Style.NumberFormat.Format = "0";
                     cellLengthVal.Style.Font.Bold = true;
-                    cellLengthVal.Style.Font.FontName = "Montserrat";
                     cellLengthVal.Style.Font.FontSize = 22;
                     cellLengthVal.Style.Alignment.Vertical = XLAlignmentVerticalValues.Bottom;
                     cellLengthVal.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
@@ -159,7 +155,6 @@ namespace WpfApp1.Core.Services
                     cellLentghTol.Value = "(4000 ± 15)";
                     cellLentghTol.Style.Font.Bold = false;
                     cellLentghTol.Style.Font.Italic = true;
-                    cellLentghTol.Style.Font.FontName = "Montserrat";
                     cellLentghTol.Style.Font.FontSize = 22;
                     cellLentghTol.Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
                     cellLentghTol.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
@@ -236,7 +231,6 @@ namespace WpfApp1.Core.Services
         private void ApplyCustomStyle(ClosedXML.Excel.IXLRange range)
         {
             range.Style.Font.Bold = true;
-            range.Style.Font.FontName = "Montserrat";
             range.Style.Font.FontSize = 22;
 
             range.Style.Alignment.Horizontal = ClosedXML.Excel.XLAlignmentHorizontalValues.Center;
