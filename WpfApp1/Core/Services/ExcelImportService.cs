@@ -13,7 +13,10 @@ namespace WpfApp1.Core.Services
 
         private BusbarRepository _repository;
 
-        public event System.Action<string> ? OnDebugMessage;
+        public event System.Action<string>? OnDebugMessage;
+
+        // Event baru untuk melaporkan progress (Current File, Total File)
+        public event System.Action<int, int>? OnProgress;
 
         public ExcelImportService(BusbarRepository repository)
         {
@@ -22,13 +25,23 @@ namespace WpfApp1.Core.Services
 
         public int TotalFilesFound { get; private set; }
         public int TotalRowsInserted { get; private set; }
+        private int _currentFileIndex = 0;
 
         public void Import(Microsoft.Data.Sqlite.SqliteConnection connection, Microsoft.Data.Sqlite.SqliteTransaction transaction)
         {
             TotalFilesFound = 0;
             TotalRowsInserted = 0;
+            _currentFileIndex = 0;
+
+            // Step 1: Hitung total file terlebih dahulu agar progress bar akurat
+            CountTotalFiles();
+
+            // Beritahu UI bahwa perhitungan selesai
+            OnProgress?.Invoke(0, TotalFilesFound);
 
             _repository.CreateBusbarTable(connection);
+
+            // Step 2: Mulai import sambil melaporkan progress
             TraverseFoldersAndImport(connection, transaction);
 
             _repository.FlushAll(connection, transaction);
@@ -38,6 +51,29 @@ namespace WpfApp1.Core.Services
         private void AppendDebug(string message)
         {
             if (OnDebugMessage != null) OnDebugMessage.Invoke(message);
+        }
+
+        private void CountTotalFiles()
+        {
+            if (!System.IO.Directory.Exists(ExcelRootFolder))
+            {
+                throw new System.IO.DirectoryNotFoundException($"Folder root Excel tidak ditemukan: {ExcelRootFolder}");
+            }
+
+            foreach (string yearDir in System.IO.Directory.GetDirectories(ExcelRootFolder))
+            {
+                foreach (string monthDir in System.IO.Directory.GetDirectories(yearDir))
+                {
+                    foreach (string file in System.IO.Directory.GetFiles(monthDir, "*.xlsx"))
+                    {
+                        string fileName = System.IO.Path.GetFileName(file);
+                        if (!fileName.StartsWith("~$"))
+                        {
+                            TotalFilesFound++;
+                        }
+                    }
+                }
+            }
         }
 
         private void TraverseFoldersAndImport(
@@ -65,7 +101,10 @@ namespace WpfApp1.Core.Services
                         if (fileName.StartsWith("~$"))
                             continue;
 
-                        TotalFilesFound++;
+                        // Update progress index
+                        _currentFileIndex++;
+                        OnProgress?.Invoke(_currentFileIndex, TotalFilesFound);
+
                         ProcessSingleExcelFile(connection, transaction, file, year, normalizedMonth);
                     }
                 }

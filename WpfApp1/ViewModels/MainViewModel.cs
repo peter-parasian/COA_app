@@ -15,7 +15,7 @@ namespace WpfApp1.ViewModels
         private ExcelImportService _importService;
         private CoaPrintService _printService;
 
-        private readonly object _lockObject = new object();
+        // Menghapus _lockObject karena kita akan menggunakan Dispatcher.Invoke yang thread-safe untuk UI
 
         private string _debugLog = string.Empty;
         public string DebugLog
@@ -23,6 +23,29 @@ namespace WpfApp1.ViewModels
             get => _debugLog;
             set { _debugLog = value; OnPropertyChanged(); }
         }
+
+        // --- Progress Properties ---
+        private int _progressValue = 0;
+        public int ProgressValue
+        {
+            get => _progressValue;
+            set { _progressValue = value; OnPropertyChanged(); }
+        }
+
+        private int _progressMaximum = 100;
+        public int ProgressMaximum
+        {
+            get => _progressMaximum;
+            set { _progressMaximum = value; OnPropertyChanged(); }
+        }
+
+        private string _progressText = "Ready";
+        public string ProgressText
+        {
+            get => _progressText;
+            set { _progressText = value; OnPropertyChanged(); }
+        }
+        // ---------------------------
 
         public int TotalFilesFound { get; private set; }
         public int TotalRowsInserted { get; private set; }
@@ -149,11 +172,28 @@ namespace WpfApp1.ViewModels
             _importService = new ExcelImportService(_repository);
             _printService = new CoaPrintService();
 
+            // PERBAIKAN 1 & 2: Dispatcher.Invoke + Log Truncation untuk Anti-Lag
             _importService.OnDebugMessage += (msg) => {
-                lock (_lockObject)
+                // Pastikan update UI dilakukan di Thread UI
+                if (System.Windows.Application.Current.Dispatcher.CheckAccess())
                 {
-                    if (DebugLog.Length > 5000) DebugLog = string.Empty;
-                    DebugLog += msg + System.Environment.NewLine;
+                    UpdateLog(msg);
+                }
+                else
+                {
+                    System.Windows.Application.Current.Dispatcher.Invoke(() => UpdateLog(msg));
+                }
+            };
+
+            // PERBAIKAN 3: Real-time Progress Reporting
+            _importService.OnProgress += (current, total) => {
+                if (System.Windows.Application.Current.Dispatcher.CheckAccess())
+                {
+                    UpdateProgress(current, total);
+                }
+                else
+                {
+                    System.Windows.Application.Current.Dispatcher.Invoke(() => UpdateProgress(current, total));
                 }
             };
 
@@ -163,6 +203,25 @@ namespace WpfApp1.ViewModels
             AddToExportCommand = new RelayCommand(ExecuteAddToExport);
             RemoveFromExportCommand = new RelayCommand(ExecuteRemoveFromExport);
             PrintCoaCommand = new RelayCommand(ExecutePrintCoa);
+        }
+
+        // Helper method untuk mengupdate log secara aman dan efisien
+        private void UpdateLog(string message)
+        {
+            // Batasi panjang log untuk mencegah Freeze memori/render
+            if (DebugLog.Length > 2000)
+            {
+                DebugLog = "...[Log truncated]..." + System.Environment.NewLine;
+            }
+            DebugLog += message + System.Environment.NewLine;
+        }
+
+        // Helper method untuk mengupdate progress bar
+        private void UpdateProgress(int current, int total)
+        {
+            ProgressValue = current;
+            ProgressMaximum = total;
+            ProgressText = total > 0 ? $"Processing file {current} of {total}" : "Scanning files...";
         }
 
         public void ImportExcelToSQLite()

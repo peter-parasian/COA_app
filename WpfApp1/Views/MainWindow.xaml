@@ -383,7 +383,7 @@
             <Border Background="#99000000" IsHitTestVisible="True"/>
 
             <Border Background="White" 
-                    Width="300" Height="150" 
+                    Width="350" Height="Auto" 
                     CornerRadius="4" 
                     BorderBrush="Black" BorderThickness="1"
                     HorizontalAlignment="Center" 
@@ -391,17 +391,31 @@
                     Effect="{DynamicResource MahApps.DropShadowEffect.Dialog}">
 
                 <StackPanel Margin="20" VerticalAlignment="Center">
+
+                    <!-- Judul Status -->
                     <TextBlock Text="{Binding BusyMessage}" 
                                FontSize="14" 
+                               FontWeight="Bold"
                                TextAlignment="Center" 
-                               Margin="0,0,0,20"/>
+                               Margin="0,0,0,5"/>
 
-                    <ProgressBar IsIndeterminate="True" Height="20" Foreground="{DynamicResource MahApps.Brushes.Accent}"/>
+                    <!-- Teks Progress Real-time -->
+                    <TextBlock Text="{Binding ProgressText}" 
+                               FontSize="11" 
+                               TextAlignment="Center" 
+                               Margin="0,0,0,10" 
+                               Foreground="#555"/>
+
+                    <!-- Progress Bar dengan Value Nyata -->
+                    <ProgressBar Value="{Binding ProgressValue}" 
+                                 Maximum="{Binding ProgressMaximum}" 
+                                 Height="20" 
+                                 Foreground="{DynamicResource MahApps.Brushes.Accent}"
+                                 Margin="0,0,0,10"/>
 
                     <TextBlock Text="Please wait, do not close this window..." 
                                FontSize="10" 
                                TextAlignment="Center" 
-                               Margin="0,20,0,0" 
                                Foreground="Gray"/>
                 </StackPanel>
             </Border>
