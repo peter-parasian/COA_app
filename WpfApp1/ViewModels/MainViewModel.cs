@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Windows.Input;
+using System.Windows.Threading; 
 using WpfApp1.Core.Models;
 using WpfApp1.Core.Services;
 using WpfApp1.Data.Database;
@@ -15,7 +16,11 @@ namespace WpfApp1.ViewModels
         private ExcelImportService _importService;
         private CoaPrintService _printService;
 
-        // Menghapus _lockObject karena kita akan menggunakan Dispatcher.Invoke yang thread-safe untuk UI
+        private readonly object _logLock = new object();
+
+        private System.Text.StringBuilder _logBuffer = new System.Text.StringBuilder();
+
+        private DispatcherTimer _logTimer;
 
         private string _debugLog = string.Empty;
         public string DebugLog
@@ -24,7 +29,6 @@ namespace WpfApp1.ViewModels
             set { _debugLog = value; OnPropertyChanged(); }
         }
 
-        // --- Progress Properties ---
         private int _progressValue = 0;
         public int ProgressValue
         {
@@ -45,7 +49,6 @@ namespace WpfApp1.ViewModels
             get => _progressText;
             set { _progressText = value; OnPropertyChanged(); }
         }
-        // ---------------------------
 
         public int TotalFilesFound { get; private set; }
         public int TotalRowsInserted { get; private set; }
@@ -62,6 +65,9 @@ namespace WpfApp1.ViewModels
                     OnPropertyChanged();
                     OnPropertyChanged(nameof(IsNotBusy));
                     OnPropertyChanged(nameof(IsBusyVisibility));
+
+                    if (_isBusy) StartLogTimer();
+                    else StopLogTimer();
                 }
             }
         }
@@ -85,7 +91,6 @@ namespace WpfApp1.ViewModels
             set { _showBlankPage = value; OnPropertyChanged(); }
         }
 
-        // --- START NEW NOTIFICATION LOGIC ---
         private string _notificationMessage = string.Empty;
         public string NotificationMessage
         {
@@ -113,12 +118,10 @@ namespace WpfApp1.ViewModels
             NotificationMessage = message;
             IsNotificationVisible = true;
 
-            // Tunggu 3 detik tanpa memblokir UI (Non-blocking)
             await System.Threading.Tasks.Task.Delay(3000);
 
             IsNotificationVisible = false;
         }
-        // --- END NEW NOTIFICATION LOGIC ---
 
         public event System.Action<string>? OnShowMessage;
         public System.Collections.ObjectModel.ObservableCollection<string> Years { get; set; } = new System.Collections.ObjectModel.ObservableCollection<string>();
@@ -172,20 +175,17 @@ namespace WpfApp1.ViewModels
             _importService = new ExcelImportService(_repository);
             _printService = new CoaPrintService();
 
-            // PERBAIKAN 1 & 2: Dispatcher.Invoke + Log Truncation untuk Anti-Lag
+            _logTimer = new DispatcherTimer();
+            _logTimer.Interval = TimeSpan.FromMilliseconds(200); 
+            _logTimer.Tick += LogTimer_Tick;
+
             _importService.OnDebugMessage += (msg) => {
-                // Pastikan update UI dilakukan di Thread UI
-                if (System.Windows.Application.Current.Dispatcher.CheckAccess())
+                lock (_logLock)
                 {
-                    UpdateLog(msg);
-                }
-                else
-                {
-                    System.Windows.Application.Current.Dispatcher.Invoke(() => UpdateLog(msg));
+                    _logBuffer.AppendLine(msg);
                 }
             };
 
-            // PERBAIKAN 3: Real-time Progress Reporting
             _importService.OnProgress += (current, total) => {
                 if (System.Windows.Application.Current.Dispatcher.CheckAccess())
                 {
@@ -205,18 +205,37 @@ namespace WpfApp1.ViewModels
             PrintCoaCommand = new RelayCommand(ExecutePrintCoa);
         }
 
-        // Helper method untuk mengupdate log secara aman dan efisien
-        private void UpdateLog(string message)
+        private void LogTimer_Tick(object? sender, EventArgs e)
         {
-            // Batasi panjang log untuk mencegah Freeze memori/render
-            if (DebugLog.Length > 2000)
+            lock (_logLock)
             {
-                DebugLog = "...[Log truncated]..." + System.Environment.NewLine;
+                string newLogs = _logBuffer.ToString();
+                if (string.IsNullOrWhiteSpace(newLogs))
+                {
+                    return;
+                }
+
+                _logBuffer.Clear();
+
+                if (DebugLog.Length > 3000)
+                {
+                    DebugLog = "...[Log truncated]..." + System.Environment.NewLine;
+                }
+                DebugLog += newLogs;
             }
-            DebugLog += message + System.Environment.NewLine;
         }
 
-        // Helper method untuk mengupdate progress bar
+        private void StartLogTimer()
+        {
+            if (!_logTimer.IsEnabled) _logTimer.Start();
+        }
+
+        private void StopLogTimer()
+        {
+            _logTimer.Stop();
+            LogTimer_Tick(null, EventArgs.Empty);
+        }
+
         private void UpdateProgress(int current, int total)
         {
             ProgressValue = current;
@@ -277,7 +296,6 @@ namespace WpfApp1.ViewModels
             DoNumber = string.Empty;
             ExportList.Clear();
             ShowBlankPage = false;
-            // Pastikan notifikasi reset saat kembali ke menu
             IsNotificationVisible = false;
             System.GC.Collect();
         }
@@ -417,7 +435,6 @@ namespace WpfApp1.ViewModels
                             SelectedStandard = null;
                             ExportList.Clear();
 
-                            // Tampilkan notifikasi non-blocking bahwa print berhasil
                             TriggerSuccessNotification("COA Generated Successfully!");
                         });
                     }
