@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text;
 using WpfApp1.Core.Models;
@@ -15,7 +16,6 @@ namespace WpfApp1.Core.Services
 
         public event System.Action<string>? OnDebugMessage;
 
-        // Event baru untuk melaporkan progress (Current File, Total File)
         public event System.Action<int, int>? OnProgress;
 
         public ExcelImportService(BusbarRepository repository)
@@ -33,15 +33,12 @@ namespace WpfApp1.Core.Services
             TotalRowsInserted = 0;
             _currentFileIndex = 0;
 
-            // Step 1: Hitung total file terlebih dahulu agar progress bar akurat
             CountTotalFiles();
 
-            // Beritahu UI bahwa perhitungan selesai
             OnProgress?.Invoke(0, TotalFilesFound);
 
             _repository.CreateBusbarTable(connection);
 
-            // Step 2: Mulai import sambil melaporkan progress
             TraverseFoldersAndImport(connection, transaction);
 
             _repository.FlushAll(connection, transaction);
@@ -85,6 +82,8 @@ namespace WpfApp1.Core.Services
                 throw new System.IO.DirectoryNotFoundException($"Folder root Excel tidak ditemukan: {ExcelRootFolder}");
             }
 
+            var filesToProcess = new System.Collections.Generic.List<string>();
+
             foreach (string yearDir in System.IO.Directory.GetDirectories(ExcelRootFolder))
             {
                 string year = new System.IO.DirectoryInfo(yearDir).Name.Trim();
@@ -101,38 +100,83 @@ namespace WpfApp1.Core.Services
                         if (fileName.StartsWith("~$"))
                             continue;
 
-                        // Update progress index
-                        _currentFileIndex++;
-                        OnProgress?.Invoke(_currentFileIndex, TotalFilesFound);
-
-                        ProcessSingleExcelFile(connection, transaction, file, year, normalizedMonth);
+                        filesToProcess.Add(file + "|" + year + "|" + normalizedMonth);
                     }
                 }
             }
+
+            var concurrentBusbarData = new System.Collections.Concurrent.ConcurrentBag<BusbarRecord>();
+            var concurrentTLJ350Data = new System.Collections.Concurrent.ConcurrentBag<TLJRecord>();
+            var concurrentTLJ500Data = new System.Collections.Concurrent.ConcurrentBag<TLJRecord>();
+
+            System.Threading.Tasks.Parallel.ForEach(filesToProcess, (fileItem) =>
+            {
+                try
+                {
+                    string[] parts = fileItem.Split(new[] { '|' }, 3);
+                    string filePath = parts[0];
+                    string year = parts[1];
+                    string month = parts[2];
+
+                    ProcessSingleExcelFileToMemory(
+                        filePath,
+                        year,
+                        month,
+                        concurrentBusbarData,
+                        concurrentTLJ350Data,
+                        concurrentTLJ500Data
+                    );
+
+                    int currentIndex = System.Threading.Interlocked.Increment(ref _currentFileIndex);
+                    OnProgress?.Invoke(currentIndex, TotalFilesFound);
+                }
+                catch (System.Exception ex)
+                {
+                    AppendDebug($"ERROR PARALLEL: {System.IO.Path.GetFileName(fileItem)} -> {ex.Message}");
+                }
+            });
+
+            int rowsInsertedCount = 0;
+
+            foreach (var record in concurrentBusbarData)
+            {
+                _repository.InsertBusbarRow(connection, transaction, record);
+                rowsInsertedCount++;
+            }
+
+            foreach (var record in concurrentTLJ350Data)
+            {
+                _repository.InsertTLJ350_Row(connection, transaction, record);
+                rowsInsertedCount++;
+            }
+
+            foreach (var record in concurrentTLJ500Data)
+            {
+                _repository.InsertTLJ500_Row(connection, transaction, record);
+                rowsInsertedCount++;
+            }
+
+            TotalRowsInserted = rowsInsertedCount;
         }
 
-        private void ProcessSingleExcelFile(
-            Microsoft.Data.Sqlite.SqliteConnection connection,
-            Microsoft.Data.Sqlite.SqliteTransaction transaction,
+        private void ProcessSingleExcelFileToMemory(
             string filePath,
             string year,
-            string month)
+            string month,
+            System.Collections.Concurrent.ConcurrentBag<BusbarRecord> busbarBag,
+            System.Collections.Concurrent.ConcurrentBag<TLJRecord> tlj350Bag,
+            System.Collections.Concurrent.ConcurrentBag<TLJRecord> tlj500Bag)
         {
             using var workbook = new ClosedXML.Excel.XLWorkbook(filePath);
-            int row = 3;
 
-            // --- Process YLB Sheet ---
             try
             {
                 var sheet_YLB = workbook.Worksheets
                     .FirstOrDefault(w => w.Name.Trim().Equals("YLB 50", System.StringComparison.OrdinalIgnoreCase));
 
-                if (sheet_YLB == null)
+                if (sheet_YLB != null)
                 {
-                    AppendDebug($"SKIP: Sheet 'YLB 50' tidak ditemukan -> {System.IO.Path.GetFileName(filePath)}");
-                }
-                else
-                {
+                    int row = 3;
                     string currentProdDate = string.Empty;
                     int folderMonthNum = DateHelper.GetMonthNumber(month);
                     int.TryParse(year, out int folderYearNum);
@@ -171,8 +215,8 @@ namespace WpfApp1.Core.Services
 
                         record.BendTest = sheet_YLB.Cell(row, "W").GetString();
 
-                        _repository.InsertBusbarRow(connection, transaction, record);
-                        TotalRowsInserted++;
+                        busbarBag.Add(record);
+
                         row += 2;
                     }
                 }
@@ -182,20 +226,16 @@ namespace WpfApp1.Core.Services
                 AppendDebug($"ERROR FILE (YLB): {System.IO.Path.GetFileName(filePath)} -> {ex.Message}");
             }
 
-            // --- Process TLJ 350 Sheet ---
-            ProcessTLJSheet(workbook, "TLJ 350", year, month, connection, transaction, _repository.InsertTLJ350_Row);
-            // --- Process TLJ 500 Sheet ---
-            ProcessTLJSheet(workbook, "TLJ 500", year, month, connection, transaction, _repository.InsertTLJ500_Row);
+            ProcessTLJSheetToMemory(workbook, "TLJ 350", year, month, tlj350Bag);
+            ProcessTLJSheetToMemory(workbook, "TLJ 500", year, month, tlj500Bag);
         }
 
-        private void ProcessTLJSheet(
+        private void ProcessTLJSheetToMemory(
             ClosedXML.Excel.XLWorkbook workbook,
             string sheetName,
             string year,
             string month,
-            Microsoft.Data.Sqlite.SqliteConnection connection,
-            Microsoft.Data.Sqlite.SqliteTransaction transaction,
-            System.Action<Microsoft.Data.Sqlite.SqliteConnection, Microsoft.Data.Sqlite.SqliteTransaction, TLJRecord> insertAction)
+            System.Collections.Concurrent.ConcurrentBag<TLJRecord> bag)
         {
             int row = 3;
             try
@@ -227,8 +267,7 @@ namespace WpfApp1.Core.Services
                             BatchNo = sheet.Cell(row, "C").GetString()
                         };
 
-                        insertAction(connection, transaction, record);
-                        TotalRowsInserted++;
+                        bag.Add(record);
                         row += 2;
                     }
                 }
