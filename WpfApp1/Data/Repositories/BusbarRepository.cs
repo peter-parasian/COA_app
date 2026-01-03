@@ -8,11 +8,11 @@ namespace WpfApp1.Data.Repositories
 {
     public class BusbarRepository
     {
-        private const int BATCH_SIZE = 500;
+        private const int BATCH_SIZE = 1000;
 
-        private System.Collections.Generic.List<BusbarRecord> _busbarBatchBuffer = new System.Collections.Generic.List<BusbarRecord>();
-        private System.Collections.Generic.List<TLJRecord> _tlj350BatchBuffer = new System.Collections.Generic.List<TLJRecord>();
-        private System.Collections.Generic.List<TLJRecord> _tlj500BatchBuffer = new System.Collections.Generic.List<TLJRecord>();
+        private System.Collections.Generic.List<BusbarRecord> _busbarBatchBuffer = new System.Collections.Generic.List<BusbarRecord>(BATCH_SIZE);
+        private System.Collections.Generic.List<TLJRecord> _tlj350BatchBuffer = new System.Collections.Generic.List<TLJRecord>(BATCH_SIZE);
+        private System.Collections.Generic.List<TLJRecord> _tlj500BatchBuffer = new System.Collections.Generic.List<TLJRecord>(BATCH_SIZE);
 
         private readonly SqliteContext _dbContext;
 
@@ -104,7 +104,7 @@ namespace WpfApp1.Data.Repositories
             using var cmd = connection.CreateCommand();
             cmd.Transaction = transaction;
 
-            System.Text.StringBuilder sqlBuilder = new System.Text.StringBuilder();
+            System.Text.StringBuilder sqlBuilder = new System.Text.StringBuilder(BATCH_SIZE * 200);
             sqlBuilder.Append(@"INSERT INTO Busbar (
                 Size_mm, Year_folder, Month_folder, Prod_date, 
                 Thickness_mm, Width_mm, Length, Radius, Chamber_mm,
@@ -152,7 +152,7 @@ namespace WpfApp1.Data.Repositories
             using var cmd = connection.CreateCommand();
             cmd.Transaction = transaction;
 
-            System.Text.StringBuilder sqlBuilder = new System.Text.StringBuilder();
+            System.Text.StringBuilder sqlBuilder = new System.Text.StringBuilder(buffer.Count * 150);
             sqlBuilder.Append($"INSERT INTO {tableName} (Size_mm, Year_folder, Month_folder, Prod_date, Batch_no) VALUES ");
 
             for (int i = 0; i < buffer.Count; i++)
@@ -188,7 +188,7 @@ namespace WpfApp1.Data.Repositories
                     WHERE (Batch_no IS NULL OR Batch_no = '')
                 ";
 
-                var updates = new System.Collections.Generic.List<(int Id, string Batch)>();
+                var updateBatch = new System.Collections.Generic.List<(int Id, string Batch)>(5000);
 
                 using (var reader = selectBusbarCmd.ExecuteReader())
                 {
@@ -205,28 +205,20 @@ namespace WpfApp1.Data.Repositories
 
                         if (!string.IsNullOrEmpty(batchNo))
                         {
-                            updates.Add((id, batchNo));
+                            updateBatch.Add((id, batchNo));
+                        }
+
+                        if (updateBatch.Count >= 1000)
+                        {
+                            ExecuteBulkUpdate(connection, transaction, updateBatch);
+                            updateBatch.Clear();
                         }
                     }
                 }
 
-                if (updates.Count > 0)
+                if (updateBatch.Count > 0)
                 {
-                    using var updateCmd = connection.CreateCommand();
-                    updateCmd.Transaction = transaction;
-                    updateCmd.CommandText = "UPDATE Busbar SET Batch_no = @b WHERE Id = @id";
-
-                    var pBatch = updateCmd.CreateParameter(); pBatch.ParameterName = "@b";
-                    var pId = updateCmd.CreateParameter(); pId.ParameterName = "@id";
-                    updateCmd.Parameters.Add(pBatch);
-                    updateCmd.Parameters.Add(pId);
-
-                    foreach (var up in updates)
-                    {
-                        pBatch.Value = up.Batch;
-                        pId.Value = up.Id;
-                        updateCmd.ExecuteNonQuery();
-                    }
+                    ExecuteBulkUpdate(connection, transaction, updateBatch);
                 }
             }
             catch (System.Exception)
@@ -235,12 +227,44 @@ namespace WpfApp1.Data.Repositories
             }
         }
 
+        private void ExecuteBulkUpdate(
+            Microsoft.Data.Sqlite.SqliteConnection connection,
+            Microsoft.Data.Sqlite.SqliteTransaction transaction,
+            System.Collections.Generic.List<(int Id, string Batch)> updates)
+        {
+            if (updates.Count == 0) return;
+
+            using var cmd = connection.CreateCommand();
+            cmd.Transaction = transaction;
+
+            var sqlBuilder = new System.Text.StringBuilder(updates.Count * 100);
+            sqlBuilder.Append("UPDATE Busbar SET Batch_no = CASE Id ");
+
+            for (int i = 0; i < updates.Count; i++)
+            {
+                sqlBuilder.Append($"WHEN @id{i} THEN @b{i} ");
+                cmd.Parameters.AddWithValue($"@id{i}", updates[i].Id);
+                cmd.Parameters.AddWithValue($"@b{i}", updates[i].Batch);
+            }
+
+            sqlBuilder.Append("END WHERE Id IN (");
+            for (int i = 0; i < updates.Count; i++)
+            {
+                if (i > 0) sqlBuilder.Append(",");
+                sqlBuilder.Append($"@id{i}");
+            }
+            sqlBuilder.Append(")");
+
+            cmd.CommandText = sqlBuilder.ToString();
+            cmd.ExecuteNonQuery();
+        }
+
         private System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<TLJRecord>> LoadTLJCache(
             Microsoft.Data.Sqlite.SqliteConnection connection,
             Microsoft.Data.Sqlite.SqliteTransaction trans,
             string tableName)
         {
-            var cache = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<TLJRecord>>();
+            var cache = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<TLJRecord>>(500);
 
             using var cmd = connection.CreateCommand();
             cmd.Transaction = trans;
@@ -260,7 +284,7 @@ namespace WpfApp1.Data.Repositories
 
                 if (!cache.ContainsKey(size))
                 {
-                    cache[size] = new System.Collections.Generic.List<TLJRecord>();
+                    cache[size] = new System.Collections.Generic.List<TLJRecord>(100);
                 }
 
                 cache[size].Add(new TLJRecord

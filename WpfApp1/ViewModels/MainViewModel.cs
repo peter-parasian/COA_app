@@ -151,8 +151,6 @@ namespace WpfApp1.ViewModels
 
             InitializeSearchData();
 
-            LoadAvailableYears();
-
             FindCommand = new RelayCommand(ExecuteFind);
             AddToExportCommand = new RelayCommand(ExecuteAddToExport);
             RemoveFromExportCommand = new RelayCommand(ExecuteRemoveFromExport);
@@ -186,20 +184,21 @@ namespace WpfApp1.ViewModels
                 }
                 catch
                 {
+                    transaction.Rollback();
                     throw;
                 }
 
                 TotalFilesFound = _importService.TotalFilesFound;
                 TotalRowsInserted = _importService.TotalRowsInserted;
 
-                System.Windows.Application.Current.Dispatcher.Invoke(() =>
-                {
-                    LoadAvailableYears();
-                });
             }
             catch (System.Exception)
             {
                 throw;
+            }
+            finally
+            {
+                System.GC.Collect(2, System.GCCollectionMode.Forced, false);
             }
         }
 
@@ -226,6 +225,8 @@ namespace WpfApp1.ViewModels
             DoNumber = string.Empty;
             ExportList.Clear();
             ShowBlankPage = false;
+
+            System.GC.Collect();
         }
 
         private void ResetCounters()
@@ -251,10 +252,10 @@ namespace WpfApp1.ViewModels
             Months.Add("December");
 
             Standards.Add("JIS");
-            //Standards.Add("DIN");
-            //Standards.Add("ASTM");
 
             SearchResults.Clear();
+
+            LoadAvailableYears();
         }
 
         private void LoadAvailableYears()
@@ -263,14 +264,25 @@ namespace WpfApp1.ViewModels
             {
                 var dbYears = _repository.GetAvailableYears();
 
-                System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                if (System.Windows.Application.Current.Dispatcher.CheckAccess())
                 {
                     Years.Clear();
                     foreach (var year in dbYears)
                     {
                         Years.Add(year);
                     }
-                });
+                }
+                else
+                {
+                    System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        Years.Clear();
+                        foreach (var year in dbYears)
+                        {
+                            Years.Add(year);
+                        }
+                    });
+                }
             }
             catch (System.Exception ex)
             {
@@ -383,7 +395,6 @@ namespace WpfApp1.ViewModels
 
         private void ExecutePrintCoa(object? parameter)
         {
-            // Validasi Input (Cepat, di UI Thread)
             if (ExportList.Count == 0)
             {
                 System.Windows.MessageBox.Show("Export List kosong. Silakan pilih data terlebih dahulu.", "Peringatan", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
@@ -416,30 +427,25 @@ namespace WpfApp1.ViewModels
 
             DoNumber = FormatDoNumber(DoNumber);
 
-            // 1. Kunci tombol (Set IsBusy = true) -> Mengakibatkan tombol Disabled di UI
             if (IsBusy) return;
             IsBusy = true;
 
-            // 2. Jalankan proses berat di Background Thread (UI tidak akan freeze, window bisa di-minimize)
             System.Threading.Tasks.Task.Run(() =>
             {
                 try
                 {
-                    // Copy data list ke memory lokal agar aman diakses background thread
                     var itemsToExport = new System.Collections.Generic.List<WpfApp1.Core.Models.BusbarExportItem>(ExportList);
 
-                    // Panggil Service berat (Excel & PDF generation)
                     string savedExcelPath = _printService.GenerateCoaExcel(CustomerName, PoNumber, DoNumber, itemsToExport, SelectedStandard);
                     string savedPdfPath = System.IO.Path.ChangeExtension(savedExcelPath, ".pdf");
 
-                    // 3. Kembali ke UI Thread untuk Update Tampilan (Hanya sebentar di akhir proses)
                     System.Windows.Application.Current.Dispatcher.Invoke(() =>
                     {
-                        System.Windows.MessageBox.Show(
-                            $"File berhasil dibuat!\n\nEXCEL:\n{savedExcelPath}\n\nPDF:\n{savedPdfPath}",
-                            "Sukses",
-                            System.Windows.MessageBoxButton.OK,
-                            System.Windows.MessageBoxImage.Information);
+                        //System.Windows.MessageBox.Show(
+                        //    $"File berhasil dibuat!\n\nEXCEL:\n{savedExcelPath}\n\nPDF:\n{savedPdfPath}",
+                        //    "Sukses",
+                        //    System.Windows.MessageBoxButton.OK,
+                        //    System.Windows.MessageBoxImage.Information);
 
                         CustomerName = string.Empty;
                         PoNumber = string.Empty;
@@ -450,7 +456,6 @@ namespace WpfApp1.ViewModels
                 }
                 catch (System.Exception ex)
                 {
-                    // Handle Error di UI Thread
                     System.Windows.Application.Current.Dispatcher.Invoke(() =>
                     {
                         System.Windows.MessageBox.Show($"Gagal membuat Dokumen:\n{ex.Message}", "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
@@ -458,11 +463,14 @@ namespace WpfApp1.ViewModels
                 }
                 finally
                 {
-                    // 4. Buka kunci tombol (Set IsBusy = false) -> Tombol jadi aktif lagi di UI
                     System.Windows.Application.Current.Dispatcher.Invoke(() =>
                     {
                         IsBusy = false;
                     });
+
+                    _printService.ClearCache();
+
+                    System.GC.Collect();
                 }
             });
         }

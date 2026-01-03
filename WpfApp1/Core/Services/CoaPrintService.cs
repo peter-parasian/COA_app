@@ -6,7 +6,6 @@ namespace WpfApp1.Core.Services
 {
     public class CoaPrintService
     {
-        // Cache untuk menghindari pengecekan file berulang
         private bool? _img1Exists = null;
         private bool? _img2Exists = null;
 
@@ -92,7 +91,6 @@ namespace WpfApp1.Core.Services
                     startRowTable2 = originalStartRowTable2 + rowsToInsert;
                 }
 
-                // Pre-calculate tolerances untuk semua items (batch processing)
                 var toleranceData = new System.Collections.Generic.List<(double thickness, double width, double nominalThick, double nominalWidth)>();
 
                 for (int i = 0; i < dataCount; i++)
@@ -127,7 +125,6 @@ namespace WpfApp1.Core.Services
                     toleranceData.Add((finalTolThickness, finalTolWidth, nominalThick, nominalWidth));
                 }
 
-                // Batch set heights untuk semua rows sekaligus
                 for (int i = 0; i < dataCount; i++)
                 {
                     int rTop = startRowTable1 + (i * rowsPerItem);
@@ -139,7 +136,6 @@ namespace WpfApp1.Core.Services
                     worksheet.Row(rTable2).Height = 102;
                 }
 
-                // Main data population loop - optimized
                 for (int i = 0; i < dataCount; i++)
                 {
                     int rTop = startRowTable1 + (i * rowsPerItem);
@@ -149,7 +145,6 @@ namespace WpfApp1.Core.Services
                     var rec = dataList[i].RecordData;
                     var tol = toleranceData[i];
 
-                    // Table 1 - Batch set values first
                     worksheet.Cell(rTop, 2).Value = rec.BatchNo;
                     worksheet.Cell(rTop, 3).Value = rec.Size;
                     worksheet.Cell(rTop, 4).Value = "No Dirty\nNo Blackspot\nNo Blisters";
@@ -170,7 +165,6 @@ namespace WpfApp1.Core.Services
                     worksheet.Cell(rTop, 10).Value = string.Format(cultureInvariant, "{0:0.00}", rec.Chamber);
                     worksheet.Cell(rTop, 11).Value = "OK";
 
-                    // Merge cells - batch operation
                     worksheet.Range(rTop, 2, rBottom, 2).Merge();
                     worksheet.Range(rTop, 3, rBottom, 3).Merge();
                     worksheet.Range(rTop, 4, rBottom, 5).Merge();
@@ -178,7 +172,6 @@ namespace WpfApp1.Core.Services
                     worksheet.Range(rTop, 10, rBottom, 10).Merge();
                     worksheet.Range(rTop, 11, rBottom, 11).Merge();
 
-                    // Table 2 - Simple value assignment
                     worksheet.Cell(rTable2, 2).Value = rec.BatchNo;
                     worksheet.Cell(rTable2, 3).Value = rec.Size;
                     worksheet.Cell(rTable2, 4).Value = string.Format(cultureInvariant, "{0:0.00}", rec.Electric);
@@ -191,51 +184,41 @@ namespace WpfApp1.Core.Services
                     worksheet.Cell(rTable2, 11).Value = "OK";
                 }
 
-                // Apply styling ONCE untuk entire range Table 1 (jauh lebih cepat)
                 var table1Range = worksheet.Range(startRowTable1, 2, startRowTable1 + totalRowsNeeded - 1, 11);
                 ApplyCustomStyleBatch(table1Range);
                 ApplyBorders(table1Range);
 
-                // Special styling untuk specific cells setelah batch - PERBAIKAN DISINI
                 for (int i = 0; i < dataCount; i++)
                 {
                     int rTop = startRowTable1 + (i * rowsPerItem);
                     int rBottom = rTop + 1;
 
-                    // === THICKNESS (Kolom F / Column 6) ===
-                    // Baris atas (nilai) = BOLD + FontSize 22
                     var cellThickVal = worksheet.Cell(rTop, 6);
                     cellThickVal.Style.Font.Bold = true;
                     cellThickVal.Style.Font.FontSize = 22;
                     cellThickVal.Style.Alignment.Vertical = XLAlignmentVerticalValues.Bottom;
                     cellThickVal.Style.Border.BottomBorder = XLBorderStyleValues.None;
 
-                    // Baris bawah (toleransi) = ITALIC ONLY (bukan bold) + FontSize 22
                     var cellThickTol = worksheet.Cell(rBottom, 6);
-                    cellThickTol.Style.Font.Bold = false; // PENTING: toleransi TIDAK BOLD
+                    cellThickTol.Style.Font.Bold = false; 
                     cellThickTol.Style.Font.Italic = true;
                     cellThickTol.Style.Font.FontSize = 22;
                     cellThickTol.Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
                     cellThickTol.Style.Border.TopBorder = XLBorderStyleValues.None;
 
-                    // === WIDTH (Kolom G / Column 7) ===
-                    // Baris atas (nilai) = BOLD + FontSize 22
                     var cellWidthVal = worksheet.Cell(rTop, 7);
                     cellWidthVal.Style.Font.Bold = true;
                     cellWidthVal.Style.Font.FontSize = 22;
                     cellWidthVal.Style.Alignment.Vertical = XLAlignmentVerticalValues.Bottom;
                     cellWidthVal.Style.Border.BottomBorder = XLBorderStyleValues.None;
 
-                    // Baris bawah (toleransi) = ITALIC ONLY (bukan bold) + FontSize 22
                     var cellWidthTol = worksheet.Cell(rBottom, 7);
-                    cellWidthTol.Style.Font.Bold = false; // PENTING: toleransi TIDAK BOLD
+                    cellWidthTol.Style.Font.Bold = false; 
                     cellWidthTol.Style.Font.Italic = true;
                     cellWidthTol.Style.Font.FontSize = 22;
                     cellWidthTol.Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
                     cellWidthTol.Style.Border.TopBorder = XLBorderStyleValues.None;
 
-                    // === LENGTH (Kolom H / Column 8) ===
-                    // Baris atas (nilai) = BOLD + FontSize 22 + Number Format
                     var cellLengthVal = worksheet.Cell(rTop, 8);
                     cellLengthVal.Style.NumberFormat.Format = "0";
                     cellLengthVal.Style.Font.Bold = true;
@@ -243,31 +226,26 @@ namespace WpfApp1.Core.Services
                     cellLengthVal.Style.Alignment.Vertical = XLAlignmentVerticalValues.Bottom;
                     cellLengthVal.Style.Border.BottomBorder = XLBorderStyleValues.None;
 
-                    // Baris bawah (toleransi) = ITALIC ONLY (bukan bold) + FontSize 22
                     var cellLengthTol = worksheet.Cell(rBottom, 8);
-                    cellLengthTol.Style.Font.Bold = false; // PENTING: toleransi TIDAK BOLD
+                    cellLengthTol.Style.Font.Bold = false; 
                     cellLengthTol.Style.Font.Italic = true;
                     cellLengthTol.Style.Font.FontSize = 22;
                     cellLengthTol.Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
                     cellLengthTol.Style.Border.TopBorder = XLBorderStyleValues.None;
 
-                    // Wrap text untuk cell D
                     worksheet.Cell(rTop, 4).Style.Alignment.WrapText = true;
                 }
 
-                // Table 2 styling - batch operation
                 int lastRowTable2 = startRowTable2 + dataCount - 1;
                 var table2Range = worksheet.Range(startRowTable2, 2, lastRowTable2, 11);
                 ApplyCustomStyleBatch(table2Range);
                 ApplyBorders(table2Range);
 
-                // Insert rows untuk signature
                 worksheet.Row(lastRowTable2).InsertRowsBelow(6);
 
                 int firstInsertedRow = lastRowTable2 + 1;
                 int lastInsertedRow = firstInsertedRow + 5;
 
-                // Clear borders untuk signature area
                 var signatureRange = worksheet.Range(firstInsertedRow, 2, lastInsertedRow, 11);
                 signatureRange.Style.Border.TopBorder = XLBorderStyleValues.None;
                 signatureRange.Style.Border.BottomBorder = XLBorderStyleValues.None;
@@ -275,14 +253,12 @@ namespace WpfApp1.Core.Services
                 signatureRange.Style.Border.RightBorder = XLBorderStyleValues.None;
                 signatureRange.Style.Border.InsideBorder = XLBorderStyleValues.None;
 
-                // Set heights
                 for (int k = 0; k < 5; k++)
                 {
                     worksheet.Row(firstInsertedRow + k).Height = 102;
                 }
                 worksheet.Row(firstInsertedRow + 5).Height = 50;
 
-                // Add images dengan caching
                 int imageRow = firstInsertedRow + 2;
 
                 if (!_img1Exists.HasValue)
@@ -303,7 +279,6 @@ namespace WpfApp1.Core.Services
                     pic2.MoveTo(worksheet.Cell(imageRow, 2));
                 }
 
-                // Page setup
                 worksheet.PageSetup.PrintAreas.Clear();
                 worksheet.PageSetup.PrintAreas.Add(1, 2, lastInsertedRow, 11);
                 worksheet.PageSetup.AddHorizontalPageBreak(lastInsertedRow + 1);
@@ -344,7 +319,6 @@ namespace WpfApp1.Core.Services
 
         private void ApplyCustomStyleBatch(ClosedXML.Excel.IXLRange range)
         {
-            // Apply style sekali untuk entire range (jauh lebih efisien)
             range.Style.Font.Bold = true;
             range.Style.Font.FontSize = 22;
             range.Style.Alignment.Horizontal = ClosedXML.Excel.XLAlignmentHorizontalValues.Center;
@@ -359,6 +333,12 @@ namespace WpfApp1.Core.Services
             range.Style.Border.LeftBorder = ClosedXML.Excel.XLBorderStyleValues.Thin;
             range.Style.Border.RightBorder = ClosedXML.Excel.XLBorderStyleValues.Thin;
             range.Style.Border.InsideBorder = ClosedXML.Excel.XLBorderStyleValues.Thin;
+        }
+
+        public void ClearCache()
+        {
+            _img1Exists = null;
+            _img2Exists = null;
         }
 
         private string GetRomanMonth(int month)
