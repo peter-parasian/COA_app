@@ -62,6 +62,41 @@ namespace WpfApp1.ViewModels
             set { _showBlankPage = value; OnPropertyChanged(); }
         }
 
+        // --- START NEW NOTIFICATION LOGIC ---
+        private string _notificationMessage = string.Empty;
+        public string NotificationMessage
+        {
+            get => _notificationMessage;
+            set { _notificationMessage = value; OnPropertyChanged(); }
+        }
+
+        private bool _isNotificationVisible = false;
+        public bool IsNotificationVisible
+        {
+            get => _isNotificationVisible;
+            set
+            {
+                _isNotificationVisible = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(NotificationVisibility));
+            }
+        }
+
+        public System.Windows.Visibility NotificationVisibility =>
+            IsNotificationVisible ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
+
+        private async void TriggerSuccessNotification(string message)
+        {
+            NotificationMessage = message;
+            IsNotificationVisible = true;
+
+            // Tunggu 3 detik tanpa memblokir UI (Non-blocking)
+            await System.Threading.Tasks.Task.Delay(3000);
+
+            IsNotificationVisible = false;
+        }
+        // --- END NEW NOTIFICATION LOGIC ---
+
         public event System.Action<string>? OnShowMessage;
         public System.Collections.ObjectModel.ObservableCollection<string> Years { get; set; } = new System.Collections.ObjectModel.ObservableCollection<string>();
         public System.Collections.ObjectModel.ObservableCollection<string> Months { get; set; } = new System.Collections.ObjectModel.ObservableCollection<string>();
@@ -183,6 +218,8 @@ namespace WpfApp1.ViewModels
             DoNumber = string.Empty;
             ExportList.Clear();
             ShowBlankPage = false;
+            // Pastikan notifikasi reset saat kembali ke menu
+            IsNotificationVisible = false;
             System.GC.Collect();
         }
 
@@ -320,6 +357,9 @@ namespace WpfApp1.ViewModels
                             DoNumber = string.Empty;
                             SelectedStandard = null;
                             ExportList.Clear();
+
+                            // Tampilkan notifikasi non-blocking bahwa print berhasil
+                            TriggerSuccessNotification("COA Generated Successfully!");
                         });
                     }
                     catch (System.Exception ex)
