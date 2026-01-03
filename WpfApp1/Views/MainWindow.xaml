@@ -69,19 +69,10 @@
 
         <ControlTemplate x:Key="UpComboBoxControlTemplate" TargetType="ComboBox">
             <Grid>
-                <ToggleButton Name="ToggleButton" 
-                      Grid.Column="2" 
-                      Background="White"
-                      BorderBrush="#DEE2E6"
-                      BorderThickness="1"
-                      IsChecked="{Binding Path=IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
-                      ClickMode="Press"
-                      Focusable="false">
+                <ToggleButton Name="ToggleButton" Grid.Column="2" Background="White" BorderBrush="#DEE2E6" BorderThickness="1" IsChecked="{Binding Path=IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" ClickMode="Press" Focusable="false">
                     <ToggleButton.Template>
                         <ControlTemplate TargetType="ToggleButton">
-                            <Border Background="{TemplateBinding Background}" 
-                            BorderBrush="{TemplateBinding BorderBrush}" 
-                            BorderThickness="1">
+                            <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
@@ -94,47 +85,11 @@
                         </ControlTemplate>
                     </ToggleButton.Template>
                 </ToggleButton>
-
-                <ContentPresenter Name="ContentSite" 
-                          IsHitTestVisible="False" 
-                          HorizontalAlignment="Left" 
-                          VerticalAlignment="Center"
-                          Margin="5,0,0,0" 
-                          Content="{TemplateBinding SelectionBoxItem}"
-                          ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
-                          ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"/>
-
-                <TextBlock x:Name="WatermarkScope"
-                   Text="{Binding Path=(Controls:TextBoxHelper.Watermark), RelativeSource={RelativeSource TemplatedParent}}"
-                   Foreground="{DynamicResource MahApps.Brushes.Text.Watermark}"
-                   FontSize="{TemplateBinding FontSize}"
-                   HorizontalAlignment="Left"
-                   VerticalAlignment="Center"
-                   Margin="5,0,0,0"
-                   IsHitTestVisible="False"
-                   Visibility="Collapsed"/>
-
-                <TextBox Name="PART_EditableTextBox" 
-                 Style="{x:Null}" 
-                 Template="{DynamicResource ComboBoxTextBox}" 
-                 HorizontalAlignment="Left" 
-                 VerticalAlignment="Center" 
-                 Margin="3,3,23,3"
-                 Focusable="True" 
-                 Background="Transparent"
-                 Visibility="Hidden"
-                 IsReadOnly="{TemplateBinding IsReadOnly}"/>
-
-                <Popup Name="Popup" 
-               Placement="Top" 
-               IsOpen="{TemplateBinding IsDropDownOpen}" 
-               AllowsTransparency="True" 
-               Focusable="False" 
-               PopupAnimation="Slide">
-                    <Grid Name="DropDown" 
-                  SnapsToDevicePixels="True" 
-                  MinWidth="{TemplateBinding ActualWidth}" 
-                  MaxHeight="200">
+                <ContentPresenter Name="ContentSite" IsHitTestVisible="False" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="5,0,0,0" Content="{TemplateBinding SelectionBoxItem}" ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}" ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"/>
+                <TextBlock x:Name="WatermarkScope" Text="{Binding Path=(Controls:TextBoxHelper.Watermark), RelativeSource={RelativeSource TemplatedParent}}" Foreground="{DynamicResource MahApps.Brushes.Text.Watermark}" FontSize="{TemplateBinding FontSize}" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="5,0,0,0" IsHitTestVisible="False" Visibility="Collapsed"/>
+                <TextBox Name="PART_EditableTextBox" Style="{x:Null}" Template="{DynamicResource ComboBoxTextBox}" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="3,3,23,3" Focusable="True" Background="Transparent" Visibility="Hidden" IsReadOnly="{TemplateBinding IsReadOnly}"/>
+                <Popup Name="Popup" Placement="Top" IsOpen="{TemplateBinding IsDropDownOpen}" AllowsTransparency="True" Focusable="False" PopupAnimation="Slide">
+                    <Grid Name="DropDown" SnapsToDevicePixels="True" MinWidth="{TemplateBinding ActualWidth}" MaxHeight="200">
                         <Border Background="White" BorderBrush="#DEE2E6" BorderThickness="1">
                             <ScrollViewer Margin="4,6,4,6" SnapsToDevicePixels="True">
                                 <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Contained"/>
@@ -143,7 +98,6 @@
                     </Grid>
                 </Popup>
             </Grid>
-
             <ControlTemplate.Triggers>
                 <Trigger Property="SelectedItem" Value="{x:Null}">
                     <Setter TargetName="WatermarkScope" Property="Visibility" Value="Visible"/>
@@ -276,38 +230,20 @@
 
                             <StackPanel Margin="0,0,15,0" VerticalAlignment="Top">
                                 <TextBlock Text="YEAR" FontSize="11" FontWeight="SemiBold" Foreground="#6C757D" Margin="0,0,0,4"/>
-                                <ComboBox MinWidth="80" Width="100" 
-                                  ItemsSource="{Binding Years}" 
-                                  SelectedItem="{Binding SelectedYear}"
-                                  Controls:TextBoxHelper.Watermark="Select Year"
-                                  Style="{StaticResource MahApps.Styles.ComboBox}"/>
+                                <ComboBox MinWidth="80" Width="100" ItemsSource="{Binding Years}" SelectedItem="{Binding SelectedYear}" Controls:TextBoxHelper.Watermark="Select Year" Style="{StaticResource MahApps.Styles.ComboBox}"/>
                             </StackPanel>
 
                             <StackPanel Margin="0,0,15,0" VerticalAlignment="Top">
                                 <TextBlock Text="MONTH" FontSize="11" FontWeight="SemiBold" Foreground="#6C757D" Margin="0,0,0,4"/>
-                                <ComboBox MinWidth="100" Width="130" 
-                                  ItemsSource="{Binding Months}" 
-                                  SelectedItem="{Binding SelectedMonth}"
-                                  Controls:TextBoxHelper.Watermark="Select Month"
-                                  Style="{StaticResource MahApps.Styles.ComboBox}"/>
+                                <ComboBox MinWidth="100" Width="130" ItemsSource="{Binding Months}" SelectedItem="{Binding SelectedMonth}" Controls:TextBoxHelper.Watermark="Select Month" Style="{StaticResource MahApps.Styles.ComboBox}"/>
                             </StackPanel>
 
                             <StackPanel Margin="0,0,20,0" VerticalAlignment="Top">
                                 <TextBlock Text="PRODUCTION DATE" FontSize="11" FontWeight="SemiBold" Foreground="#6C757D" Margin="0,0,0,4"/>
-                                <DatePicker MinWidth="120" Width="150" 
-                                  SelectedDate="{Binding SelectedDate}"
-                                  Controls:TextBoxHelper.Watermark="Select Date"
-                                  Style="{StaticResource MahApps.Styles.DatePicker}"/>
+                                <DatePicker MinWidth="120" Width="150" SelectedDate="{Binding SelectedDate}" Controls:TextBoxHelper.Watermark="Select Date" Style="{StaticResource MahApps.Styles.DatePicker}"/>
                             </StackPanel>
 
-                            <Button Content="FIND" 
-                                MinWidth="80" Width="100" Height="38" 
-                                FontSize="13" FontWeight="SemiBold" 
-                                IsEnabled="{Binding IsNotBusy}"
-                                Command="{Binding FindCommand}"
-                                Controls:ControlsHelper.ContentCharacterCasing="Upper"
-                                Style="{StaticResource MahApps.Styles.Button.Square.Accent}" 
-                                VerticalAlignment="Top" Margin="0,0,10,0"/>
+                            <Button Content="FIND" MinWidth="80" Width="100" Height="38" FontSize="13" FontWeight="SemiBold" IsEnabled="{Binding IsNotBusy}" Command="{Binding FindCommand}" Controls:ControlsHelper.ContentCharacterCasing="Upper" Style="{StaticResource MahApps.Styles.Button.Square.Accent}" VerticalAlignment="Top" Margin="0,0,10,0"/>
                         </WrapPanel>
 
                         <StackPanel Grid.Column="1" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="20,0,0,0">
@@ -340,34 +276,15 @@
                             </StackPanel>
                         </Border>
 
-                        <DataGrid x:Name="GridSearchResults"
-                              ItemsSource="{Binding SearchResults}"
-                              Style="{StaticResource MahApps.Styles.DataGrid}"
-                              AutoGenerateColumns="False"
-                              GridLinesVisibility="Horizontal"
-                              HeadersVisibility="Column"
-                              IsReadOnly="True"
-                              CanUserResizeColumns="False"
-                              CanUserReorderColumns="False"
-                              CanUserSortColumns="True"
-                              ScrollViewer.VerticalScrollBarVisibility="Auto"
-                              ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                              ColumnHeaderStyle="{StaticResource CenteredColumnHeaderStyle}"
-                              BorderThickness="0">
+                        <DataGrid x:Name="GridSearchResults" ItemsSource="{Binding SearchResults}" Style="{StaticResource MahApps.Styles.DataGrid}" AutoGenerateColumns="False" GridLinesVisibility="Horizontal" HeadersVisibility="Column" IsReadOnly="True" CanUserResizeColumns="False" CanUserReorderColumns="False" CanUserSortColumns="True" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Auto" ColumnHeaderStyle="{StaticResource CenteredColumnHeaderStyle}" BorderThickness="0">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="NO" Width="50" Binding="{Binding No}" ElementStyle="{StaticResource CenteredCellStyle}"/>
                                 <DataGridTextColumn Header="SIZE (SPEC)" Width="*" Binding="{Binding Specification}" ElementStyle="{StaticResource CenteredCellStyle}"/>
                                 <DataGridTextColumn Header="PROD DATE" Width="*" Binding="{Binding DateProd}" ElementStyle="{StaticResource CenteredCellStyle}"/>
-
                                 <DataGridTemplateColumn Header="ACTION" Width="70">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <Button Content="+" Width="30" Height="26" Background="#28A745" Foreground="White"
-                                            FontSize="16" Padding="0,-2,0,0" BorderThickness="0" Cursor="Hand"
-                                            ToolTip="Tambahkan ke daftar" Style="{StaticResource MahApps.Styles.Button.Square}"
-                                            IsEnabled="{Binding DataContext.IsNotBusy, RelativeSource={RelativeSource AncestorType=Window}}"
-                                            Command="{Binding DataContext.AddToExportCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                            CommandParameter="{Binding}"/>
+                                            <Button Content="+" Width="30" Height="26" Background="#28A745" Foreground="White" FontSize="16" Padding="0,-2,0,0" BorderThickness="0" Cursor="Hand" ToolTip="Tambahkan ke daftar" Style="{StaticResource MahApps.Styles.Button.Square}" IsEnabled="{Binding DataContext.IsNotBusy, RelativeSource={RelativeSource AncestorType=Window}}" Command="{Binding DataContext.AddToExportCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}"/>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
@@ -392,34 +309,15 @@
                             </Grid>
                         </Border>
 
-                        <DataGrid x:Name="GridBasket"
-                                  ItemsSource="{Binding ExportList}"
-                                  Style="{StaticResource MahApps.Styles.DataGrid}"
-                                  AutoGenerateColumns="False"
-                                  GridLinesVisibility="Horizontal"
-                                  HeadersVisibility="Column"
-                                  IsReadOnly="True"
-                                  CanUserResizeColumns="False"
-                                  CanUserReorderColumns="False"
-                                  CanUserSortColumns="True"
-                                  ScrollViewer.VerticalScrollBarVisibility="Auto"
-                                  ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                                  ColumnHeaderStyle="{StaticResource CenteredColumnHeaderStyle}"
-                                  BorderThickness="0">
+                        <DataGrid x:Name="GridBasket" ItemsSource="{Binding ExportList}" Style="{StaticResource MahApps.Styles.DataGrid}" AutoGenerateColumns="False" GridLinesVisibility="Horizontal" HeadersVisibility="Column" IsReadOnly="True" CanUserResizeColumns="False" CanUserReorderColumns="False" CanUserSortColumns="True" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Auto" ColumnHeaderStyle="{StaticResource CenteredColumnHeaderStyle}" BorderThickness="0">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="ID" Width="50" Binding="{Binding Id}" ElementStyle="{StaticResource CenteredCellStyle}"/>
                                 <DataGridTextColumn Header="SIZE (SPEC)" Width="*" Binding="{Binding Specification}" ElementStyle="{StaticResource CenteredCellStyle}"/>
                                 <DataGridTextColumn Header="PROD DATE" Width="*" Binding="{Binding DateProd}" ElementStyle="{StaticResource CenteredCellStyle}"/>
-
                                 <DataGridTemplateColumn Header="ACTION" Width="70">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <Button Content="×" Width="30" Height="26" Background="#DC3545" Foreground="White"
-                                                    FontSize="18" Padding="0,-4,0,0" BorderThickness="0" Cursor="Hand"
-                                                    ToolTip="Hapus dari daftar" Style="{StaticResource MahApps.Styles.Button.Square}"
-                                                    IsEnabled="{Binding DataContext.IsNotBusy, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                    Command="{Binding DataContext.RemoveFromExportCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                    CommandParameter="{Binding}"/>
+                                            <Button Content="×" Width="30" Height="26" Background="#DC3545" Foreground="White" FontSize="18" Padding="0,-4,0,0" BorderThickness="0" Cursor="Hand" ToolTip="Hapus dari daftar" Style="{StaticResource MahApps.Styles.Button.Square}" IsEnabled="{Binding DataContext.IsNotBusy, RelativeSource={RelativeSource AncestorType=Window}}" Command="{Binding DataContext.RemoveFromExportCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}"/>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
@@ -435,52 +333,63 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <Border Grid.Column="0" Background="White" CornerRadius="4" BorderBrush="#DEE2E6" BorderThickness="1" 
-            Padding="15,10" VerticalAlignment="Center" Margin="0,0,10,0">
-
+                <Border Grid.Column="0" Background="White" CornerRadius="4" BorderBrush="#DEE2E6" BorderThickness="1" Padding="15,10" VerticalAlignment="Center" Margin="0,0,10,0">
                     <DockPanel LastChildFill="True">
                         <WrapPanel DockPanel.Dock="Left" Orientation="Horizontal">
                             <StackPanel Orientation="Horizontal" Margin="0,0,25,0">
                                 <TextBlock Text="Standard:" FontSize="12" FontWeight="Bold" Foreground="#6C757D" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                <ComboBox MinWidth="130" VerticalAlignment="Center"
-                              ItemsSource="{Binding Standards}" SelectedItem="{Binding SelectedStandard}"
-                              Controls:TextBoxHelper.Watermark="Select Standart"
-                              Template="{StaticResource UpComboBoxControlTemplate}" />
+                                <ComboBox MinWidth="130" VerticalAlignment="Center" ItemsSource="{Binding Standards}" SelectedItem="{Binding SelectedStandard}" Controls:TextBoxHelper.Watermark="Select Standart" Template="{StaticResource UpComboBoxControlTemplate}" />
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" Margin="0,0,25,0">
                                 <TextBlock Text="Customer:" FontSize="12" FontWeight="Bold" Foreground="#6C757D" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                <TextBox MinWidth="140" VerticalAlignment="Center"
-                             Text="{Binding CustomerName, UpdateSourceTrigger=PropertyChanged}"
-                             Controls:TextBoxHelper.Watermark="Input Company"
-                             Controls:TextBoxHelper.ClearTextButton="True"/>
+                                <TextBox MinWidth="140" VerticalAlignment="Center" Text="{Binding CustomerName, UpdateSourceTrigger=PropertyChanged}" Controls:TextBoxHelper.Watermark="Input Company" Controls:TextBoxHelper.ClearTextButton="True"/>
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" Margin="0,0,25,0">
                                 <TextBlock Text="DO Number:" FontSize="12" FontWeight="Bold" Foreground="#6C757D" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                <TextBox MinWidth="140" VerticalAlignment="Center"
-                             Text="{Binding DoNumber, UpdateSourceTrigger=PropertyChanged}"
-                             Controls:TextBoxHelper.Watermark="Input DO Number"
-                             Controls:TextBoxHelper.ClearTextButton="True"/>
+                                <TextBox MinWidth="140" VerticalAlignment="Center" Text="{Binding DoNumber, UpdateSourceTrigger=PropertyChanged}" Controls:TextBoxHelper.Watermark="Input DO Number" Controls:TextBoxHelper.ClearTextButton="True"/>
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,0">
                                 <TextBlock Text="PO Number:" FontSize="12" FontWeight="Bold" Foreground="#6C757D" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                <TextBox MinWidth="140" VerticalAlignment="Center"
-                             Text="{Binding PoNumber, UpdateSourceTrigger=PropertyChanged}"
-                             Controls:TextBoxHelper.Watermark="Input PO Number"
-                             Controls:TextBoxHelper.ClearTextButton="True"/>
+                                <TextBox MinWidth="140" VerticalAlignment="Center" Text="{Binding PoNumber, UpdateSourceTrigger=PropertyChanged}" Controls:TextBoxHelper.Watermark="Input PO Number" Controls:TextBoxHelper.ClearTextButton="True"/>
                             </StackPanel>
                         </WrapPanel>
                     </DockPanel>
                 </Border>
 
-                <Button Grid.Column="1" Content="PRINT COA"
-                        IsEnabled="{Binding IsNotBusy}"
-                        Command="{Binding PrintCoaCommand}"
-                        Controls:ControlsHelper.ContentCharacterCasing="Upper"
-                        MinWidth="150" Width="200" Height="Auto" FontSize="16" FontWeight="Bold"
-                        Style="{StaticResource MahApps.Styles.Button.Square.Accent}"
-                        ToolTip="Export data terpilih ke Excel" Padding="15,10"
-                        VerticalAlignment="Center"/>
+                <Button Grid.Column="1" Content="PRINT COA" IsEnabled="{Binding IsNotBusy}" Command="{Binding PrintCoaCommand}" Controls:ControlsHelper.ContentCharacterCasing="Upper" MinWidth="150" Width="200" Height="Auto" FontSize="16" FontWeight="Bold" Style="{StaticResource MahApps.Styles.Button.Square.Accent}" ToolTip="Export data terpilih ke Excel" Padding="15,10" VerticalAlignment="Center"/>
             </Grid>
         </Grid>
+
+        <Grid x:Name="ProgressOverlay" 
+              Visibility="{Binding IsBusyVisibility}"
+              d:Visibility="Visible">
+
+            <Border Background="#99000000" IsHitTestVisible="True"/>
+
+            <Border Background="White" 
+                    Width="300" Height="150" 
+                    CornerRadius="4" 
+                    BorderBrush="Black" BorderThickness="1"
+                    HorizontalAlignment="Center" 
+                    VerticalAlignment="Center"
+                    Effect="{DynamicResource MahApps.DropShadowEffect.Dialog}">
+
+                <StackPanel Margin="20" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding BusyMessage}" 
+                               FontSize="14" 
+                               TextAlignment="Center" 
+                               Margin="0,0,0,20"/>
+
+                    <ProgressBar IsIndeterminate="True" Height="20" Foreground="{DynamicResource MahApps.Brushes.Accent}"/>
+
+                    <TextBlock Text="Please wait, do not close this window..." 
+                               FontSize="10" 
+                               TextAlignment="Center" 
+                               Margin="0,20,0,0" 
+                               Foreground="Gray"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+
     </Grid>
 </Controls:MetroWindow>

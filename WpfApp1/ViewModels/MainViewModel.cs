@@ -33,13 +33,27 @@ namespace WpfApp1.ViewModels
             get => _isBusy;
             set
             {
-                _isBusy = value;
-                OnPropertyChanged();
-                OnPropertyChanged(nameof(IsNotBusy));
+                if (_isBusy != value)
+                {
+                    _isBusy = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(IsNotBusy));
+                    OnPropertyChanged(nameof(IsBusyVisibility));
+                }
             }
         }
 
         public bool IsNotBusy => !IsBusy;
+
+        public System.Windows.Visibility IsBusyVisibility =>
+            IsBusy ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
+
+        private string _busyMessage = "Processing...";
+        public string BusyMessage
+        {
+            get => _busyMessage;
+            set { _busyMessage = value; OnPropertyChanged(); }
+        }
 
         private bool _showBlankPage = false;
         public bool ShowBlankPage
@@ -49,7 +63,6 @@ namespace WpfApp1.ViewModels
         }
 
         public event System.Action<string>? OnShowMessage;
-
         public System.Collections.ObjectModel.ObservableCollection<string> Years { get; set; } = new System.Collections.ObjectModel.ObservableCollection<string>();
         public System.Collections.ObjectModel.ObservableCollection<string> Months { get; set; } = new System.Collections.ObjectModel.ObservableCollection<string>();
         public System.Collections.ObjectModel.ObservableCollection<string> Standards { get; set; } = new System.Collections.ObjectModel.ObservableCollection<string>();
@@ -58,73 +71,33 @@ namespace WpfApp1.ViewModels
         public string? SelectedYear
         {
             get => _selectedYear;
-            set
-            {
-                if (_selectedYear != value)
-                {
-                    _selectedYear = value;
-                    OnPropertyChanged();
-                    SetDefaultProductionDate();
-                }
-            }
+            set { if (_selectedYear != value) { _selectedYear = value; OnPropertyChanged(); SetDefaultProductionDate(); } }
         }
 
         private string? _selectedMonth;
         public string? SelectedMonth
         {
             get => _selectedMonth;
-            set
-            {
-                if (_selectedMonth != value)
-                {
-                    _selectedMonth = value;
-                    OnPropertyChanged();
-                    SetDefaultProductionDate();
-                }
-            }
+            set { if (_selectedMonth != value) { _selectedMonth = value; OnPropertyChanged(); SetDefaultProductionDate(); } }
         }
 
         private System.DateTime? _selectedDate;
-        public System.DateTime? SelectedDate
-        {
-            get => _selectedDate;
-            set { _selectedDate = value; OnPropertyChanged(); }
-        }
+        public System.DateTime? SelectedDate { get => _selectedDate; set { _selectedDate = value; OnPropertyChanged(); } }
 
         private string? _selectedStandard;
-        public string? SelectedStandard
-        {
-            get => _selectedStandard;
-            set { _selectedStandard = value; OnPropertyChanged(); }
-        }
+        public string? SelectedStandard { get => _selectedStandard; set { _selectedStandard = value; OnPropertyChanged(); } }
 
         private string _customerName = string.Empty;
-        public string CustomerName
-        {
-            get => _customerName;
-            set { _customerName = value; OnPropertyChanged(); }
-        }
+        public string CustomerName { get => _customerName; set { _customerName = value; OnPropertyChanged(); } }
 
         private string _poNumber = string.Empty;
-        public string PoNumber
-        {
-            get => _poNumber;
-            set { _poNumber = value; OnPropertyChanged(); }
-        }
+        public string PoNumber { get => _poNumber; set { _poNumber = value; OnPropertyChanged(); } }
 
         private string _numberDO = string.Empty;
-        public string DoNumber
-        {
-            get => _numberDO;
-            set { _numberDO = value; OnPropertyChanged(); }
-        }
+        public string DoNumber { get => _numberDO; set { _numberDO = value; OnPropertyChanged(); } }
 
         private System.Collections.ObjectModel.ObservableCollection<BusbarSearchItem> _searchResults = new System.Collections.ObjectModel.ObservableCollection<BusbarSearchItem>();
-        public System.Collections.ObjectModel.ObservableCollection<BusbarSearchItem> SearchResults
-        {
-            get => _searchResults;
-            set { _searchResults = value; OnPropertyChanged(); }
-        }
+        public System.Collections.ObjectModel.ObservableCollection<BusbarSearchItem> SearchResults { get => _searchResults; set { _searchResults = value; OnPropertyChanged(); } }
 
         public System.Collections.ObjectModel.ObservableCollection<WpfApp1.Core.Models.BusbarExportItem> ExportList { get; set; }
             = new System.Collections.ObjectModel.ObservableCollection<WpfApp1.Core.Models.BusbarExportItem>();
@@ -165,9 +138,7 @@ namespace WpfApp1.ViewModels
                 ResetCounters();
 
                 using var connection = _dbContext.CreateConnection();
-
-                if (connection.State != System.Data.ConnectionState.Open)
-                    connection.Open();
+                if (connection.State != System.Data.ConnectionState.Open) connection.Open();
 
                 using (var command = connection.CreateCommand())
                 {
@@ -176,7 +147,6 @@ namespace WpfApp1.ViewModels
                 }
 
                 using var transaction = connection.BeginTransaction();
-
                 try
                 {
                     _importService.Import(connection, transaction);
@@ -190,7 +160,6 @@ namespace WpfApp1.ViewModels
 
                 TotalFilesFound = _importService.TotalFilesFound;
                 TotalRowsInserted = _importService.TotalRowsInserted;
-
             }
             catch (System.Exception)
             {
@@ -202,20 +171,9 @@ namespace WpfApp1.ViewModels
             }
         }
 
-        public void ButtonMode2_Click()
-        {
-            OnShowMessage?.Invoke("MODE 2 belum diimplementasikan");
-        }
-
-        public void ButtonMode3_Click()
-        {
-            OnShowMessage?.Invoke("MODE 3 belum diimplementasikan");
-        }
-
-        public void ButtonMode4_Click()
-        {
-            OnShowMessage?.Invoke("MODE 4 belum diimplementasikan");
-        }
+        public void ButtonMode2_Click() { OnShowMessage?.Invoke("MODE 2 belum diimplementasikan"); }
+        public void ButtonMode3_Click() { OnShowMessage?.Invoke("MODE 3 belum diimplementasikan"); }
+        public void ButtonMode4_Click() { OnShowMessage?.Invoke("MODE 4 belum diimplementasikan"); }
 
         public void BackToMenu()
         {
@@ -225,16 +183,10 @@ namespace WpfApp1.ViewModels
             DoNumber = string.Empty;
             ExportList.Clear();
             ShowBlankPage = false;
-
             System.GC.Collect();
         }
 
-        private void ResetCounters()
-        {
-            TotalFilesFound = 0;
-            TotalRowsInserted = 0;
-            DebugLog = "";
-        }
+        private void ResetCounters() { TotalFilesFound = 0; TotalRowsInserted = 0; DebugLog = ""; }
 
         private void InitializeSearchData()
         {
@@ -263,33 +215,18 @@ namespace WpfApp1.ViewModels
             try
             {
                 var dbYears = _repository.GetAvailableYears();
-
                 if (System.Windows.Application.Current.Dispatcher.CheckAccess())
                 {
-                    Years.Clear();
-                    foreach (var year in dbYears)
-                    {
-                        Years.Add(year);
-                    }
+                    Years.Clear(); foreach (var year in dbYears) Years.Add(year);
                 }
                 else
                 {
-                    System.Windows.Application.Current.Dispatcher.Invoke(() =>
-                    {
-                        Years.Clear();
-                        foreach (var year in dbYears)
-                        {
-                            Years.Add(year);
-                        }
-                    });
+                    System.Windows.Application.Current.Dispatcher.Invoke(() => { Years.Clear(); foreach (var year in dbYears) Years.Add(year); });
                 }
             }
             catch (System.Exception ex)
             {
-                System.Windows.Application.Current.Dispatcher.Invoke(() =>
-                {
-                    System.Windows.MessageBox.Show($"Error loading years: {ex.Message}");
-                });
+                System.Windows.Application.Current.Dispatcher.Invoke(() => { System.Windows.MessageBox.Show($"Error loading years: {ex.Message}"); });
             }
         }
 
@@ -300,59 +237,28 @@ namespace WpfApp1.ViewModels
                 if (int.TryParse(SelectedYear, out int year))
                 {
                     string engMonth = ConvertMonthToEnglish(SelectedMonth);
-
                     int month = WpfApp1.Shared.Helpers.DateHelper.GetMonthNumber(engMonth);
-
-                    if (month > 0 && month <= 12)
-                    {
-                        SelectedDate = new System.DateTime(year, month, 1);
-                    }
+                    if (month > 0 && month <= 12) SelectedDate = new System.DateTime(year, month, 1);
                 }
             }
         }
 
         private void ExecuteFind(object? parameter)
         {
-            if (string.IsNullOrWhiteSpace(SelectedYear))
-            {
-                OnShowMessage?.Invoke("Harap memilih YEAR.");
-                return;
-            }
-
-            if (string.IsNullOrWhiteSpace(SelectedMonth))
-            {
-                OnShowMessage?.Invoke("Harap memilih MONTH.");
-                return;
-            }
-
-            if (SelectedDate == null)
-            {
-                OnShowMessage?.Invoke("Harap memilih PRODUCTION DATE.");
-                return;
-            }
+            if (string.IsNullOrWhiteSpace(SelectedYear)) { OnShowMessage?.Invoke("Harap memilih YEAR."); return; }
+            if (string.IsNullOrWhiteSpace(SelectedMonth)) { OnShowMessage?.Invoke("Harap memilih MONTH."); return; }
+            if (SelectedDate == null) { OnShowMessage?.Invoke("Harap memilih PRODUCTION DATE."); return; }
 
             try
             {
                 string dbMonth = ConvertMonthToEnglish(SelectedMonth);
                 string dbDate = SelectedDate.Value.ToString("dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture);
-
                 var data = _repository.SearchBusbarRecords(SelectedYear, dbMonth, dbDate);
-
                 SearchResults.Clear();
-                foreach (var item in data)
-                {
-                    SearchResults.Add(item);
-                }
-
-                if (SearchResults.Count == 0)
-                {
-                    OnShowMessage?.Invoke("Data tidak ditemukan untuk kriteria tersebut.");
-                }
+                foreach (var item in data) SearchResults.Add(item);
+                if (SearchResults.Count == 0) OnShowMessage?.Invoke("Data tidak ditemukan untuk kriteria tersebut.");
             }
-            catch (System.Exception ex)
-            {
-                OnShowMessage?.Invoke($"Terjadi kesalahan saat pencarian: {ex.Message}");
-            }
+            catch (System.Exception ex) { OnShowMessage?.Invoke($"Terjadi kesalahan saat pencarian: {ex.Message}"); }
         }
 
         private void ExecuteAddToExport(object? parameter)
@@ -360,36 +266,19 @@ namespace WpfApp1.ViewModels
             if (parameter is BusbarSearchItem selectedItem)
             {
                 bool exists = ExportList.Any(x => x.RecordData.Id == selectedItem.FullRecord.Id);
-
-                if (!exists)
-                {
-                    var exportItem = new WpfApp1.Core.Models.BusbarExportItem(selectedItem.FullRecord);
-                    ExportList.Add(exportItem);
-                }
-                else
-                {
-                    OnShowMessage?.Invoke("Data ini sudah ada dalam daftar Export.");
-                }
+                if (!exists) { var exportItem = new WpfApp1.Core.Models.BusbarExportItem(selectedItem.FullRecord); ExportList.Add(exportItem); }
+                else { OnShowMessage?.Invoke("Data ini sudah ada dalam daftar Export."); }
             }
         }
 
         private void ExecuteRemoveFromExport(object? parameter)
         {
-            if (parameter is WpfApp1.Core.Models.BusbarExportItem itemToRemove)
-            {
-                ExportList.Remove(itemToRemove);
-            }
+            if (parameter is WpfApp1.Core.Models.BusbarExportItem itemToRemove) ExportList.Remove(itemToRemove);
         }
 
         private string FormatDoNumber(string doNumber)
         {
-            if (int.TryParse(doNumber, out int doVal))
-            {
-                if (doVal < 10)
-                {
-                    return "0" + doVal.ToString();
-                }
-            }
+            if (int.TryParse(doNumber, out int doVal)) { if (doVal < 10) return "0" + doVal.ToString(); }
             return doNumber;
         }
 
@@ -401,97 +290,28 @@ namespace WpfApp1.ViewModels
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(SelectedStandard))
+            if (string.IsNullOrWhiteSpace(SelectedStandard) || string.IsNullOrWhiteSpace(CustomerName) ||
+                string.IsNullOrWhiteSpace(PoNumber) || string.IsNullOrWhiteSpace(DoNumber))
             {
-                System.Windows.MessageBox.Show("Silakan pilih Standard terlebih dahulu.", "Peringatan", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
-                return;
-            }
-
-            if (string.IsNullOrWhiteSpace(CustomerName))
-            {
-                System.Windows.MessageBox.Show("Silakan input Nama Perusahaan.", "Peringatan", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
-                return;
-            }
-
-            if (string.IsNullOrWhiteSpace(PoNumber))
-            {
-                System.Windows.MessageBox.Show("Silakan input Nomor PO.", "Peringatan", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
-                return;
-            }
-
-            if (string.IsNullOrWhiteSpace(DoNumber))
-            {
-                System.Windows.MessageBox.Show("Silakan input Nomor DO (Delivery Order).", "Peringatan", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                System.Windows.MessageBox.Show("Silakan lengkapi data (Standard, Customer, PO, DO).", "Peringatan", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
                 return;
             }
 
             DoNumber = FormatDoNumber(DoNumber);
 
             if (IsBusy) return;
-            IsBusy = true;
 
-            bool canCloseProgress = false;
-            System.Windows.Window? progressWindow = null;
+            BusyMessage = "Generating COA Document...";
+            IsBusy = true;
 
             try
             {
-                progressWindow = new System.Windows.Window
-                {
-                    Title = "Processing...",
-                    Width = 300,
-                    Height = 150,
-                    WindowStartupLocation = System.Windows.WindowStartupLocation.CenterOwner,
-                    Owner = System.Windows.Application.Current.MainWindow,
-                    ResizeMode = System.Windows.ResizeMode.NoResize,
-                    WindowStyle = System.Windows.WindowStyle.None,
-                    BorderBrush = System.Windows.Media.Brushes.Black,
-                    BorderThickness = new System.Windows.Thickness(1),
-                    Content = new System.Windows.Controls.StackPanel
-                    {
-                        Margin = new System.Windows.Thickness(20),
-                        Children =
-                        {
-                            new System.Windows.Controls.TextBlock
-                            {
-                                Text = "Generating COA Document...", 
-                                FontSize = 14,
-                                TextAlignment = System.Windows.TextAlignment.Center,
-                                Margin = new System.Windows.Thickness(0, 10, 0, 20)
-                            },
-                            new System.Windows.Controls.ProgressBar
-                            {
-                                IsIndeterminate = true,
-                                Height = 20
-                            },
-                            new System.Windows.Controls.TextBlock
-                            {
-                                Text = "Please wait, do not close this window...",
-                                FontSize = 10,
-                                TextAlignment = System.Windows.TextAlignment.Center,
-                                Margin = new System.Windows.Thickness(0, 20, 0, 0),
-                                Foreground = System.Windows.Media.Brushes.Gray
-                            }
-                        }
-                    }
-                };
-
-                progressWindow.Closing += (s, args) =>
-                {
-                    if (!canCloseProgress)
-                    {
-                        args.Cancel = true;
-                    }
-                };
-
-                progressWindow.Show();
-
                 await System.Threading.Tasks.Task.Run(() =>
                 {
                     try
                     {
                         var itemsToExport = new System.Collections.Generic.List<WpfApp1.Core.Models.BusbarExportItem>(ExportList);
                         string savedExcelPath = _printService.GenerateCoaExcel(CustomerName, PoNumber, DoNumber, itemsToExport, SelectedStandard);
-                        string savedPdfPath = System.IO.Path.ChangeExtension(savedExcelPath, ".pdf");
 
                         System.Windows.Application.Current.Dispatcher.Invoke(() =>
                         {
@@ -507,18 +327,9 @@ namespace WpfApp1.ViewModels
                         throw ex;
                     }
                 });
-
-                canCloseProgress = true;
-                progressWindow.Close();
             }
             catch (System.Exception ex)
             {
-                if (progressWindow != null)
-                {
-                    canCloseProgress = true;
-                    progressWindow.Close();
-                }
-
                 System.Windows.MessageBox.Show($"Gagal membuat Dokumen:\n{ex.Message}", "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             }
             finally
@@ -551,11 +362,7 @@ namespace WpfApp1.ViewModels
 
         private void ResetSearchData()
         {
-            SelectedYear = null;
-            SelectedMonth = null;
-            SelectedDate = null;
-            SelectedStandard = null;
-            SearchResults.Clear();
+            SelectedYear = null; SelectedMonth = null; SelectedDate = null; SelectedStandard = null; SearchResults.Clear();
         }
     }
 
@@ -563,21 +370,9 @@ namespace WpfApp1.ViewModels
     {
         private readonly System.Action<object?> _execute;
         private readonly System.Func<object?, bool>? _canExecute;
-
-        public RelayCommand(System.Action<object?> execute, System.Func<object?, bool>? canExecute = null)
-        {
-            _execute = execute;
-            _canExecute = canExecute;
-        }
-
-        public event System.EventHandler? CanExecuteChanged
-        {
-            add { System.Windows.Input.CommandManager.RequerySuggested += value; }
-            remove { System.Windows.Input.CommandManager.RequerySuggested -= value; }
-        }
-
+        public RelayCommand(System.Action<object?> execute, System.Func<object?, bool>? canExecute = null) { _execute = execute; _canExecute = canExecute; }
+        public event System.EventHandler? CanExecuteChanged { add { System.Windows.Input.CommandManager.RequerySuggested += value; } remove { System.Windows.Input.CommandManager.RequerySuggested -= value; } }
         public bool CanExecute(object? parameter) => _canExecute == null || _canExecute(parameter);
-
         public void Execute(object? parameter) => _execute(parameter);
     }
 }
