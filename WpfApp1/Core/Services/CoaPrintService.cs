@@ -37,7 +37,18 @@ namespace WpfApp1.Core.Services
             }
 
             string[] existingFiles = System.IO.Directory.GetFiles(finalDirectory, "*.xlsx");
-            int nomorFile = existingFiles.Length + 1;
+
+            int validFileCount = 0;
+            foreach (string filePath in existingFiles)
+            {
+                string fName = System.IO.Path.GetFileName(filePath);
+                if (!fName.StartsWith("~$"))
+                {
+                    validFileCount++;
+                }
+            }
+
+            int nomorFile = validFileCount + 1;
 
             string formattedFileNumber = nomorFile.ToString("000");
             string romanMonth = GetRomanMonth(now.Month);
