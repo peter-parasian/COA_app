@@ -15,6 +15,8 @@ namespace WpfApp1.Core.Services
         {
             string templatePath = @"C:\Users\mrrx\Documents\My Web Sites\H\TEMPLATE_COA_BUSBAR.xlsx";
             string basePath = @"C:\Users\mrrx\Documents\My Web Sites\H\COA";
+            string pathImg1 = @"C:\Users\mrrx\Documents\Custom Office Templates\WpfApp1\WpfApp1\Images\approved_IMG.png";
+            string pathImg2 = @"C:\Users\mrrx\Documents\Custom Office Templates\WpfApp1\WpfApp1\Images\profile_SNI.png";
 
             if (!System.IO.File.Exists(templatePath))
             {
@@ -244,15 +246,51 @@ namespace WpfApp1.Core.Services
                     worksheet.Cell(rBottom, 8).Style.Border.TopBorder = XLBorderStyleValues.None;
                 }
 
-                var table2Range = worksheet.Range(startRowTable2, 2, startRowTable2 + dataCount - 1, 11);
+                int lastRowTable2 = startRowTable2 + dataCount - 1;
+
+                var table2Range = worksheet.Range(startRowTable2, 2, lastRowTable2, 11);
                 ApplyBorders(table2Range);
 
+                worksheet.Row(lastRowTable2).InsertRowsBelow(6);
+                int firstInsertedRow = lastRowTable2 + 1;
+                int lastInsertedRow = firstInsertedRow + 5;
+
+                var signatureRange = worksheet.Range(firstInsertedRow, 2, lastInsertedRow, 11);
+                signatureRange.Style.Border.TopBorder = XLBorderStyleValues.None;
+                signatureRange.Style.Border.BottomBorder = XLBorderStyleValues.None;
+                signatureRange.Style.Border.LeftBorder = XLBorderStyleValues.None;
+                signatureRange.Style.Border.RightBorder = XLBorderStyleValues.None;
+                signatureRange.Style.Border.InsideBorder = XLBorderStyleValues.None;
+                signatureRange.Style.Border.OutsideBorder = XLBorderStyleValues.None;
+
+                for (int k = 0; k < 5; k++)
+                {
+                    worksheet.Row(firstInsertedRow + k).Height = 102;
+                }
+
+                worksheet.Row(firstInsertedRow + 5).Height = 50;
+
+                int imageRow = firstInsertedRow + 2;
+
+                if (System.IO.File.Exists(pathImg1))
+                {
+                    var pic1 = worksheet.AddPicture(pathImg1);
+                    pic1.MoveTo(worksheet.Cell(imageRow, 11));
+                }
+
+                if (System.IO.File.Exists(pathImg2))
+                {
+                    var pic2 = worksheet.AddPicture(pathImg2);
+                    pic2.MoveTo(worksheet.Cell(imageRow, 2));
+                }
+
+                worksheet.PageSetup.PrintAreas.Clear();
+                worksheet.PageSetup.PrintAreas.Add(1, 2, lastInsertedRow, 11);
+                worksheet.PageSetup.AddHorizontalPageBreak(lastInsertedRow + 1);
                 worksheet.PageSetup.PagesTall = 1;
                 worksheet.PageSetup.PagesWide = 1;
-
                 workbook.SaveAs(fullPath);
             }
-
             return fullPath;
         }
 
