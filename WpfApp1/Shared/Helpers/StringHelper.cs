@@ -6,6 +6,30 @@ namespace WpfApp1.Shared.Helpers
 {
     public static class StringHelper
     {
+        public static string CleanSizeCOA(string rawSize)
+        {
+            if (string.IsNullOrWhiteSpace(rawSize))
+            {
+                return string.Empty;
+            }
+
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+
+            foreach (char c in rawSize)
+            {
+                if (char.IsDigit(c))
+                {
+                    sb.Append(c);
+                }
+                else if (c == 'x' || c == 'X')
+                {
+                    sb.Append('x');
+                }
+            }
+
+            return sb.ToString();
+        }
+
         public static string CleanSizeText(string raw)
         {
             if (string.IsNullOrWhiteSpace(raw)) return string.Empty;

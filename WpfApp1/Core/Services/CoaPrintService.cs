@@ -97,6 +97,21 @@ namespace WpfApp1.Core.Services
                     cellD.Style.Alignment.WrapText = true;
                     worksheet.Range(rTop, 4, rBottom, 5).Merge();
 
+                    string cleanSizeStr = WpfApp1.Shared.Helpers.StringHelper.CleanSizeCOA(rec.Size);
+                    var calculatedTols = WpfApp1.Shared.Helpers.ToleranceJIS.CalculateFromDbString(cleanSizeStr);
+
+                    double nominalThick = 0;
+                    double nominalWidth = 0;
+                    string[] parts = cleanSizeStr.Split('x');
+                    if (parts.Length >= 2)
+                    {
+                        double.TryParse(parts[0], System.Globalization.NumberStyles.Float, cultureInvariant, out nominalThick);
+                        double.TryParse(parts[1], System.Globalization.NumberStyles.Float, cultureInvariant, out nominalWidth);
+                    }
+
+                    string strThickTol = string.Format(cultureInvariant, "({0:0.00} \u00B1 {1:0.00})", nominalThick, calculatedTols.Thickness);
+                    string strWidthTol = string.Format(cultureInvariant, "({0:0.00} \u00B1 {1:0.00})", nominalWidth, calculatedTols.Width);
+
                     var cellThickVal = worksheet.Cell(rTop, 6);
                     cellThickVal.Value = string.Format(cultureInvariant, "{0:0.00}", rec.Thickness);
                     cellThickVal.Style.Font.Bold = true;
@@ -106,7 +121,7 @@ namespace WpfApp1.Core.Services
                     cellThickVal.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
 
                     var cellThickTol = worksheet.Cell(rBottom, 6);
-                    cellThickTol.Value = "(5.00 ± 0.10)";
+                    cellThickTol.Value = strThickTol; 
                     cellThickTol.Style.Font.Bold = false;
                     cellThickTol.Style.Font.FontName = "Montserrat";
                     cellThickTol.Style.Font.FontSize = 22;
@@ -122,7 +137,7 @@ namespace WpfApp1.Core.Services
                     cellWidthVal.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
 
                     var cellWidhtTol = worksheet.Cell(rBottom, 7);
-                    cellWidhtTol.Value = "(5.00 ± 0.10)";
+                    cellWidhtTol.Value = strWidthTol; 
                     cellWidhtTol.Style.Font.Bold = false;
                     cellWidhtTol.Style.Font.FontName = "Montserrat";
                     cellWidhtTol.Style.Font.FontSize = 22;
@@ -130,11 +145,8 @@ namespace WpfApp1.Core.Services
                     cellWidhtTol.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
 
                     var cellLengthVal = worksheet.Cell(rTop, 8);
-                    if (double.TryParse(rec.Length.ToString(), out double lengthValue))
-                    {
-                        cellLengthVal.Value = System.Convert.ToInt32(lengthValue);
-                    }
-                    cellLengthVal.Value = string.Format(cultureInvariant, "{0:0.00}", rec.Length);
+                    cellLengthVal.Value = rec.Length;
+                    cellLengthVal.Style.NumberFormat.Format = "0";
                     cellLengthVal.Style.Font.Bold = true;
                     cellLengthVal.Style.Font.FontName = "Montserrat";
                     cellLengthVal.Style.Font.FontSize = 22;
@@ -142,7 +154,7 @@ namespace WpfApp1.Core.Services
                     cellLengthVal.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
 
                     var cellLentghTol = worksheet.Cell(rBottom, 8);
-                    cellLentghTol.Value = "(5.00 ± 0.10)";
+                    cellLentghTol.Value = "(4000 ± 15)";
                     cellLentghTol.Style.Font.Bold = false;
                     cellLentghTol.Style.Font.FontName = "Montserrat";
                     cellLentghTol.Style.Font.FontSize = 22;
