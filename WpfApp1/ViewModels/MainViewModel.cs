@@ -13,7 +13,7 @@ namespace WpfApp1.ViewModels
         private SqliteContext _dbContext;
         private BusbarRepository _repository;
         private ExcelImportService _importService;
-        private CoaPrintService _printService; // Service baru
+        private CoaPrintService _printService;
 
         private readonly object _lockObject = new object();
 
@@ -139,7 +139,7 @@ namespace WpfApp1.ViewModels
             _dbContext = new SqliteContext();
             _repository = new BusbarRepository(_dbContext);
             _importService = new ExcelImportService(_repository);
-            _printService = new CoaPrintService(); // Inisialisasi Service
+            _printService = new CoaPrintService();
 
             _importService.OnDebugMessage += (msg) => {
                 lock (_lockObject)
@@ -251,8 +251,8 @@ namespace WpfApp1.ViewModels
             Months.Add("December");
 
             Standards.Add("JIS");
-            Standards.Add("DIN");
-            Standards.Add("ASTM");
+            //Standards.Add("DIN");
+            //Standards.Add("ASTM");
 
             SearchResults.Clear();
         }
@@ -418,8 +418,7 @@ namespace WpfApp1.ViewModels
             try
             {
                 var itemsToExport = new System.Collections.Generic.List<WpfApp1.Core.Models.BusbarExportItem>(ExportList);
-
-                string savedPath = _printService.GenerateCoaExcel(CustomerName, PoNumber, DoNumber, itemsToExport);
+                string savedPath = _printService.GenerateCoaExcel(CustomerName, PoNumber, DoNumber, itemsToExport, SelectedStandard);
 
                 System.Windows.MessageBox.Show($"Data berhasil diexport ke:\n{savedPath}", "Sukses", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
 

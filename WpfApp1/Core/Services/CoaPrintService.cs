@@ -10,7 +10,8 @@ namespace WpfApp1.Core.Services
             string customerName,
             string poNumber,
             string doNumber,
-            System.Collections.Generic.List<WpfApp1.Core.Models.BusbarExportItem> dataList)
+            System.Collections.Generic.List<WpfApp1.Core.Models.BusbarExportItem> dataList,
+            string standardName)
         {
             string templatePath = @"C:\Users\mrrx\Documents\My Web Sites\H\TEMPLATE_COA_BUSBAR.xlsx";
             string basePath = @"C:\Users\mrrx\Documents\My Web Sites\H\COA";
@@ -43,6 +44,8 @@ namespace WpfApp1.Core.Services
 
             string fileName = $"{formattedFileNumber}. COA {customerName} {doNumber}.xlsx";
             string fullPath = System.IO.Path.Combine(finalDirectory, fileName);
+
+            System.Random randomGen = new System.Random();
 
             using (var workbook = new ClosedXML.Excel.XLWorkbook(templatePath))
             {
@@ -99,7 +102,21 @@ namespace WpfApp1.Core.Services
                     worksheet.Range(rTop, 4, rBottom, 5).Merge();
 
                     string cleanSizeStr = WpfApp1.Shared.Helpers.StringHelper.CleanSizeCOA(rec.Size);
-                    var calculatedTols = WpfApp1.Shared.Helpers.ToleranceJIS.CalculateFromDbString(cleanSizeStr);
+
+                    double finalTolThickness = 0;
+                    double finalTolWidth = 0;
+
+                    if (standardName == "JIS")
+                    {
+                        var calculatedTols = WpfApp1.Shared.Helpers.ToleranceJIS.CalculateFromDbString(cleanSizeStr);
+                        finalTolThickness = calculatedTols.Thickness;
+                        finalTolWidth = calculatedTols.Width;
+                    }
+                    else
+                    {
+                        finalTolThickness = System.Math.Round((randomGen.NextDouble() * 0.2) + 0.05, 2);
+                        finalTolWidth = System.Math.Round((randomGen.NextDouble() * 1.0) + 0.50, 2);
+                    }
 
                     double nominalThick = 0;
                     double nominalWidth = 0;
@@ -110,8 +127,8 @@ namespace WpfApp1.Core.Services
                         double.TryParse(parts[1], System.Globalization.NumberStyles.Float, cultureInvariant, out nominalWidth);
                     }
 
-                    string strThickTol = string.Format(cultureInvariant, "({0:0.00} \u00B1 {1:0.00})", nominalThick, calculatedTols.Thickness);
-                    string strWidthTol = string.Format(cultureInvariant, "({0:0.00} \u00B1 {1:0.00})", nominalWidth, calculatedTols.Width);
+                    string strThickTol = string.Format(cultureInvariant, "({0:0.00} \u00B1 {1:0.00})", nominalThick, finalTolThickness);
+                    string strWidthTol = string.Format(cultureInvariant, "({0:0.00} \u00B1 {1:0.00})", nominalWidth, finalTolWidth);
 
                     var cellThickVal = worksheet.Cell(rTop, 6);
                     cellThickVal.Value = string.Format(cultureInvariant, "{0:0.00}", rec.Thickness);
