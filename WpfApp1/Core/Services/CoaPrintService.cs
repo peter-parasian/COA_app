@@ -6,7 +6,6 @@ namespace WpfApp1.Core.Services
 {
     public class CoaPrintService
     {
-        // PERUBAHAN: Cache disimpan dalam bentuk byte array, bukan hanya bool exists
         private byte[]? _img1Data = null;
         private byte[]? _img2Data = null;
 
@@ -24,7 +23,6 @@ namespace WpfApp1.Core.Services
                 string pathImg1 = @"C:\Users\mrrx\Documents\Custom Office Templates\WpfApp1\WpfApp1\Images\approved_IMG.png";
                 string pathImg2 = @"C:\Users\mrrx\Documents\Custom Office Templates\WpfApp1\WpfApp1\Images\profile_SNI.png";
 
-                // PERUBAHAN: Load images ke memory (Caching) sekali saja
                 if (_img1Data == null && System.IO.File.Exists(pathImg1))
                 {
                     _img1Data = System.IO.File.ReadAllBytes(pathImg1);
@@ -275,7 +273,6 @@ namespace WpfApp1.Core.Services
 
                     int imageRow = firstInsertedRow + 2;
 
-                    // PERUBAHAN: Menggunakan gambar dari MemoryStream
                     if (_img1Data != null)
                     {
                         using (var ms1 = new System.IO.MemoryStream(_img1Data))
@@ -312,24 +309,53 @@ namespace WpfApp1.Core.Services
 
         private void ConvertExcelToPdf(string excelFile, string pdfFile)
         {
-            Spire.Xls.Workbook workbook = new Spire.Xls.Workbook();
+            Microsoft.Office.Interop.Excel.Application? excelApp = null;
+            Microsoft.Office.Interop.Excel.Workbook? workbook = null;
 
             try
             {
-                workbook.LoadFromFile(excelFile);
+                excelApp = new Microsoft.Office.Interop.Excel.Application();
+                excelApp.Visible = false;
+                excelApp.ScreenUpdating = false; 
+                excelApp.DisplayAlerts = false;  
 
-                foreach (Spire.Xls.Worksheet sheet in workbook.Worksheets)
-                {
-                    Spire.Xls.PageSetup setup = sheet.PageSetup;
-                    setup.FitToPagesWide = 1;
-                    setup.FitToPagesTall = 1;
-                }
+                workbook = excelApp.Workbooks.Open(excelFile);
 
-                workbook.SaveToFile(pdfFile, Spire.Xls.FileFormat.PDF);
+                workbook.ExportAsFixedFormat(
+                    Microsoft.Office.Interop.Excel.XlFixedFormatType.xlTypePDF,
+                    pdfFile
+                );
             }
             catch (System.Exception ex)
             {
-                throw new System.Exception("Gagal konversi PDF dengan Spire: " + ex.Message, ex);
+                throw new System.Exception("Gagal konversi PDF dengan Microsoft Excel Interop: " + ex.Message, ex);
+            }
+            finally
+            {
+                if (workbook != null)
+                {
+                    try
+                    {
+                        workbook.Close(false); 
+                        System.Runtime.InteropServices.Marshal.ReleaseComObject(workbook);
+                    }
+                    catch { /* Abaikan error saat closing */ }
+                    workbook = null;
+                }
+
+                if (excelApp != null)
+                {
+                    try
+                    {
+                        excelApp.Quit(); 
+                        System.Runtime.InteropServices.Marshal.ReleaseComObject(excelApp);
+                    }
+                    catch { /* Abaikan error saat quitting */ }
+                    excelApp = null;
+                }
+
+                System.GC.Collect();
+                System.GC.WaitForPendingFinalizers();
             }
         }
 
@@ -353,7 +379,6 @@ namespace WpfApp1.Core.Services
 
         public void ClearCache()
         {
-            // PERUBAHAN: Reset byte array cache
             _img1Data = null;
             _img2Data = null;
         }

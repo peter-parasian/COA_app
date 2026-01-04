@@ -186,7 +186,6 @@ namespace WpfApp1.ViewModels
                 }
             };
 
-            // PERUBAHAN: Menggunakan InvokeAsync agar thread background tidak terblokir UI
             _importService.OnProgress += (current, total) => {
                 System.Windows.Application.Current.Dispatcher.InvokeAsync(() => UpdateProgress(current, total));
             };
@@ -272,7 +271,6 @@ namespace WpfApp1.ViewModels
             {
                 throw;
             }
-            // PERUBAHAN: Menghapus GC.Collect di sini karena tidak perlu dipaksa
         }
 
         public void ButtonMode2_Click() { OnShowMessage?.Invoke("MODE 2 belum diimplementasikan"); }
@@ -288,7 +286,6 @@ namespace WpfApp1.ViewModels
             ExportList.Clear();
             ShowBlankPage = false;
             IsNotificationVisible = false;
-            // PERUBAHAN: Menghapus GC.Collect yang berlebihan
         }
 
         private void ResetCounters() { TotalFilesFound = 0; TotalRowsInserted = 0; DebugLog = ""; }
@@ -432,7 +429,6 @@ namespace WpfApp1.ViewModels
             {
                 IsBusy = false;
                 _printService.ClearCache();
-                // PERUBAHAN: Menghapus GC.Collect yang tidak perlu
             }
         }
 

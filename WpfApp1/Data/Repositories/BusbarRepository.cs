@@ -188,7 +188,6 @@ namespace WpfApp1.Data.Repositories
                     WHERE (Batch_no IS NULL OR Batch_no = '')
                 ";
 
-                // PERUBAHAN: Meningkatkan kapasitas awal list
                 var updateBatch = new System.Collections.Generic.List<(int Id, string Batch)>(5000);
 
                 using (var reader = selectBusbarCmd.ExecuteReader())
@@ -209,7 +208,6 @@ namespace WpfApp1.Data.Repositories
                             updateBatch.Add((id, batchNo));
                         }
 
-                        // PERUBAHAN: Batch execute di trigger pada angka 5000 (Optimasi)
                         if (updateBatch.Count >= 5000)
                         {
                             ExecuteBulkUpdate(connection, transaction, updateBatch);

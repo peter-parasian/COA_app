@@ -109,7 +109,6 @@ namespace WpfApp1.Core.Services
             var concurrentTLJ350Data = new System.Collections.Concurrent.ConcurrentBag<TLJRecord>();
             var concurrentTLJ500Data = new System.Collections.Concurrent.ConcurrentBag<TLJRecord>();
 
-            // PERUBAHAN: Membatasi Parallelism agar tidak menghabiskan semua resource CPU/RAM
             var parallelOptions = new System.Threading.Tasks.ParallelOptions
             {
                 MaxDegreeOfParallelism = System.Environment.ProcessorCount
