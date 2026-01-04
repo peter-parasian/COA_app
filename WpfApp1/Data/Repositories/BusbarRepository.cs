@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using WpfApp1.Core.Models;
 using WpfApp1.Shared.Helpers;
 using WpfApp1.Data.Database;
+//New Logic Claude
 
 namespace WpfApp1.Data.Repositories
 {
@@ -186,9 +187,11 @@ namespace WpfApp1.Data.Repositories
                     SELECT Id, Size_mm, Prod_date 
                     FROM Busbar 
                     WHERE (Batch_no IS NULL OR Batch_no = '')
+                    ORDER BY Prod_date ASC
                 ";
 
                 var updateBatch = new System.Collections.Generic.List<(int Id, string Batch)>(5000);
+                var usedBatchNumbers = new System.Collections.Generic.HashSet<string>();
 
                 using (var reader = selectBusbarCmd.ExecuteReader())
                 {
@@ -201,11 +204,12 @@ namespace WpfApp1.Data.Repositories
                         string targetTable = StringHelper.DetermineTLJTable(size);
                         var targetCache = (targetTable == "TLJ350") ? cache350 : cache500;
 
-                        string batchNo = FindBatchInMemory(targetCache, size, dateStr);
+                        string batchNo = FindClosestAvailableBatch(targetCache, size, dateStr, usedBatchNumbers);
 
                         if (!string.IsNullOrEmpty(batchNo))
                         {
                             updateBatch.Add((id, batchNo));
+                            usedBatchNumbers.Add($"{size}|{batchNo}");
                         }
 
                         if (updateBatch.Count >= 5000)
@@ -237,15 +241,12 @@ namespace WpfApp1.Data.Repositories
             using var cmd = connection.CreateCommand();
             cmd.Transaction = transaction;
 
-            // 1. Create Temp Table (Tabel Bayangan)
             cmd.CommandText = "CREATE TEMP TABLE IF NOT EXISTS TempBusbarUpdates (Id INTEGER PRIMARY KEY, Batch_no TEXT)";
             cmd.ExecuteNonQuery();
 
-            // 2. Clear previous data in temp table just in case
             cmd.CommandText = "DELETE FROM TempBusbarUpdates";
             cmd.ExecuteNonQuery();
 
-            // 3. Bulk Insert ke Tabel Bayangan
             var sqlBuilder = new System.Text.StringBuilder();
             sqlBuilder.Append("INSERT INTO TempBusbarUpdates (Id, Batch_no) VALUES ");
 
@@ -260,8 +261,6 @@ namespace WpfApp1.Data.Repositories
             cmd.CommandText = sqlBuilder.ToString();
             cmd.ExecuteNonQuery();
 
-            // 4. Join Update (Update Busbar dari Tabel Bayangan)
-            // Menggunakan subquery yang efisien di SQLite untuk mensimulasikan JOIN UPDATE standar
             cmd.CommandText = @"
                 UPDATE Busbar
                 SET Batch_no = (SELECT Batch_no FROM TempBusbarUpdates WHERE TempBusbarUpdates.Id = Busbar.Id)
@@ -270,7 +269,6 @@ namespace WpfApp1.Data.Repositories
             cmd.Parameters.Clear();
             cmd.ExecuteNonQuery();
 
-            // 5. Cleanup (Hapus Tabel Bayangan)
             cmd.CommandText = "DROP TABLE TempBusbarUpdates";
             cmd.ExecuteNonQuery();
         }
@@ -320,10 +318,11 @@ namespace WpfApp1.Data.Repositories
             return cache;
         }
 
-        private string FindBatchInMemory(
+        private string FindClosestAvailableBatch(
             System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<TLJRecord>> cache,
             string size,
-            string targetDateStr)
+            string targetDateStr,
+            System.Collections.Generic.HashSet<string> usedBatchNumbers)
         {
             if (!cache.ContainsKey(size)) return string.Empty;
 
@@ -334,20 +333,34 @@ namespace WpfApp1.Data.Repositories
 
             var list = cache[size];
 
-            for (int i = list.Count - 1; i >= 0; i--)
+            TLJRecord? bestCandidate = null;
+            System.TimeSpan smallestGap = System.TimeSpan.MaxValue;
+
+            foreach (var rec in list)
             {
-                if (list[i].ParsedDate == targetDate)
+                if (rec.ParsedDate > targetDate)
                 {
-                    return StringHelper.ProcessRawBatchString(list[i].BatchNo);
+                    break;
+                }
+
+                string batchKey = $"{size}|{rec.BatchNo}";
+                if (usedBatchNumbers.Contains(batchKey))
+                {
+                    continue;
+                }
+
+                System.TimeSpan gap = targetDate - rec.ParsedDate;
+
+                if (gap < smallestGap)
+                {
+                    smallestGap = gap;
+                    bestCandidate = rec;
                 }
             }
 
-            for (int i = list.Count - 1; i >= 0; i--)
+            if (bestCandidate.HasValue)
             {
-                if (list[i].ParsedDate < targetDate)
-                {
-                    return StringHelper.ProcessRawBatchString(list[i].BatchNo);
-                }
+                return StringHelper.ProcessRawBatchString(bestCandidate.Value.BatchNo);
             }
 
             return string.Empty;
