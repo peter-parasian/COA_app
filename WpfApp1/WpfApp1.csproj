@@ -15,6 +15,8 @@
 		<PackageReference Include="MahApps.Metro" Version="2.4.10" />
 		<PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.1" />
 		<PackageReference Include="ClosedXML" Version="0.104.2" />
+		<PackageReference Include="ExcelDataReader" Version="3.6.0" />
+		<PackageReference Include="ExcelDataReader.DataSet" Version="3.6.0" />
 		<Resource Include="Images\**\*" />
 	</ItemGroup>
 

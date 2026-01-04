@@ -5,6 +5,7 @@ using System.Text;
 using WpfApp1.Core.Models;
 using WpfApp1.Data.Repositories;
 using WpfApp1.Shared.Helpers;
+using ExcelDataReader; 
 
 namespace WpfApp1.Core.Services
 {
@@ -21,6 +22,8 @@ namespace WpfApp1.Core.Services
         public ExcelImportService(BusbarRepository repository)
         {
             _repository = repository;
+
+            System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
         }
 
         public int TotalFilesFound { get; private set; }
@@ -172,26 +175,48 @@ namespace WpfApp1.Core.Services
             System.Collections.Concurrent.ConcurrentBag<TLJRecord> tlj350Bag,
             System.Collections.Concurrent.ConcurrentBag<TLJRecord> tlj500Bag)
         {
-            using var workbook = new ClosedXML.Excel.XLWorkbook(filePath);
-
             try
             {
-                var sheet_YLB = workbook.Worksheets
-                    .FirstOrDefault(w => w.Name.Trim().Equals("YLB 50", System.StringComparison.OrdinalIgnoreCase));
+                using var stream = System.IO.File.Open(filePath, System.IO.FileMode.Open, System.IO.FileAccess.Read, System.IO.FileShare.ReadWrite);
 
-                if (sheet_YLB != null)
+                using var reader = ExcelDataReader.ExcelReaderFactory.CreateReader(stream);
+
+                var result = reader.AsDataSet(new ExcelDataReader.ExcelDataSetConfiguration()
                 {
-                    int row = 3;
+                    ConfigureDataTable = (_) => new ExcelDataReader.ExcelDataTableConfiguration()
+                    {
+                        UseHeaderRow = false 
+                    }
+                });
+
+                System.Data.DataTable? tableYLB = null;
+                foreach (System.Data.DataTable table in result.Tables)
+                {
+                    if (table.TableName.Trim().Equals("YLB 50", System.StringComparison.OrdinalIgnoreCase))
+                    {
+                        tableYLB = table;
+                        break;
+                    }
+                }
+
+                if (tableYLB != null)
+                {
+                    int rowIndex = 2;
+                    int rowCount = tableYLB.Rows.Count;
                     string currentProdDate = string.Empty;
                     int folderMonthNum = DateHelper.GetMonthNumber(month);
                     int.TryParse(year, out int folderYearNum);
 
-                    while (true)
+                    while (rowIndex < rowCount)
                     {
-                        string sizeValue_YLB = sheet_YLB.Cell(row, "C").GetString();
+                        object rawSize = tableYLB.Rows[rowIndex][2];
+                        string sizeValue_YLB = rawSize != null ? rawSize.ToString() ?? "" : "";
+
                         if (string.IsNullOrWhiteSpace(sizeValue_YLB)) break;
 
-                        string rawDateFromCell = sheet_YLB.Cell(row, "B").GetString().Trim();
+                        object rawDateObj = tableYLB.Rows[rowIndex][1];
+                        string rawDateFromCell = rawDateObj != null ? rawDateObj.ToString()?.Trim() ?? "" : "";
+
                         if (!string.IsNullOrEmpty(rawDateFromCell))
                         {
                             currentProdDate = DateHelper.StandardizeDate(rawDateFromCell, folderMonthNum, folderYearNum);
@@ -203,81 +228,103 @@ namespace WpfApp1.Core.Services
                         record.Month = month;
                         record.ProdDate = currentProdDate;
 
-                        record.Thickness = System.Math.Round(StringHelper.ParseCustomDecimal(sheet_YLB.Cell(row, "G").GetString()), 2);
-                        record.Width = System.Math.Round(StringHelper.ParseCustomDecimal(sheet_YLB.Cell(row, "I").GetString()), 2);
-                        record.Radius = System.Math.Round(StringHelper.ParseCustomDecimal(sheet_YLB.Cell(row, "J").GetString()), 2);
-                        record.Chamber = System.Math.Round(StringHelper.ParseCustomDecimal(sheet_YLB.Cell(row, "L").GetString()), 2);
-                        record.Electric = System.Math.Round(StringHelper.ParseCustomDecimal(sheet_YLB.Cell(row, "U").GetString()), 2);
-                        record.Oxygen = System.Math.Round(StringHelper.ParseCustomDecimal(sheet_YLB.Cell(row, "X").GetString()), 2);
+                        string GetStr(int colIdx)
+                        {
+                            if (colIdx >= tableYLB.Columns.Count) return "";
+                            object val = tableYLB.Rows[rowIndex][colIdx];
+                            return val != null ? val.ToString() ?? "" : "";
+                        }
 
-                        record.Spectro = StringHelper.ParseCustomDecimal(sheet_YLB.Cell(row, "Y").GetString());
-                        record.Resistivity = StringHelper.ParseCustomDecimal(sheet_YLB.Cell(row, "T").GetString());
+                        record.Thickness = System.Math.Round(StringHelper.ParseCustomDecimal(GetStr(6)), 2);  
+                        record.Width = System.Math.Round(StringHelper.ParseCustomDecimal(GetStr(8)), 2);      
+                        record.Radius = System.Math.Round(StringHelper.ParseCustomDecimal(GetStr(9)), 2);     
+                        record.Chamber = System.Math.Round(StringHelper.ParseCustomDecimal(GetStr(11)), 2);   
+                        record.Electric = System.Math.Round(StringHelper.ParseCustomDecimal(GetStr(20)), 2);  
+                        record.Oxygen = System.Math.Round(StringHelper.ParseCustomDecimal(GetStr(23)), 2);    
 
-                        record.Length = (int)System.Math.Round(StringHelper.ParseCustomDecimal(sheet_YLB.Cell(row, "K").GetString()), 0);
+                        record.Spectro = StringHelper.ParseCustomDecimal(GetStr(24)); 
+                        record.Resistivity = StringHelper.ParseCustomDecimal(GetStr(19)); 
 
-                        record.Elongation = System.Math.Round(MathHelper.GetMergedOrAverageValue(sheet_YLB, row, "R"), 2);
-                        record.Tensile = System.Math.Round(MathHelper.GetMergedOrAverageValue(sheet_YLB, row, "Q"), 2);
+                        record.Length = (int)System.Math.Round(StringHelper.ParseCustomDecimal(GetStr(10)), 0); 
 
-                        record.BendTest = sheet_YLB.Cell(row, "W").GetString();
+                        record.Elongation = System.Math.Round(MathHelper.GetMergedOrAverageValue(tableYLB, rowIndex, 17), 2); 
+                        record.Tensile = System.Math.Round(MathHelper.GetMergedOrAverageValue(tableYLB, rowIndex, 16), 2);    
+
+                        record.BendTest = GetStr(22); 
 
                         busbarBag.Add(record);
 
-                        row += 2;
+                        rowIndex += 2; 
                     }
                 }
+
+                ProcessTLJSheetToMemory(result, "TLJ 350", year, month, tlj350Bag);
+                ProcessTLJSheetToMemory(result, "TLJ 500", year, month, tlj500Bag);
             }
             catch (System.Exception ex)
             {
-                AppendDebug($"ERROR FILE (YLB): {System.IO.Path.GetFileName(filePath)} -> {ex.Message}");
+                AppendDebug($"ERROR FILE (READ): {System.IO.Path.GetFileName(filePath)} -> {ex.Message}");
             }
-
-            ProcessTLJSheetToMemory(workbook, "TLJ 350", year, month, tlj350Bag);
-            ProcessTLJSheetToMemory(workbook, "TLJ 500", year, month, tlj500Bag);
         }
 
         private void ProcessTLJSheetToMemory(
-            ClosedXML.Excel.XLWorkbook workbook,
+            System.Data.DataSet dataSet,
             string sheetName,
             string year,
             string month,
             System.Collections.Concurrent.ConcurrentBag<TLJRecord> bag)
         {
-            int row = 3;
-            try
+            System.Data.DataTable? sheet = null;
+            foreach (System.Data.DataTable table in dataSet.Tables)
             {
-                var sheet = workbook.Worksheets.FirstOrDefault(w => w.Name.Trim().Equals(sheetName, System.StringComparison.OrdinalIgnoreCase));
-                if (sheet != null)
+                if (table.TableName.Trim().Equals(sheetName, System.StringComparison.OrdinalIgnoreCase))
                 {
-                    string currentProdDate = string.Empty;
-                    int folderMonthNum = DateHelper.GetMonthNumber(month);
-                    int.TryParse(year, out int folderYearNum);
-
-                    while (true)
-                    {
-                        string sizeValue = sheet.Cell(row, "D").GetString();
-                        if (string.IsNullOrWhiteSpace(sizeValue)) break;
-
-                        string rawDate = sheet.Cell(row, "B").GetString().Trim();
-                        if (!string.IsNullOrEmpty(rawDate))
-                        {
-                            currentProdDate = DateHelper.StandardizeDate(rawDate, folderMonthNum, folderYearNum);
-                        }
-
-                        TLJRecord record = new TLJRecord
-                        {
-                            Size = StringHelper.CleanSizeText(sizeValue),
-                            Year = year,
-                            Month = month,
-                            ProdDate = currentProdDate,
-                            BatchNo = sheet.Cell(row, "C").GetString()
-                        };
-
-                        bag.Add(record);
-                        row += 2;
-                    }
+                    sheet = table;
+                    break;
                 }
             }
-            catch (System.Exception ex) { AppendDebug($"ERROR FILE ({sheetName}): {ex.Message}"); }
+
+            if (sheet != null)
+            {
+                int rowIndex = 2; 
+                int rowCount = sheet.Rows.Count;
+                string currentProdDate = string.Empty;
+                int folderMonthNum = DateHelper.GetMonthNumber(month);
+                int.TryParse(year, out int folderYearNum);
+
+                while (rowIndex < rowCount)
+                {
+                    if (3 >= sheet.Columns.Count) break;
+
+                    object rawSize = sheet.Rows[rowIndex][3];
+                    string sizeValue = rawSize != null ? rawSize.ToString() ?? "" : "";
+
+                    if (string.IsNullOrWhiteSpace(sizeValue)) break;
+
+                    object rawDate = sheet.Rows[rowIndex][1];
+                    string rawDateStr = rawDate != null ? rawDate.ToString()?.Trim() ?? "" : "";
+
+                    if (!string.IsNullOrEmpty(rawDateStr))
+                    {
+                        currentProdDate = DateHelper.StandardizeDate(rawDateStr, folderMonthNum, folderYearNum);
+                    }
+
+                    object rawBatch = sheet.Rows[rowIndex][2];
+                    string batchValue = rawBatch != null ? rawBatch.ToString() ?? "" : "";
+
+                    TLJRecord record = new TLJRecord
+                    {
+                        Size = StringHelper.CleanSizeText(sizeValue),
+                        Year = year,
+                        Month = month,
+                        ProdDate = currentProdDate,
+                        BatchNo = batchValue
+                    };
+
+                    bag.Add(record);
+                    rowIndex += 2;
+                }
+            }
         }
     }
 }
