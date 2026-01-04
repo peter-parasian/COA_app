@@ -237,25 +237,41 @@ namespace WpfApp1.Data.Repositories
             using var cmd = connection.CreateCommand();
             cmd.Transaction = transaction;
 
-            var sqlBuilder = new System.Text.StringBuilder(updates.Count * 100);
-            sqlBuilder.Append("UPDATE Busbar SET Batch_no = CASE Id ");
+            // 1. Create Temp Table (Tabel Bayangan)
+            cmd.CommandText = "CREATE TEMP TABLE IF NOT EXISTS TempBusbarUpdates (Id INTEGER PRIMARY KEY, Batch_no TEXT)";
+            cmd.ExecuteNonQuery();
+
+            // 2. Clear previous data in temp table just in case
+            cmd.CommandText = "DELETE FROM TempBusbarUpdates";
+            cmd.ExecuteNonQuery();
+
+            // 3. Bulk Insert ke Tabel Bayangan
+            var sqlBuilder = new System.Text.StringBuilder();
+            sqlBuilder.Append("INSERT INTO TempBusbarUpdates (Id, Batch_no) VALUES ");
 
             for (int i = 0; i < updates.Count; i++)
             {
-                sqlBuilder.Append($"WHEN @id{i} THEN @b{i} ");
+                if (i > 0) sqlBuilder.Append(",");
+                sqlBuilder.Append($"(@id{i}, @b{i})");
                 cmd.Parameters.AddWithValue($"@id{i}", updates[i].Id);
                 cmd.Parameters.AddWithValue($"@b{i}", updates[i].Batch);
             }
 
-            sqlBuilder.Append("END WHERE Id IN (");
-            for (int i = 0; i < updates.Count; i++)
-            {
-                if (i > 0) sqlBuilder.Append(",");
-                sqlBuilder.Append($"@id{i}");
-            }
-            sqlBuilder.Append(")");
-
             cmd.CommandText = sqlBuilder.ToString();
+            cmd.ExecuteNonQuery();
+
+            // 4. Join Update (Update Busbar dari Tabel Bayangan)
+            // Menggunakan subquery yang efisien di SQLite untuk mensimulasikan JOIN UPDATE standar
+            cmd.CommandText = @"
+                UPDATE Busbar
+                SET Batch_no = (SELECT Batch_no FROM TempBusbarUpdates WHERE TempBusbarUpdates.Id = Busbar.Id)
+                WHERE Id IN (SELECT Id FROM TempBusbarUpdates);
+            ";
+            cmd.Parameters.Clear();
+            cmd.ExecuteNonQuery();
+
+            // 5. Cleanup (Hapus Tabel Bayangan)
+            cmd.CommandText = "DROP TABLE TempBusbarUpdates";
             cmd.ExecuteNonQuery();
         }
 
