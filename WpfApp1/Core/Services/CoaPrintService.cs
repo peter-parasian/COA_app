@@ -6,10 +6,10 @@ namespace WpfApp1.Core.Services
 {
     public class CoaPrintService
     {
-        private bool? _img1Exists = null;
-        private bool? _img2Exists = null;
+        // PERUBAHAN: Cache disimpan dalam bentuk byte array, bukan hanya bool exists
+        private byte[]? _img1Data = null;
+        private byte[]? _img2Data = null;
 
-        // PERUBAHAN 1: Tanda tangan metode diganti menjadi async Task<string>
         public async System.Threading.Tasks.Task<string> GenerateCoaExcel(
             string customerName,
             string poNumber,
@@ -17,13 +17,23 @@ namespace WpfApp1.Core.Services
             System.Collections.Generic.List<WpfApp1.Core.Models.BusbarExportItem> dataList,
             string standardName)
         {
-            // PERUBAHAN 2: Seluruh logika berat dibungkus Task.Run agar non-blocking
             return await System.Threading.Tasks.Task.Run<string>(() =>
             {
                 string templatePath = @"C:\Users\mrrx\Documents\My Web Sites\H\TEMPLATE_COA_BUSBAR.xlsx";
                 string basePath = @"C:\Users\mrrx\Documents\My Web Sites\H\COA";
                 string pathImg1 = @"C:\Users\mrrx\Documents\Custom Office Templates\WpfApp1\WpfApp1\Images\approved_IMG.png";
                 string pathImg2 = @"C:\Users\mrrx\Documents\Custom Office Templates\WpfApp1\WpfApp1\Images\profile_SNI.png";
+
+                // PERUBAHAN: Load images ke memory (Caching) sekali saja
+                if (_img1Data == null && System.IO.File.Exists(pathImg1))
+                {
+                    _img1Data = System.IO.File.ReadAllBytes(pathImg1);
+                }
+
+                if (_img2Data == null && System.IO.File.Exists(pathImg2))
+                {
+                    _img2Data = System.IO.File.ReadAllBytes(pathImg2);
+                }
 
                 if (!System.IO.File.Exists(templatePath))
                 {
@@ -265,22 +275,23 @@ namespace WpfApp1.Core.Services
 
                     int imageRow = firstInsertedRow + 2;
 
-                    if (!_img1Exists.HasValue)
-                        _img1Exists = System.IO.File.Exists(pathImg1);
-
-                    if (!_img2Exists.HasValue)
-                        _img2Exists = System.IO.File.Exists(pathImg2);
-
-                    if (_img1Exists.Value)
+                    // PERUBAHAN: Menggunakan gambar dari MemoryStream
+                    if (_img1Data != null)
                     {
-                        var pic1 = worksheet.AddPicture(pathImg1);
-                        pic1.MoveTo(worksheet.Cell(imageRow, 11));
+                        using (var ms1 = new System.IO.MemoryStream(_img1Data))
+                        {
+                            var pic1 = worksheet.AddPicture(ms1);
+                            pic1.MoveTo(worksheet.Cell(imageRow, 11));
+                        }
                     }
 
-                    if (_img2Exists.Value)
+                    if (_img2Data != null)
                     {
-                        var pic2 = worksheet.AddPicture(pathImg2);
-                        pic2.MoveTo(worksheet.Cell(imageRow, 2));
+                        using (var ms2 = new System.IO.MemoryStream(_img2Data))
+                        {
+                            var pic2 = worksheet.AddPicture(ms2);
+                            pic2.MoveTo(worksheet.Cell(imageRow, 2));
+                        }
                     }
 
                     worksheet.PageSetup.PrintAreas.Clear();
@@ -342,8 +353,9 @@ namespace WpfApp1.Core.Services
 
         public void ClearCache()
         {
-            _img1Exists = null;
-            _img2Exists = null;
+            // PERUBAHAN: Reset byte array cache
+            _img1Data = null;
+            _img2Data = null;
         }
 
         private string GetRomanMonth(int month)

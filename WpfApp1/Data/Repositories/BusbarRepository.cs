@@ -29,7 +29,6 @@ namespace WpfApp1.Data.Repositories
 
             using var cmd = connection.CreateCommand();
 
-            // SCRIPT CREATE TABLE TANPA INDEX (Index dibuat nanti agar Insert Cepat)
             cmd.CommandText = @"
                 DROP TABLE IF EXISTS Busbar;
                 CREATE TABLE IF NOT EXISTS Busbar (
@@ -39,6 +38,7 @@ namespace WpfApp1.Data.Repositories
                     Electric_IACS REAL, Weight REAL, Elongation REAL, Tensile REAL, Bend_test TEXT,
                     Spectro_Cu REAL, Oxygen REAL
                 );
+                CREATE INDEX IF NOT EXISTS IDX_Busbar_LookUp ON Busbar(Size_mm, Prod_date);
             ";
             cmd.ExecuteNonQuery();
 
@@ -48,6 +48,7 @@ namespace WpfApp1.Data.Repositories
                     Id INTEGER PRIMARY KEY AUTOINCREMENT,
                     Year_folder TEXT, Month_folder TEXT, Batch_no TEXT, Prod_date TEXT, Size_mm TEXT
                 );
+                CREATE INDEX IF NOT EXISTS IDX_TLJ500_LookUp ON TLJ500(Size_mm, Prod_date);
             ";
             cmd.ExecuteNonQuery();
 
@@ -57,18 +58,6 @@ namespace WpfApp1.Data.Repositories
                     Id INTEGER PRIMARY KEY AUTOINCREMENT,
                     Year_folder TEXT, Month_folder TEXT, Batch_no TEXT, Prod_date TEXT, Size_mm TEXT
                 );
-            ";
-            cmd.ExecuteNonQuery();
-        }
-
-        // METHOD BARU: Dijalankan SETELAH semua insert selesai
-        public void RecreateIndexes(Microsoft.Data.Sqlite.SqliteConnection connection, Microsoft.Data.Sqlite.SqliteTransaction transaction)
-        {
-            using var cmd = connection.CreateCommand();
-            cmd.Transaction = transaction;
-            cmd.CommandText = @"
-                CREATE INDEX IF NOT EXISTS IDX_Busbar_LookUp ON Busbar(Size_mm, Prod_date);
-                CREATE INDEX IF NOT EXISTS IDX_TLJ500_LookUp ON TLJ500(Size_mm, Prod_date);
                 CREATE INDEX IF NOT EXISTS IDX_TLJ350_LookUp ON TLJ350(Size_mm, Prod_date);
             ";
             cmd.ExecuteNonQuery();
@@ -199,6 +188,7 @@ namespace WpfApp1.Data.Repositories
                     WHERE (Batch_no IS NULL OR Batch_no = '')
                 ";
 
+                // PERUBAHAN: Meningkatkan kapasitas awal list
                 var updateBatch = new System.Collections.Generic.List<(int Id, string Batch)>(5000);
 
                 using (var reader = selectBusbarCmd.ExecuteReader())
@@ -219,7 +209,8 @@ namespace WpfApp1.Data.Repositories
                             updateBatch.Add((id, batchNo));
                         }
 
-                        if (updateBatch.Count >= 1000)
+                        // PERUBAHAN: Batch execute di trigger pada angka 5000 (Optimasi)
+                        if (updateBatch.Count >= 5000)
                         {
                             ExecuteBulkUpdate(connection, transaction, updateBatch);
                             updateBatch.Clear();
