@@ -316,8 +316,8 @@ namespace WpfApp1.Core.Services
             {
                 excelApp = new Microsoft.Office.Interop.Excel.Application();
                 excelApp.Visible = false;
-                excelApp.ScreenUpdating = false; 
-                excelApp.DisplayAlerts = false;  
+                excelApp.ScreenUpdating = false;
+                excelApp.DisplayAlerts = false;
 
                 workbook = excelApp.Workbooks.Open(excelFile);
 
@@ -336,7 +336,7 @@ namespace WpfApp1.Core.Services
                 {
                     try
                     {
-                        workbook.Close(false); 
+                        workbook.Close(false);
                         System.Runtime.InteropServices.Marshal.ReleaseComObject(workbook);
                     }
                     catch { /* Abaikan error saat closing */ }
@@ -347,7 +347,7 @@ namespace WpfApp1.Core.Services
                 {
                     try
                     {
-                        excelApp.Quit(); 
+                        excelApp.Quit();
                         System.Runtime.InteropServices.Marshal.ReleaseComObject(excelApp);
                     }
                     catch { /* Abaikan error saat quitting */ }

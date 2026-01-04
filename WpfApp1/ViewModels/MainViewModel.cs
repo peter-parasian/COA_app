@@ -176,7 +176,7 @@ namespace WpfApp1.ViewModels
             _printService = new CoaPrintService();
 
             _logTimer = new DispatcherTimer();
-            _logTimer.Interval = TimeSpan.FromMilliseconds(200);
+            _logTimer.Interval = System.TimeSpan.FromMilliseconds(1000);
             _logTimer.Tick += LogTimer_Tick;
 
             _importService.OnDebugMessage += (msg) => {
@@ -353,8 +353,15 @@ namespace WpfApp1.ViewModels
 
                 var data = await System.Threading.Tasks.Task.Run(() => _repository.SearchBusbarRecords(SelectedYear, dbMonth, dbDate));
 
-                SearchResults.Clear();
-                foreach (var item in data) SearchResults.Add(item);
+                var newResults = new System.Collections.ObjectModel.ObservableCollection<BusbarSearchItem>();
+
+                foreach (var item in data)
+                {
+                    newResults.Add(item);
+                }
+
+                SearchResults = newResults;
+
                 if (SearchResults.Count == 0) OnShowMessage?.Invoke("Data tidak ditemukan untuk kriteria tersebut.");
             }
             catch (System.Exception ex) { OnShowMessage?.Invoke($"Terjadi kesalahan saat pencarian: {ex.Message}"); }
