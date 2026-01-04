@@ -186,15 +186,9 @@ namespace WpfApp1.ViewModels
                 }
             };
 
+            // PERUBAHAN: Menggunakan InvokeAsync agar thread background tidak terblokir UI
             _importService.OnProgress += (current, total) => {
-                if (System.Windows.Application.Current.Dispatcher.CheckAccess())
-                {
-                    UpdateProgress(current, total);
-                }
-                else
-                {
-                    System.Windows.Application.Current.Dispatcher.Invoke(() => UpdateProgress(current, total));
-                }
+                System.Windows.Application.Current.Dispatcher.InvokeAsync(() => UpdateProgress(current, total));
             };
 
             InitializeSearchData();
@@ -278,10 +272,7 @@ namespace WpfApp1.ViewModels
             {
                 throw;
             }
-            finally
-            {
-                System.GC.Collect(2, System.GCCollectionMode.Forced, false);
-            }
+            // PERUBAHAN: Menghapus GC.Collect di sini karena tidak perlu dipaksa
         }
 
         public void ButtonMode2_Click() { OnShowMessage?.Invoke("MODE 2 belum diimplementasikan"); }
@@ -297,7 +288,7 @@ namespace WpfApp1.ViewModels
             ExportList.Clear();
             ShowBlankPage = false;
             IsNotificationVisible = false;
-            System.GC.Collect();
+            // PERUBAHAN: Menghapus GC.Collect yang berlebihan
         }
 
         private void ResetCounters() { TotalFilesFound = 0; TotalRowsInserted = 0; DebugLog = ""; }
@@ -321,7 +312,6 @@ namespace WpfApp1.ViewModels
 
             SearchResults.Clear();
 
-            // FIX CS4014: Menggunakan _ = untuk menandai fire-and-forget agar warning hilang
             _ = LoadAvailableYears();
         }
 
@@ -331,7 +321,6 @@ namespace WpfApp1.ViewModels
             {
                 var dbYears = await System.Threading.Tasks.Task.Run(() => _repository.GetAvailableYears());
 
-                // Updating ObservableCollection on UI thread is safe here because await captures the context
                 Years.Clear();
                 foreach (var year in dbYears) Years.Add(year);
             }
@@ -365,7 +354,6 @@ namespace WpfApp1.ViewModels
                 string dbMonth = ConvertMonthToEnglish(SelectedMonth);
                 string dbDate = SelectedDate.Value.ToString("dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture);
 
-                // Wrap DB search in Task.Run to prevent UI blocking
                 var data = await System.Threading.Tasks.Task.Run(() => _repository.SearchBusbarRecords(SelectedYear, dbMonth, dbDate));
 
                 SearchResults.Clear();
@@ -420,17 +408,14 @@ namespace WpfApp1.ViewModels
 
             try
             {
-                // Prepare data on UI thread before going background
                 var itemsToExport = new System.Collections.Generic.List<WpfApp1.Core.Models.BusbarExportItem>(ExportList);
                 string custName = CustomerName;
                 string po = PoNumber;
                 string doNum = DoNumber;
                 string std = SelectedStandard ?? string.Empty;
 
-                // FIX CS1061: Await the Async Service method directly
                 string savedExcelPath = await _printService.GenerateCoaExcel(custName, po, doNum, itemsToExport, std);
 
-                // UI updates happen automatically here after await (on UI thread)
                 CustomerName = string.Empty;
                 PoNumber = string.Empty;
                 DoNumber = string.Empty;
@@ -447,7 +432,7 @@ namespace WpfApp1.ViewModels
             {
                 IsBusy = false;
                 _printService.ClearCache();
-                System.GC.Collect();
+                // PERUBAHAN: Menghapus GC.Collect yang tidak perlu
             }
         }
 

@@ -276,7 +276,10 @@
                             </StackPanel>
                         </Border>
 
-                        <DataGrid x:Name="GridSearchResults" ItemsSource="{Binding SearchResults}" Style="{StaticResource MahApps.Styles.DataGrid}" AutoGenerateColumns="False" GridLinesVisibility="Horizontal" HeadersVisibility="Column" IsReadOnly="True" CanUserResizeColumns="False" CanUserReorderColumns="False" CanUserSortColumns="True" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Auto" ColumnHeaderStyle="{StaticResource CenteredColumnHeaderStyle}" BorderThickness="0">
+                        <DataGrid x:Name="GridSearchResults" ItemsSource="{Binding SearchResults}" Style="{StaticResource MahApps.Styles.DataGrid}" AutoGenerateColumns="False" GridLinesVisibility="Horizontal" HeadersVisibility="Column" IsReadOnly="True" CanUserResizeColumns="False" CanUserReorderColumns="False" CanUserSortColumns="True" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Auto" ColumnHeaderStyle="{StaticResource CenteredColumnHeaderStyle}" BorderThickness="0"
+                                  EnableRowVirtualization="True"
+                                  VirtualizingPanel.IsVirtualizing="True"
+                                  VirtualizingPanel.VirtualizationMode="Recycling">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="NO" Width="50" Binding="{Binding No}" ElementStyle="{StaticResource CenteredCellStyle}"/>
                                 <DataGridTextColumn Header="SIZE (SPEC)" Width="*" Binding="{Binding Specification}" ElementStyle="{StaticResource CenteredCellStyle}"/>
@@ -309,7 +312,10 @@
                             </Grid>
                         </Border>
 
-                        <DataGrid x:Name="GridBasket" ItemsSource="{Binding ExportList}" Style="{StaticResource MahApps.Styles.DataGrid}" AutoGenerateColumns="False" GridLinesVisibility="Horizontal" HeadersVisibility="Column" IsReadOnly="True" CanUserResizeColumns="False" CanUserReorderColumns="False" CanUserSortColumns="True" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Auto" ColumnHeaderStyle="{StaticResource CenteredColumnHeaderStyle}" BorderThickness="0">
+                        <DataGrid x:Name="GridBasket" ItemsSource="{Binding ExportList}" Style="{StaticResource MahApps.Styles.DataGrid}" AutoGenerateColumns="False" GridLinesVisibility="Horizontal" HeadersVisibility="Column" IsReadOnly="True" CanUserResizeColumns="False" CanUserReorderColumns="False" CanUserSortColumns="True" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Auto" ColumnHeaderStyle="{StaticResource CenteredColumnHeaderStyle}" BorderThickness="0"
+                                  EnableRowVirtualization="True"
+                                  VirtualizingPanel.IsVirtualizing="True"
+                                  VirtualizingPanel.VirtualizationMode="Recycling">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="ID" Width="50" Binding="{Binding Id}" ElementStyle="{StaticResource CenteredCellStyle}"/>
                                 <DataGridTextColumn Header="SIZE (SPEC)" Width="*" Binding="{Binding Specification}" ElementStyle="{StaticResource CenteredCellStyle}"/>
@@ -392,21 +398,18 @@
 
                 <StackPanel Margin="20" VerticalAlignment="Center">
 
-                    <!-- Judul Status -->
                     <TextBlock Text="{Binding BusyMessage}" 
                                FontSize="14" 
                                FontWeight="Bold"
                                TextAlignment="Center" 
                                Margin="0,0,0,5"/>
 
-                    <!-- Teks Progress Real-time -->
                     <TextBlock Text="{Binding ProgressText}" 
                                FontSize="11" 
                                TextAlignment="Center" 
                                Margin="0,0,0,10" 
                                Foreground="#555"/>
 
-                    <!-- Progress Bar dengan Value Nyata -->
                     <ProgressBar Value="{Binding ProgressValue}" 
                                  Maximum="{Binding ProgressMaximum}" 
                                  Height="20" 

@@ -18,6 +18,9 @@ namespace WpfApp1.Core.Services
 
         public event System.Action<int, int>? OnProgress;
 
+        // Variabel untuk throttling
+        private long _lastProgressTick = 0;
+
         public ExcelImportService(BusbarRepository repository)
         {
             _repository = repository;
@@ -32,16 +35,22 @@ namespace WpfApp1.Core.Services
             TotalFilesFound = 0;
             TotalRowsInserted = 0;
             _currentFileIndex = 0;
+            _lastProgressTick = 0;
 
             CountTotalFiles();
 
             OnProgress?.Invoke(0, TotalFilesFound);
 
-            _repository.CreateBusbarTable(connection);
+            _repository.CreateBusbarTable(connection); // Tabel dibuat TANPA index
 
             TraverseFoldersAndImport(connection, transaction);
 
             _repository.FlushAll(connection, transaction);
+
+            // Recreate Indexes SETELAH insert masal selesai (Sangat cepat)
+            AppendDebug("Recreating database indexes...");
+            _repository.RecreateIndexes(connection, transaction);
+
             _repository.UpdateBusbarBatchNumbers(connection, transaction);
         }
 
@@ -128,7 +137,16 @@ namespace WpfApp1.Core.Services
                     );
 
                     int currentIndex = System.Threading.Interlocked.Increment(ref _currentFileIndex);
-                    OnProgress?.Invoke(currentIndex, TotalFilesFound);
+
+                    // THROTTLING LOGIC: Hanya update UI max 100ms sekali
+                    long currentTick = System.Environment.TickCount64;
+                    long lastTick = System.Threading.Interlocked.Read(ref _lastProgressTick);
+
+                    if (currentTick - lastTick > 100 || currentIndex == TotalFilesFound)
+                    {
+                        System.Threading.Interlocked.Exchange(ref _lastProgressTick, currentTick);
+                        OnProgress?.Invoke(currentIndex, TotalFilesFound);
+                    }
                 }
                 catch (System.Exception ex)
                 {
