@@ -16,6 +16,8 @@ namespace WpfApp1.ViewModels
         private ExcelImportService _importService;
         private CoaPrintService _printService;
 
+        private System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<WpfApp1.Core.Models.BusbarSearchItem>> _searchCache;
+
         private readonly object _logLock = new object();
 
         private System.Text.StringBuilder _logBuffer = new System.Text.StringBuilder();
@@ -175,6 +177,8 @@ namespace WpfApp1.ViewModels
             _importService = new ExcelImportService(_repository);
             _printService = new CoaPrintService();
 
+            _searchCache = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<WpfApp1.Core.Models.BusbarSearchItem>>();
+
             _logTimer = new DispatcherTimer();
             _logTimer.Interval = System.TimeSpan.FromMilliseconds(1000);
             _logTimer.Tick += LogTimer_Tick;
@@ -288,7 +292,13 @@ namespace WpfApp1.ViewModels
             IsNotificationVisible = false;
         }
 
-        private void ResetCounters() { TotalFilesFound = 0; TotalRowsInserted = 0; DebugLog = ""; }
+        private void ResetCounters()
+        {
+            TotalFilesFound = 0;
+            TotalRowsInserted = 0;
+            DebugLog = "";
+            _searchCache.Clear();
+        }
 
         private void InitializeSearchData()
         {
@@ -351,14 +361,27 @@ namespace WpfApp1.ViewModels
                 string dbMonth = ConvertMonthToEnglish(SelectedMonth);
                 string dbDate = SelectedDate.Value.ToString("dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture);
 
-                var data = await System.Threading.Tasks.Task.Run(() => _repository.SearchBusbarRecords(SelectedYear, dbMonth, dbDate));
+                string cacheKey = $"{SelectedYear}_{dbMonth}_{dbDate}";
 
+                if (_searchCache.ContainsKey(cacheKey))
+                {
+                    var cachedList = _searchCache[cacheKey];
+                    SearchResults = new System.Collections.ObjectModel.ObservableCollection<BusbarSearchItem>(cachedList);
+                    if (SearchResults.Count == 0) OnShowMessage?.Invoke("Data tidak ditemukan (Cached).");
+                    return; 
+                }
+
+                var data = await System.Threading.Tasks.Task.Run(() => _repository.SearchBusbarRecords(SelectedYear, dbMonth, dbDate));
                 var newResults = new System.Collections.ObjectModel.ObservableCollection<BusbarSearchItem>();
+                var listForCache = new System.Collections.Generic.List<BusbarSearchItem>();
 
                 foreach (var item in data)
                 {
                     newResults.Add(item);
+                    listForCache.Add(item);
                 }
+
+                _searchCache[cacheKey] = listForCache;
 
                 SearchResults = newResults;
 
