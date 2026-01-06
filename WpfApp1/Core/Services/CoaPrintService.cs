@@ -119,7 +119,8 @@ namespace WpfApp1.Core.Services
 
                     for (int i = 0; i < dataCount; i++)
                     {
-                        var rec = dataList[i].RecordData;
+                        var exportItem = dataList[i];
+                        var rec = exportItem.RecordData;
                         string cleanSizeStr = WpfApp1.Shared.Helpers.StringHelper.CleanSizeCOA(rec.Size);
 
                         double finalTolThickness = 0;
@@ -166,13 +167,22 @@ namespace WpfApp1.Core.Services
                         int rBottom = rTop + 1;
                         int rTable2 = startRowTable2 + i;
 
-                        var rec = dataList[i].RecordData;
+                        var exportItem = dataList[i];
+                        var rec = exportItem.RecordData;
                         var tol = toleranceData[i];
 
                         string displaySize = WpfApp1.Shared.Helpers.StringHelper.CleanSizeCOA(rec.Size).Replace("x", " x ");
+                        string selectedType = exportItem.SelectedType;
+
+                        if (!System.String.IsNullOrEmpty(selectedType) &&
+                            !selectedType.Equals("Select", System.StringComparison.OrdinalIgnoreCase) &&
+                            !selectedType.Equals("None", System.StringComparison.OrdinalIgnoreCase))
+                        {
+                            displaySize = displaySize + " - " + selectedType;
+                        }
 
                         worksheet.Cell(rTop, 2).Value = rec.BatchNo;
-                        worksheet.Cell(rTop, 3).Value = displaySize;
+                        worksheet.Cell(rTop, 3).Value = displaySize; 
                         worksheet.Cell(rTop, 4).Value = "No Dirty\nNo Blackspot\nNo Blisters";
 
                         string strThickTol = string.Format(cultureInvariant, "({0:0.00} \u00B1 {1:0.00})", tol.nominalThick, tol.thickness);
@@ -199,7 +209,7 @@ namespace WpfApp1.Core.Services
                         worksheet.Range(rTop, 11, rBottom, 11).Merge();
 
                         worksheet.Cell(rTable2, 2).Value = rec.BatchNo;
-                        worksheet.Cell(rTable2, 3).Value = displaySize;
+                        worksheet.Cell(rTable2, 3).Value = displaySize; 
                         worksheet.Cell(rTable2, 4).Value = string.Format(cultureInvariant, "{0:0.00}", rec.Electric);
                         worksheet.Cell(rTable2, 5).Value = string.Format(cultureInvariant, "{0:0.00000}", rec.Resistivity);
                         worksheet.Cell(rTable2, 6).Value = string.Format(cultureInvariant, "{0:0.00}", rec.Elongation);

@@ -418,6 +418,22 @@ namespace WpfApp1.ViewModels
 
         private async void ExecutePrintCoa(object? parameter)
         {
+            bool hasUnselectedType = false;
+            foreach (var item in ExportList)
+            {
+                if (item.SelectedType == "Select")
+                {
+                    hasUnselectedType = true;
+                    break;
+                }
+            }
+
+            if (hasUnselectedType)
+            {
+                System.Windows.MessageBox.Show("Mohon lengkapi kolom 'Type' untuk semua data sebelum melakukan Export COA.", "Validasi Data", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                return;
+            }
+
             if (ExportList.Count == 0)
             {
                 System.Windows.MessageBox.Show("Export List kosong. Silakan pilih data terlebih dahulu.", "Peringatan", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);

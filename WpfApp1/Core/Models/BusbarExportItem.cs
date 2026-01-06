@@ -6,7 +6,7 @@ namespace WpfApp1.Core.Models
     public class BusbarExportItem : INotifyPropertyChanged
     {
         private BusbarRecord _record;
-        private string _selectedType = "select";
+        private string _selectedType = "Select";
 
         public BusbarExportItem(BusbarRecord record)
         {
