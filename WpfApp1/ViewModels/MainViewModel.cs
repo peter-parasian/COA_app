@@ -130,6 +130,11 @@ namespace WpfApp1.ViewModels
         public System.Collections.ObjectModel.ObservableCollection<string> Months { get; set; } = new System.Collections.ObjectModel.ObservableCollection<string>();
         public System.Collections.ObjectModel.ObservableCollection<string> Standards { get; set; } = new System.Collections.ObjectModel.ObservableCollection<string>();
 
+        public System.Collections.ObjectModel.ObservableCollection<string> TypeOptions { get; set; } = new System.Collections.ObjectModel.ObservableCollection<string>
+        {
+            "Select", "RD", "FR", "TP", "NONE"
+        };
+
         private string? _selectedYear;
         public string? SelectedYear
         {
@@ -368,7 +373,7 @@ namespace WpfApp1.ViewModels
                     var cachedList = _searchCache[cacheKey];
                     SearchResults = new System.Collections.ObjectModel.ObservableCollection<BusbarSearchItem>(cachedList);
                     if (SearchResults.Count == 0) OnShowMessage?.Invoke("Data tidak ditemukan (Cached).");
-                    return; 
+                    return;
                 }
 
                 var data = await System.Threading.Tasks.Task.Run(() => _repository.SearchBusbarRecords(SelectedYear, dbMonth, dbDate));

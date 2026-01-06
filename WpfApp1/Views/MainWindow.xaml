@@ -1,98 +1,173 @@
-﻿<Controls:MetroWindow x:Class="WpfApp1.Views.MainWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:Controls="http://metro.mahapps.com/winfx/xaml/controls"
-        xmlns:local="clr-namespace:WpfApp1"
-        mc:Ignorable="d"
-        Title="Indowire Plant 2 - Quality Control System"
-        MinWidth="900"
-        MinHeight="600"
-        Background="#F4F7F6"
-        FontFamily="Segoe UI"
-        WindowState="Maximized"
-        SaveWindowPosition="True"
-        GlowBrush="{DynamicResource MahApps.Brushes.Accent}"
-        ShowTitleBar="True"
-        WindowTitleBrush="{DynamicResource MahApps.Brushes.Accent}"
-        NonActiveWindowTitleBrush="Gray"
-        NonActiveGlowBrush="Gray">
+﻿<Controls:MetroWindow
+    x:Class="WpfApp1.Views.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:Controls="http://metro.mahapps.com/winfx/xaml/controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:WpfApp1"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Title="Indowire Plant 2 - Quality Control System"
+    MinWidth="1100"
+    MinHeight="700"
+    Background="#F4F7F6"
+    FontFamily="Segoe UI"
+    GlowBrush="{DynamicResource MahApps.Brushes.Accent}"
+    NonActiveGlowBrush="Gray"
+    NonActiveWindowTitleBrush="Gray"
+    SaveWindowPosition="True"
+    ShowTitleBar="True"
+    WindowState="Maximized"
+    WindowTitleBrush="{DynamicResource MahApps.Brushes.Accent}"
+    mc:Ignorable="d">
 
     <Window.Resources>
-        <Style x:Key="IndowireMetroBtn" TargetType="Button" BasedOn="{StaticResource MahApps.Styles.Button.Square}">
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Height" Value="Auto"/>
+        <Style
+            x:Key="IndowireMetroBtn"
+            BasedOn="{StaticResource MahApps.Styles.Button.Square}"
+            TargetType="Button">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Height" Value="Auto" />
         </Style>
 
-        <Style x:Key="IndowireMetroBtnAccent" TargetType="Button" BasedOn="{StaticResource MahApps.Styles.Button.Square.Accent}">
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Height" Value="Auto"/>
+        <Style
+            x:Key="IndowireMetroBtnAccent"
+            BasedOn="{StaticResource MahApps.Styles.Button.Square.Accent}"
+            TargetType="Button">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Height" Value="Auto" />
         </Style>
 
-        <Style x:Key="CircleBackBtnStyle" TargetType="Button" BasedOn="{StaticResource MahApps.Styles.Button.Circle}">
-            <Setter Property="Background" Value="#6C757D"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Width" Value="50"/>
-            <Setter Property="Height" Value="50"/>
-            <Setter Property="Cursor" Value="Hand"/>
+        <Style
+            x:Key="CircleBackBtnStyle"
+            BasedOn="{StaticResource MahApps.Styles.Button.Circle}"
+            TargetType="Button">
+            <Setter Property="Background" Value="#6C757D" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Width" Value="50" />
+            <Setter Property="Height" Value="50" />
+            <Setter Property="Cursor" Value="Hand" />
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#FD7E14"/>
-                    <Setter Property="Foreground" Value="White"/>
+                    <Setter Property="Background" Value="#FD7E14" />
                     <Setter Property="RenderTransform">
                         <Setter.Value>
-                            <ScaleTransform ScaleX="1.1" ScaleY="1.1" CenterX="25" CenterY="25"/>
+                            <ScaleTransform
+                                CenterX="25"
+                                CenterY="25"
+                                ScaleX="1.1"
+                                ScaleY="1.1" />
                         </Setter.Value>
                     </Setter>
                 </Trigger>
                 <Trigger Property="IsPressed" Value="True">
-                    <Setter Property="Background" Value="#D35400"/>
+                    <Setter Property="Background" Value="#D35400" />
                 </Trigger>
             </Style.Triggers>
         </Style>
 
-        <Style x:Key="CenteredColumnHeaderStyle" TargetType="DataGridColumnHeader" BasedOn="{StaticResource MahApps.Styles.DataGridColumnHeader}">
-            <Setter Property="HorizontalContentAlignment" Value="Center"/>
-            <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="Foreground" Value="#495057"/>
-            <Setter Property="SeparatorVisibility" Value="Hidden"/>
+        <Style
+            x:Key="CenteredColumnHeaderStyle"
+            BasedOn="{StaticResource MahApps.Styles.DataGridColumnHeader}"
+            TargetType="DataGridColumnHeader">
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="#495057" />
+            <Setter Property="SeparatorVisibility" Value="Hidden" />
         </Style>
 
         <Style x:Key="CenteredCellStyle" TargetType="TextBlock">
-            <Setter Property="HorizontalAlignment" Value="Center"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
 
         <ControlTemplate x:Key="UpComboBoxControlTemplate" TargetType="ComboBox">
             <Grid>
-                <ToggleButton Name="ToggleButton" Grid.Column="2" Background="White" BorderBrush="#DEE2E6" BorderThickness="1" IsChecked="{Binding Path=IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" ClickMode="Press" Focusable="false">
+                <ToggleButton
+                    Name="ToggleButton"
+                    Grid.Column="2"
+                    Background="White"
+                    BorderBrush="#DEE2E6"
+                    BorderThickness="1"
+                    ClickMode="Press"
+                    Focusable="false"
+                    IsChecked="{Binding Path=IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
                     <ToggleButton.Template>
                         <ControlTemplate TargetType="ToggleButton">
-                            <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1">
+                            <Border
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="1">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="20"/>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="20" />
                                     </Grid.ColumnDefinitions>
-                                    <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center" Margin="5,0,0,0"/>
-                                    <Path Grid.Column="1" Data="M 0 0 L 4 4 L 8 0 Z" Fill="#6C757D" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    <ContentPresenter
+                                        Margin="5,0,0,0"
+                                        HorizontalAlignment="Left"
+                                        VerticalAlignment="Center" />
+                                    <Path
+                                        Grid.Column="1"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Data="M 0 0 L 4 4 L 8 0 Z"
+                                        Fill="#6C757D" />
                                 </Grid>
                             </Border>
                         </ControlTemplate>
                     </ToggleButton.Template>
                 </ToggleButton>
-                <ContentPresenter Name="ContentSite" IsHitTestVisible="False" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="5,0,0,0" Content="{TemplateBinding SelectionBoxItem}" ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}" ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"/>
-                <TextBlock x:Name="WatermarkScope" Text="{Binding Path=(Controls:TextBoxHelper.Watermark), RelativeSource={RelativeSource TemplatedParent}}" Foreground="{DynamicResource MahApps.Brushes.Text.Watermark}" FontSize="{TemplateBinding FontSize}" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="5,0,0,0" IsHitTestVisible="False" Visibility="Collapsed"/>
-                <TextBox Name="PART_EditableTextBox" Style="{x:Null}" Template="{DynamicResource ComboBoxTextBox}" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="3,3,23,3" Focusable="True" Background="Transparent" Visibility="Hidden" IsReadOnly="{TemplateBinding IsReadOnly}"/>
-                <Popup Name="Popup" Placement="Top" IsOpen="{TemplateBinding IsDropDownOpen}" AllowsTransparency="True" Focusable="False" PopupAnimation="Slide">
-                    <Grid Name="DropDown" SnapsToDevicePixels="True" MinWidth="{TemplateBinding ActualWidth}" MaxHeight="200">
-                        <Border Background="White" BorderBrush="#DEE2E6" BorderThickness="1">
+                <ContentPresenter
+                    Name="ContentSite"
+                    Margin="5,0,0,0"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Center"
+                    Content="{TemplateBinding SelectionBoxItem}"
+                    ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                    ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
+                    IsHitTestVisible="False" />
+                <TextBlock
+                    x:Name="WatermarkScope"
+                    Margin="5,0,0,0"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Center"
+                    FontSize="{TemplateBinding FontSize}"
+                    Foreground="{DynamicResource MahApps.Brushes.Text.Watermark}"
+                    IsHitTestVisible="False"
+                    Text="{Binding Path=(Controls:TextBoxHelper.Watermark), RelativeSource={RelativeSource TemplatedParent}}"
+                    Visibility="Collapsed" />
+                <TextBox
+                    Name="PART_EditableTextBox"
+                    Margin="3,3,23,3"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Center"
+                    Background="Transparent"
+                    Focusable="True"
+                    IsReadOnly="{TemplateBinding IsReadOnly}"
+                    Style="{x:Null}"
+                    Template="{DynamicResource ComboBoxTextBox}"
+                    Visibility="Hidden" />
+                <Popup
+                    Name="Popup"
+                    AllowsTransparency="True"
+                    Focusable="False"
+                    IsOpen="{TemplateBinding IsDropDownOpen}"
+                    Placement="Top"
+                    PopupAnimation="Slide">
+                    <Grid
+                        Name="DropDown"
+                        MinWidth="{TemplateBinding ActualWidth}"
+                        MaxHeight="200"
+                        SnapsToDevicePixels="True">
+                        <Border
+                            Background="White"
+                            BorderBrush="#DEE2E6"
+                            BorderThickness="1">
                             <ScrollViewer Margin="4,6,4,6" SnapsToDevicePixels="True">
-                                <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Contained"/>
+                                <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Contained" />
                             </ScrollViewer>
                         </Border>
                     </Grid>
@@ -100,159 +175,324 @@
             </Grid>
             <ControlTemplate.Triggers>
                 <Trigger Property="SelectedItem" Value="{x:Null}">
-                    <Setter TargetName="WatermarkScope" Property="Visibility" Value="Visible"/>
+                    <Setter TargetName="WatermarkScope" Property="Visibility" Value="Visible" />
                 </Trigger>
                 <Trigger Property="SelectedIndex" Value="-1">
-                    <Setter TargetName="WatermarkScope" Property="Visibility" Value="Visible"/>
+                    <Setter TargetName="WatermarkScope" Property="Visibility" Value="Visible" />
                 </Trigger>
             </ControlTemplate.Triggers>
         </ControlTemplate>
     </Window.Resources>
 
-    <Grid Margin="0">
+    <Grid>
         <Grid x:Name="MainMenuPanel" Margin="20,40,20,20">
             <Grid.Style>
                 <Style TargetType="Grid">
-                    <Setter Property="Visibility" Value="Visible"/>
+                    <Setter Property="Visibility" Value="Visible" />
                     <Style.Triggers>
                         <DataTrigger Binding="{Binding ShowBlankPage}" Value="True">
-                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Setter Property="Visibility" Value="Collapsed" />
                         </DataTrigger>
                     </Style.Triggers>
                 </Style>
             </Grid.Style>
 
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
-            <Viewbox Stretch="Uniform" Height="80">
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,0,0,10">
-                    <Image Source="pack://application:,,,/Images/company_logo.png" Height="60" Margin="0,0,15,0"/>
-                    <TextBlock Text="PT. Indowire Prima Industrindo (Plan 2)" FontSize="28" FontWeight="Bold" Foreground="#343A40" VerticalAlignment="Center"/>
+            <Viewbox Height="80" Stretch="Uniform">
+                <StackPanel
+                    Margin="0,0,0,10"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Orientation="Horizontal">
+                    <Image
+                        Height="60"
+                        Margin="0,0,15,0"
+                        Source="pack://application:,,,/Images/company_logo.png" />
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        FontSize="28"
+                        FontWeight="Bold"
+                        Foreground="#343A40"
+                        Text="PT. Indowire Prima Industrindo (Plan 2)" />
                 </StackPanel>
             </Viewbox>
 
-            <TextBlock Grid.Row="1" Text="SUPER TEAM" FontSize="22" FontWeight="SemiBold" Foreground="#FD7E14" HorizontalAlignment="Center" Margin="0,5,0,20"/>
+            <TextBlock
+                Grid.Row="1"
+                Margin="0,5,0,20"
+                HorizontalAlignment="Center"
+                FontSize="22"
+                FontWeight="SemiBold"
+                Foreground="#FD7E14"
+                Text="SUPER TEAM" />
 
             <Grid Grid.Row="2">
                 <Grid.RowDefinitions>
-                    <RowDefinition/>
-                    <RowDefinition/>
+                    <RowDefinition />
+                    <RowDefinition />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition/>
-                    <ColumnDefinition/>
+                    <ColumnDefinition />
+                    <ColumnDefinition />
                 </Grid.ColumnDefinitions>
 
-                <Button Grid.Row="0" Grid.Column="0" Margin="10" Click="ButtonMode1_Click" IsEnabled="{Binding IsNotBusy}" Style="{StaticResource IndowireMetroBtnAccent}">
+                <Button
+                    Grid.Row="0"
+                    Grid.Column="0"
+                    Margin="10"
+                    Click="ButtonMode1_Click"
+                    IsEnabled="{Binding IsNotBusy}"
+                    Style="{StaticResource IndowireMetroBtnAccent}">
                     <Viewbox Stretch="Uniform">
-                        <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
-                            <Image Source="pack://application:,,,/Images/logo1.jpg" Height="80"/>
-                            <TextBlock Text="Copper Busbar" FontSize="16" FontWeight="SemiBold" Foreground="White" HorizontalAlignment="Center" Margin="0,5,0,0"/>
+                        <StackPanel HorizontalAlignment="Center" Orientation="Vertical">
+                            <Image Height="80" Source="pack://application:,,,/Images/logo1.jpg" />
+                            <TextBlock
+                                Margin="0,5,0,0"
+                                HorizontalAlignment="Center"
+                                FontSize="16"
+                                FontWeight="SemiBold"
+                                Foreground="White"
+                                Text="Copper Busbar" />
                         </StackPanel>
                     </Viewbox>
                 </Button>
 
-                <Button Grid.Row="0" Grid.Column="1" Margin="10" Click="ButtonMode2_Click" IsEnabled="{Binding IsNotBusy}" Style="{StaticResource IndowireMetroBtnAccent}">
+                <Button
+                    Grid.Row="0"
+                    Grid.Column="1"
+                    Margin="10"
+                    Click="ButtonMode2_Click"
+                    IsEnabled="{Binding IsNotBusy}"
+                    Style="{StaticResource IndowireMetroBtnAccent}">
                     <Viewbox Stretch="Uniform">
                         <StackPanel Orientation="Vertical">
-                            <Image Source="pack://application:,,,/Images/logo2.png" Height="80"/>
-                            <TextBlock Text="MODE 2" FontSize="16" Foreground="White" HorizontalAlignment="Center" Margin="0,5,0,0"/>
+                            <Image Height="80" Source="pack://application:,,,/Images/logo2.png" />
+                            <TextBlock
+                                Margin="0,5,0,0"
+                                HorizontalAlignment="Center"
+                                FontSize="16"
+                                Foreground="White"
+                                Text="MODE 2" />
                         </StackPanel>
                     </Viewbox>
                 </Button>
 
-                <Button Grid.Row="1" Grid.Column="0" Margin="10" Click="ButtonMode3_Click" IsEnabled="{Binding IsNotBusy}" Style="{StaticResource IndowireMetroBtnAccent}">
+                <Button
+                    Grid.Row="1"
+                    Grid.Column="0"
+                    Margin="10"
+                    Click="ButtonMode3_Click"
+                    IsEnabled="{Binding IsNotBusy}"
+                    Style="{StaticResource IndowireMetroBtnAccent}">
                     <Viewbox Stretch="Uniform">
                         <StackPanel Orientation="Vertical">
-                            <Image Source="pack://application:,,,/Images/logo3.png" Height="80"/>
-                            <TextBlock Text="MODE 3" FontSize="16" Foreground="White" HorizontalAlignment="Center" Margin="0,5,0,0"/>
+                            <Image Height="80" Source="pack://application:,,,/Images/logo3.png" />
+                            <TextBlock
+                                Margin="0,5,0,0"
+                                HorizontalAlignment="Center"
+                                FontSize="16"
+                                Foreground="White"
+                                Text="MODE 3" />
                         </StackPanel>
                     </Viewbox>
                 </Button>
 
-                <Button Grid.Row="1" Grid.Column="1" Margin="10" Click="ButtonMode4_Click" IsEnabled="{Binding IsNotBusy}" Style="{StaticResource IndowireMetroBtnAccent}">
+                <Button
+                    Grid.Row="1"
+                    Grid.Column="1"
+                    Margin="10"
+                    Click="ButtonMode4_Click"
+                    IsEnabled="{Binding IsNotBusy}"
+                    Style="{StaticResource IndowireMetroBtnAccent}">
                     <Viewbox Stretch="Uniform">
                         <StackPanel Orientation="Vertical">
-                            <Image Source="pack://application:,,,/Images/logo4.png" Height="80"/>
-                            <TextBlock Text="MODE 4" FontSize="16" Foreground="White" HorizontalAlignment="Center" Margin="0,5,0,0"/>
+                            <Image Height="80" Source="pack://application:,,,/Images/logo4.png" />
+                            <TextBlock
+                                Margin="0,5,0,0"
+                                HorizontalAlignment="Center"
+                                FontSize="16"
+                                Foreground="White"
+                                Text="MODE 4" />
                         </StackPanel>
                     </Viewbox>
                 </Button>
             </Grid>
         </Grid>
 
-        <Grid x:Name="BlankPagePanel" Margin="15,50,15,15">
+        <Grid x:Name="BlankPagePanel" Margin="15,20,15,15">
             <Grid.Style>
                 <Style TargetType="Grid">
-                    <Setter Property="Visibility" Value="Collapsed"/>
+                    <Setter Property="Visibility" Value="Collapsed" />
                     <Style.Triggers>
                         <DataTrigger Binding="{Binding ShowBlankPage}" Value="True">
-                            <Setter Property="Visibility" Value="Visible"/>
+                            <Setter Property="Visibility" Value="Visible" />
                         </DataTrigger>
                     </Style.Triggers>
                 </Style>
             </Grid.Style>
 
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <Grid Grid.Row="0" Margin="0,0,0,25">
+            <Grid Grid.Row="0" Margin="0,0,0,15">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <Button Click="ButtonBack_Click" Style="{StaticResource CircleBackBtnStyle}" ToolTip="Kembali ke Menu Utama" Margin="0,0,15,0">
-                    <TextBlock Text="&#xE72B;" FontFamily="Segoe MDL2 Assets" FontSize="20" FontWeight="Bold"/>
+                <Button
+                    Margin="0,0,15,0"
+                    VerticalAlignment="Center"
+                    Click="ButtonBack_Click"
+                    Style="{StaticResource CircleBackBtnStyle}"
+                    ToolTip="Kembali ke Menu Utama">
+                    <TextBlock
+                        FontFamily="Segoe MDL2 Assets"
+                        FontSize="20"
+                        FontWeight="Bold"
+                        Text="&#xE72B;" />
                 </Button>
 
-                <Border Grid.Column="1" Background="White" CornerRadius="4" BorderBrush="#DEE2E6" BorderThickness="1" Padding="20,15">
+                <Border
+                    Grid.Column="1"
+                    Padding="15,10"
+                    Background="White"
+                    BorderBrush="#DEE2E6"
+                    BorderThickness="1"
+                    CornerRadius="4">
                     <Grid>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
 
-                        <WrapPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Top">
-                            <StackPanel VerticalAlignment="Top" Margin="0,0,25,0">
-                                <TextBlock Text="DATA FILTER" FontSize="14" FontWeight="Bold" Foreground="#28A745"/>
-                                <TextBlock Text="DATABASE SEARCH" FontSize="11" Foreground="#6C757D"/>
+                        <Grid Grid.Column="0" VerticalAlignment="Center">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="20" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="15" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="15" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="15" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                <TextBlock
+                                    FontSize="14"
+                                    FontWeight="Bold"
+                                    Foreground="#28A745"
+                                    Text="DATA FILTER" />
+                                <TextBlock
+                                    FontSize="11"
+                                    Foreground="#6C757D"
+                                    Text="DATABASE SEARCH" />
                             </StackPanel>
 
-                            <Border Width="1" Height="35" Background="#CED4DA" Margin="0,0,20,0"/>
+                            <Border
+                                Grid.Column="1"
+                                Width="1"
+                                Height="35"
+                                HorizontalAlignment="Center"
+                                Background="#CED4DA" />
 
-                            <StackPanel Margin="0,0,15,0" VerticalAlignment="Top">
-                                <TextBlock Text="YEAR" FontSize="11" FontWeight="SemiBold" Foreground="#6C757D" Margin="0,0,0,4"/>
-                                <ComboBox MinWidth="80" Width="100" ItemsSource="{Binding Years}" SelectedItem="{Binding SelectedYear}" Controls:TextBoxHelper.Watermark="Select Year" Style="{StaticResource MahApps.Styles.ComboBox}"/>
+                            <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                <TextBlock
+                                    Margin="0,0,0,2"
+                                    FontSize="11"
+                                    FontWeight="SemiBold"
+                                    Foreground="#6C757D"
+                                    Text="YEAR" />
+                                <ComboBox
+                                    Width="120"
+                                    Controls:TextBoxHelper.Watermark="Select Year"
+                                    ItemsSource="{Binding Years}"
+                                    SelectedItem="{Binding SelectedYear}"
+                                    Style="{StaticResource MahApps.Styles.ComboBox}" />
                             </StackPanel>
 
-                            <StackPanel Margin="0,0,15,0" VerticalAlignment="Top">
-                                <TextBlock Text="MONTH" FontSize="11" FontWeight="SemiBold" Foreground="#6C757D" Margin="0,0,0,4"/>
-                                <ComboBox MinWidth="100" Width="130" ItemsSource="{Binding Months}" SelectedItem="{Binding SelectedMonth}" Controls:TextBoxHelper.Watermark="Select Month" Style="{StaticResource MahApps.Styles.ComboBox}"/>
+                            <StackPanel Grid.Column="4" VerticalAlignment="Center">
+                                <TextBlock
+                                    Margin="0,0,0,2"
+                                    FontSize="11"
+                                    FontWeight="SemiBold"
+                                    Foreground="#6C757D"
+                                    Text="MONTH" />
+                                <ComboBox
+                                    Width="150"
+                                    Controls:TextBoxHelper.Watermark="Select Month"
+                                    ItemsSource="{Binding Months}"
+                                    SelectedItem="{Binding SelectedMonth}"
+                                    Style="{StaticResource MahApps.Styles.ComboBox}" />
                             </StackPanel>
 
-                            <StackPanel Margin="0,0,20,0" VerticalAlignment="Top">
-                                <TextBlock Text="PRODUCTION DATE" FontSize="11" FontWeight="SemiBold" Foreground="#6C757D" Margin="0,0,0,4"/>
-                                <DatePicker MinWidth="120" Width="150" SelectedDate="{Binding SelectedDate}" Controls:TextBoxHelper.Watermark="Select Date" Style="{StaticResource MahApps.Styles.DatePicker}"/>
+                            <StackPanel Grid.Column="6" VerticalAlignment="Center">
+                                <TextBlock
+                                    Margin="0,0,0,2"
+                                    FontSize="11"
+                                    FontWeight="SemiBold"
+                                    Foreground="#6C757D"
+                                    Text="PRODUCTION DATE" />
+                                <DatePicker
+                                    Width="160"
+                                    Controls:TextBoxHelper.Watermark="Select Date"
+                                    SelectedDate="{Binding SelectedDate}"
+                                    Style="{StaticResource MahApps.Styles.DatePicker}" />
                             </StackPanel>
 
-                            <Button Content="FIND" MinWidth="80" Width="100" Height="38" FontSize="13" FontWeight="SemiBold" IsEnabled="{Binding IsNotBusy}" Command="{Binding FindCommand}" Controls:ControlsHelper.ContentCharacterCasing="Upper" Style="{StaticResource MahApps.Styles.Button.Square.Accent}" VerticalAlignment="Top" Margin="0,0,10,0"/>
-                        </WrapPanel>
+                            <Button
+                                Grid.Column="8"
+                                Width="100"
+                                Height="38"
+                                VerticalAlignment="Bottom"
+                                Command="{Binding FindCommand}"
+                                Content="FIND"
+                                Controls:ControlsHelper.ContentCharacterCasing="Upper"
+                                FontSize="13"
+                                FontWeight="SemiBold"
+                                IsEnabled="{Binding IsNotBusy}"
+                                Style="{StaticResource MahApps.Styles.Button.Square.Accent}" />
+                        </Grid>
 
-                        <StackPanel Grid.Column="1" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="20,0,0,0">
-                            <Border Background="#FFF4E6" HorizontalAlignment="Right" CornerRadius="3" Padding="8,3" Margin="0,0,0,2">
-                                <TextBlock Text="SUPER TEAM" FontSize="10" FontWeight="Bold" Foreground="#FD7E14"/>
+                        <StackPanel
+                            Grid.Column="1"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center">
+                            <Border
+                                Margin="0,0,0,2"
+                                Padding="8,3"
+                                HorizontalAlignment="Right"
+                                Background="#FFF4E6"
+                                CornerRadius="3">
+                                <TextBlock
+                                    FontSize="10"
+                                    FontWeight="Bold"
+                                    Foreground="#FD7E14"
+                                    Text="SUPER TEAM" />
                             </Border>
-                            <TextBlock Text="COA Copper Busbar" FontSize="16" FontWeight="Black" Foreground="#FD7E14" HorizontalAlignment="Right">
+                            <TextBlock
+                                HorizontalAlignment="Right"
+                                FontSize="16"
+                                FontWeight="Black"
+                                Foreground="#FD7E14"
+                                Text="COA Copper Busbar">
                                 <TextBlock.Effect>
-                                    <DropShadowEffect Color="#FFDAC0" BlurRadius="0" ShadowDepth="2" Direction="315" Opacity="0.5"/>
+                                    <DropShadowEffect
+                                        BlurRadius="0"
+                                        Direction="315"
+                                        Opacity="0.5"
+                                        ShadowDepth="2"
+                                        Color="#FFDAC0" />
                                 </TextBlock.Effect>
                             </TextBlock>
                         </StackPanel>
@@ -262,32 +502,92 @@
 
             <Grid Grid.Row="1">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="1*"/>
-                    <ColumnDefinition Width="15"/>
-                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="4*" />
+                    <ColumnDefinition Width="15" />
+                    <ColumnDefinition Width="6*" />
                 </Grid.ColumnDefinitions>
 
-                <Border Grid.Column="0" Background="White" CornerRadius="4" BorderBrush="#DEE2E6" BorderThickness="1">
+                <Border
+                    Grid.Column="0"
+                    Background="White"
+                    BorderBrush="#DEE2E6"
+                    BorderThickness="1"
+                    CornerRadius="4">
                     <DockPanel>
-                        <Border DockPanel.Dock="Top" Background="#F8F9FA" Padding="15,10" BorderThickness="0,0,0,1" BorderBrush="#E9ECEF" CornerRadius="4,4,0,0">
+                        <Border
+                            Padding="15,10"
+                            Background="#F8F9FA"
+                            BorderBrush="#E9ECEF"
+                            BorderThickness="0,0,0,1"
+                            CornerRadius="4,4,0,0"
+                            DockPanel.Dock="Top">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="#6C757D"/>
-                                <TextBlock Text="SEARCH RESULTS" FontWeight="Bold" FontSize="14" Foreground="#495057"/>
+                                <TextBlock
+                                    Margin="0,0,8,0"
+                                    VerticalAlignment="Center"
+                                    FontFamily="Segoe MDL2 Assets"
+                                    Foreground="#6C757D"
+                                    Text="&#xE721;" />
+                                <TextBlock
+                                    FontSize="14"
+                                    FontWeight="Bold"
+                                    Foreground="#495057"
+                                    Text="SEARCH RESULTS" />
                             </StackPanel>
                         </Border>
 
-                        <DataGrid x:Name="GridSearchResults" ItemsSource="{Binding SearchResults}" Style="{StaticResource MahApps.Styles.DataGrid}" AutoGenerateColumns="False" GridLinesVisibility="Horizontal" HeadersVisibility="Column" IsReadOnly="True" CanUserResizeColumns="False" CanUserReorderColumns="False" CanUserSortColumns="True" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Auto" ColumnHeaderStyle="{StaticResource CenteredColumnHeaderStyle}" BorderThickness="0"
-                                  EnableRowVirtualization="True"
-                                  VirtualizingPanel.IsVirtualizing="True"
-                                  VirtualizingPanel.VirtualizationMode="Recycling">
+                        <DataGrid
+                            x:Name="GridSearchResults"
+                            AutoGenerateColumns="False"
+                            BorderThickness="0"
+                            CanUserReorderColumns="False"
+                            CanUserResizeColumns="False"
+                            CanUserSortColumns="True"
+                            ColumnHeaderStyle="{StaticResource CenteredColumnHeaderStyle}"
+                            EnableRowVirtualization="True"
+                            GridLinesVisibility="Horizontal"
+                            HeadersVisibility="Column"
+                            IsReadOnly="True"
+                            ItemsSource="{Binding SearchResults}"
+                            ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                            ScrollViewer.VerticalScrollBarVisibility="Auto"
+                            Style="{StaticResource MahApps.Styles.DataGrid}"
+                            VirtualizingPanel.IsVirtualizing="True"
+                            VirtualizingPanel.VirtualizationMode="Recycling">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="NO" Width="50" Binding="{Binding No}" ElementStyle="{StaticResource CenteredCellStyle}"/>
-                                <DataGridTextColumn Header="SIZE (SPEC)" Width="*" Binding="{Binding Specification}" ElementStyle="{StaticResource CenteredCellStyle}"/>
-                                <DataGridTextColumn Header="PROD DATE" Width="*" Binding="{Binding DateProd}" ElementStyle="{StaticResource CenteredCellStyle}"/>
-                                <DataGridTemplateColumn Header="ACTION" Width="70">
+                                <DataGridTextColumn
+                                    Width="50"
+                                    Binding="{Binding No}"
+                                    ElementStyle="{StaticResource CenteredCellStyle}"
+                                    Header="NO" />
+                                <DataGridTextColumn
+                                    Width="*"
+                                    Binding="{Binding Specification}"
+                                    ElementStyle="{StaticResource CenteredCellStyle}"
+                                    Header="SIZE (SPEC)" />
+                                <DataGridTextColumn
+                                    Width="100"
+                                    Binding="{Binding DateProd}"
+                                    ElementStyle="{StaticResource CenteredCellStyle}"
+                                    Header="PROD DATE" />
+                                <DataGridTemplateColumn Width="70" Header="ACTION">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <Button Content="+" Width="30" Height="26" Background="#28A745" Foreground="White" FontSize="16" Padding="0,-2,0,0" BorderThickness="0" Cursor="Hand" ToolTip="Tambahkan ke daftar" Style="{StaticResource MahApps.Styles.Button.Square}" IsEnabled="{Binding DataContext.IsNotBusy, RelativeSource={RelativeSource AncestorType=Window}}" Command="{Binding DataContext.AddToExportCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}"/>
+                                            <Button
+                                                Width="30"
+                                                Height="26"
+                                                Padding="0,-2,0,0"
+                                                Background="#28A745"
+                                                BorderThickness="0"
+                                                Command="{Binding DataContext.AddToExportCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                CommandParameter="{Binding}"
+                                                Content="+"
+                                                Cursor="Hand"
+                                                FontSize="16"
+                                                Foreground="White"
+                                                IsEnabled="{Binding DataContext.IsNotBusy, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                Style="{StaticResource MahApps.Styles.Button.Square}"
+                                                ToolTip="Tambahkan ke daftar" />
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
@@ -296,34 +596,117 @@
                     </DockPanel>
                 </Border>
 
-                <Border Grid.Column="2" Background="White" CornerRadius="4" BorderBrush="#DEE2E6" BorderThickness="1">
+                <Border
+                    Grid.Column="2"
+                    Background="White"
+                    BorderBrush="#DEE2E6"
+                    BorderThickness="1"
+                    CornerRadius="4">
                     <DockPanel>
-                        <Border DockPanel.Dock="Top" Background="#F8F9FA" Padding="15,10" BorderThickness="0,0,0,1" BorderBrush="#E9ECEF" CornerRadius="4,4,0,0">
+                        <Border
+                            Padding="15,10"
+                            Background="#F8F9FA"
+                            BorderBrush="#E9ECEF"
+                            BorderThickness="0,0,0,1"
+                            CornerRadius="4,4,0,0"
+                            DockPanel.Dock="Top">
                             <Grid>
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="&#xE7BF;" FontFamily="Segoe MDL2 Assets" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="#28A745"/>
-                                    <StackPanel>
-                                        <TextBlock Text="EXPORT LIST" FontWeight="Bold" FontSize="14" Foreground="#28A745"/>
-                                    </StackPanel>
+                                    <TextBlock
+                                        Margin="0,0,8,0"
+                                        VerticalAlignment="Center"
+                                        FontFamily="Segoe MDL2 Assets"
+                                        Foreground="#28A745"
+                                        Text="&#xE7BF;" />
+                                    <TextBlock
+                                        FontSize="14"
+                                        FontWeight="Bold"
+                                        Foreground="#28A745"
+                                        Text="EXPORT LIST" />
                                 </StackPanel>
-                                <Border HorizontalAlignment="Right" Background="#FD7E14" CornerRadius="10" Padding="10,2" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding ExportList.Count, StringFormat='{}{0} Items'}" Foreground="White" FontSize="11" FontWeight="Bold"/>
+                                <Border
+                                    Padding="10,2"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Center"
+                                    Background="#FD7E14"
+                                    CornerRadius="10">
+                                    <TextBlock
+                                        FontSize="11"
+                                        FontWeight="Bold"
+                                        Foreground="White"
+                                        Text="{Binding ExportList.Count, StringFormat='{}{0} Items'}" />
                                 </Border>
                             </Grid>
                         </Border>
 
-                        <DataGrid x:Name="GridBasket" ItemsSource="{Binding ExportList}" Style="{StaticResource MahApps.Styles.DataGrid}" AutoGenerateColumns="False" GridLinesVisibility="Horizontal" HeadersVisibility="Column" IsReadOnly="True" CanUserResizeColumns="False" CanUserReorderColumns="False" CanUserSortColumns="True" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Auto" ColumnHeaderStyle="{StaticResource CenteredColumnHeaderStyle}" BorderThickness="0"
-                                  EnableRowVirtualization="True"
-                                  VirtualizingPanel.IsVirtualizing="True"
-                                  VirtualizingPanel.VirtualizationMode="Recycling">
+                        <DataGrid
+                            x:Name="GridBasket"
+                            AutoGenerateColumns="False"
+                            BorderThickness="0"
+                            CanUserReorderColumns="False"
+                            CanUserResizeColumns="False"
+                            CanUserSortColumns="True"
+                            ColumnHeaderStyle="{StaticResource CenteredColumnHeaderStyle}"
+                            EnableRowVirtualization="True"
+                            GridLinesVisibility="Horizontal"
+                            HeadersVisibility="Column"
+                            IsReadOnly="False"
+                            ItemsSource="{Binding ExportList}"
+                            ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                            ScrollViewer.VerticalScrollBarVisibility="Auto"
+                            Style="{StaticResource MahApps.Styles.DataGrid}"
+                            VirtualizingPanel.IsVirtualizing="True"
+                            VirtualizingPanel.VirtualizationMode="Recycling">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="ID" Width="50" Binding="{Binding Id}" ElementStyle="{StaticResource CenteredCellStyle}"/>
-                                <DataGridTextColumn Header="SIZE (SPEC)" Width="*" Binding="{Binding Specification}" ElementStyle="{StaticResource CenteredCellStyle}"/>
-                                <DataGridTextColumn Header="PROD DATE" Width="*" Binding="{Binding DateProd}" ElementStyle="{StaticResource CenteredCellStyle}"/>
-                                <DataGridTemplateColumn Header="ACTION" Width="70">
+                                <DataGridTextColumn
+                                    Width="50"
+                                    Binding="{Binding Id}"
+                                    ElementStyle="{StaticResource CenteredCellStyle}"
+                                    Header="ID"
+                                    IsReadOnly="True" />
+                                <DataGridTextColumn
+                                    Width="*"
+                                    Binding="{Binding Specification}"
+                                    ElementStyle="{StaticResource CenteredCellStyle}"
+                                    Header="SIZE (SPEC)"
+                                    IsReadOnly="True" />
+                                <DataGridTextColumn
+                                    Width="100"
+                                    Binding="{Binding DateProd}"
+                                    ElementStyle="{StaticResource CenteredCellStyle}"
+                                    Header="PROD DATE"
+                                    IsReadOnly="True" />
+                                <DataGridTemplateColumn Width="150" Header="TYPE">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <Button Content="×" Width="30" Height="26" Background="#DC3545" Foreground="White" FontSize="18" Padding="0,-4,0,0" BorderThickness="0" Cursor="Hand" ToolTip="Hapus dari daftar" Style="{StaticResource MahApps.Styles.Button.Square}" IsEnabled="{Binding DataContext.IsNotBusy, RelativeSource={RelativeSource AncestorType=Window}}" Command="{Binding DataContext.RemoveFromExportCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}"/>
+                                            <ComboBox
+                                                Margin="2"
+                                                HorizontalAlignment="Stretch"
+                                                VerticalAlignment="Center"
+                                                ItemsSource="{Binding DataContext.TypeOptions, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                SelectedItem="{Binding SelectedType, UpdateSourceTrigger=PropertyChanged}"
+                                                Style="{StaticResource MahApps.Styles.ComboBox}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Width="70" Header="ACTION">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button
+                                                Width="30"
+                                                Height="26"
+                                                Padding="0,-4,0,0"
+                                                Background="#DC3545"
+                                                BorderThickness="0"
+                                                Command="{Binding DataContext.RemoveFromExportCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                CommandParameter="{Binding}"
+                                                Content="×"
+                                                Cursor="Hand"
+                                                FontSize="18"
+                                                Foreground="White"
+                                                IsEnabled="{Binding DataContext.IsNotBusy, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                Style="{StaticResource MahApps.Styles.Button.Square}"
+                                                ToolTip="Hapus dari daftar" />
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
@@ -335,94 +718,184 @@
 
             <Grid Grid.Row="2" Margin="0,15,0,0">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <Border Grid.Column="0" Background="White" CornerRadius="4" BorderBrush="#DEE2E6" BorderThickness="1" Padding="15,10" VerticalAlignment="Center" Margin="0,0,10,0">
-                    <DockPanel LastChildFill="True">
-                        <WrapPanel DockPanel.Dock="Left" Orientation="Horizontal">
-                            <StackPanel Orientation="Horizontal" Margin="0,0,25,0">
-                                <TextBlock Text="Standard:" FontSize="12" FontWeight="Bold" Foreground="#6C757D" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                <ComboBox MinWidth="130" VerticalAlignment="Center" ItemsSource="{Binding Standards}" SelectedItem="{Binding SelectedStandard}" Controls:TextBoxHelper.Watermark="Select Standart" Template="{StaticResource UpComboBoxControlTemplate}" />
-                            </StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0,0,25,0">
-                                <TextBlock Text="Customer:" FontSize="12" FontWeight="Bold" Foreground="#6C757D" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                <TextBox MinWidth="140" VerticalAlignment="Center" Text="{Binding CustomerName, UpdateSourceTrigger=PropertyChanged}" Controls:TextBoxHelper.Watermark="Input Company" Controls:TextBoxHelper.ClearTextButton="True"/>
-                            </StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0,0,25,0">
-                                <TextBlock Text="DO Number:" FontSize="12" FontWeight="Bold" Foreground="#6C757D" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                <TextBox MinWidth="140" VerticalAlignment="Center" Text="{Binding DoNumber, UpdateSourceTrigger=PropertyChanged}" Controls:TextBoxHelper.Watermark="Input DO Number" Controls:TextBoxHelper.ClearTextButton="True"/>
-                            </StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,0">
-                                <TextBlock Text="PO Number:" FontSize="12" FontWeight="Bold" Foreground="#6C757D" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                <TextBox MinWidth="140" VerticalAlignment="Center" Text="{Binding PoNumber, UpdateSourceTrigger=PropertyChanged}" Controls:TextBoxHelper.Watermark="Input PO Number" Controls:TextBoxHelper.ClearTextButton="True"/>
-                            </StackPanel>
-                        </WrapPanel>
-                    </DockPanel>
+                <Border
+                    Grid.Column="0"
+                    Margin="0,0,10,0"
+                    Padding="15,10"
+                    VerticalAlignment="Center"
+                    Background="White"
+                    BorderBrush="#DEE2E6"
+                    BorderThickness="1"
+                    CornerRadius="4">
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="10" />
+                            <ColumnDefinition Width="1.2*" />
+                            <ColumnDefinition Width="20" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="10" />
+                            <ColumnDefinition Width="2*" />
+                            <ColumnDefinition Width="20" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="10" />
+                            <ColumnDefinition Width="1.5*" />
+                            <ColumnDefinition Width="20" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="10" />
+                            <ColumnDefinition Width="1.5*" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock
+                            Grid.Column="0"
+                            VerticalAlignment="Center"
+                            FontSize="12"
+                            FontWeight="Bold"
+                            Foreground="#6C757D"
+                            Text="Standard:" />
+                        <ComboBox
+                            Grid.Column="2"
+                            VerticalAlignment="Center"
+                            Controls:TextBoxHelper.Watermark="Select Standart"
+                            ItemsSource="{Binding Standards}"
+                            SelectedItem="{Binding SelectedStandard}"
+                            Template="{StaticResource UpComboBoxControlTemplate}" />
+
+                        <TextBlock
+                            Grid.Column="4"
+                            VerticalAlignment="Center"
+                            FontSize="12"
+                            FontWeight="Bold"
+                            Foreground="#6C757D"
+                            Text="Customer:" />
+                        <TextBox
+                            Grid.Column="6"
+                            VerticalAlignment="Center"
+                            Controls:TextBoxHelper.ClearTextButton="True"
+                            Controls:TextBoxHelper.Watermark="Input Company"
+                            Text="{Binding CustomerName, UpdateSourceTrigger=PropertyChanged}" />
+
+                        <TextBlock
+                            Grid.Column="8"
+                            VerticalAlignment="Center"
+                            FontSize="12"
+                            FontWeight="Bold"
+                            Foreground="#6C757D"
+                            Text="DO Number:" />
+                        <TextBox
+                            Grid.Column="10"
+                            VerticalAlignment="Center"
+                            Controls:TextBoxHelper.ClearTextButton="True"
+                            Controls:TextBoxHelper.Watermark="Input DO Number"
+                            Text="{Binding DoNumber, UpdateSourceTrigger=PropertyChanged}" />
+
+                        <TextBlock
+                            Grid.Column="12"
+                            VerticalAlignment="Center"
+                            FontSize="12"
+                            FontWeight="Bold"
+                            Foreground="#6C757D"
+                            Text="PO Number:" />
+                        <TextBox
+                            Grid.Column="14"
+                            VerticalAlignment="Center"
+                            Controls:TextBoxHelper.ClearTextButton="True"
+                            Controls:TextBoxHelper.Watermark="Input PO Number"
+                            Text="{Binding PoNumber, UpdateSourceTrigger=PropertyChanged}" />
+                    </Grid>
                 </Border>
 
-                <Button Grid.Column="1" Content="PRINT COA" IsEnabled="{Binding IsNotBusy}" Command="{Binding PrintCoaCommand}" Controls:ControlsHelper.ContentCharacterCasing="Upper" MinWidth="150" Width="200" Height="Auto" FontSize="16" FontWeight="Bold" Style="{StaticResource MahApps.Styles.Button.Square.Accent}" ToolTip="Export data terpilih ke Excel" Padding="15,10" VerticalAlignment="Center"/>
+                <Button
+                    Grid.Column="1"
+                    Width="200"
+                    Height="Auto"
+                    MinWidth="150"
+                    Padding="15,10"
+                    VerticalAlignment="Center"
+                    Command="{Binding PrintCoaCommand}"
+                    Content="PRINT COA"
+                    Controls:ControlsHelper.ContentCharacterCasing="Upper"
+                    FontSize="16"
+                    FontWeight="Bold"
+                    IsEnabled="{Binding IsNotBusy}"
+                    Style="{StaticResource MahApps.Styles.Button.Square.Accent}"
+                    ToolTip="Export data terpilih ke Excel" />
             </Grid>
 
-            <Border Grid.RowSpan="3"
-                    Background="#FD7E14"
-                    CornerRadius="5"
-                    Padding="30,15"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Top"
-                    Margin="0,10,0,0"
-                    Visibility="{Binding NotificationVisibility}"
-                    Effect="{DynamicResource MahApps.DropShadowEffect.Dialog}">
+            <Border
+                Grid.RowSpan="3"
+                Margin="0,10,0,0"
+                Padding="30,15"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Top"
+                Background="#FD7E14"
+                CornerRadius="5"
+                Effect="{DynamicResource MahApps.DropShadowEffect.Dialog}"
+                Visibility="{Binding NotificationVisibility}">
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="&#xE930;" FontFamily="Segoe MDL2 Assets" Foreground="White" FontSize="18" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                    <TextBlock Text="{Binding NotificationMessage}" Foreground="White" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    <TextBlock
+                        Margin="0,0,10,0"
+                        VerticalAlignment="Center"
+                        FontFamily="Segoe MDL2 Assets"
+                        FontSize="18"
+                        Foreground="White"
+                        Text="&#xE930;" />
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        FontSize="14"
+                        FontWeight="SemiBold"
+                        Foreground="White"
+                        Text="{Binding NotificationMessage}" />
                 </StackPanel>
             </Border>
-
         </Grid>
 
-        <Grid x:Name="ProgressOverlay" 
-              Visibility="{Binding IsBusyVisibility}"
-              d:Visibility="Visible">
-
-            <Border Background="#99000000" IsHitTestVisible="True"/>
-
-            <Border Background="White" 
-                    Width="350" Height="Auto" 
-                    CornerRadius="4" 
-                    BorderBrush="Black" BorderThickness="1"
-                    HorizontalAlignment="Center" 
-                    VerticalAlignment="Center"
-                    Effect="{DynamicResource MahApps.DropShadowEffect.Dialog}">
-
+        <Grid
+            x:Name="ProgressOverlay"
+            d:Visibility="Visible"
+            Visibility="{Binding IsBusyVisibility}">
+            <Border Background="#99000000" IsHitTestVisible="True" />
+            <Border
+                Width="350"
+                Height="Auto"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Background="White"
+                BorderBrush="Black"
+                BorderThickness="1"
+                CornerRadius="4"
+                Effect="{DynamicResource MahApps.DropShadowEffect.Dialog}">
                 <StackPanel Margin="20" VerticalAlignment="Center">
-
-                    <TextBlock Text="{Binding BusyMessage}" 
-                               FontSize="14" 
-                               FontWeight="Bold"
-                               TextAlignment="Center" 
-                               Margin="0,0,0,5"/>
-
-                    <TextBlock Text="{Binding ProgressText}" 
-                               FontSize="11" 
-                               TextAlignment="Center" 
-                               Margin="0,0,0,10" 
-                               Foreground="#555"/>
-
-                    <ProgressBar Value="{Binding ProgressValue}" 
-                                 Maximum="{Binding ProgressMaximum}" 
-                                 Height="20" 
-                                 Foreground="{DynamicResource MahApps.Brushes.Accent}"
-                                 Margin="0,0,0,10"/>
-
-                    <TextBlock Text="Please wait, do not close this window..." 
-                               FontSize="10" 
-                               TextAlignment="Center" 
-                               Foreground="Gray"/>
+                    <TextBlock
+                        Margin="0,0,0,5"
+                        FontSize="14"
+                        FontWeight="Bold"
+                        TextAlignment="Center"
+                        Text="{Binding BusyMessage}" />
+                    <TextBlock
+                        Margin="0,0,0,10"
+                        FontSize="11"
+                        Foreground="#555"
+                        TextAlignment="Center"
+                        Text="{Binding ProgressText}" />
+                    <ProgressBar
+                        Height="20"
+                        Margin="0,0,0,10"
+                        Foreground="{DynamicResource MahApps.Brushes.Accent}"
+                        Maximum="{Binding ProgressMaximum}"
+                        Value="{Binding ProgressValue}" />
+                    <TextBlock
+                        FontSize="10"
+                        Foreground="Gray"
+                        TextAlignment="Center"
+                        Text="Please wait, do not close this window..." />
                 </StackPanel>
             </Border>
         </Grid>
-
     </Grid>
 </Controls:MetroWindow>
