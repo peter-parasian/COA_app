@@ -14,16 +14,39 @@ namespace WpfApp1.Shared.Helpers
             }
 
             System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            bool hasX = false;
+            bool hasDigitsAfterX = false;
 
             foreach (char c in rawSize)
             {
                 if (char.IsDigit(c))
                 {
                     sb.Append(c);
+                    if (hasX)
+                    {
+                        hasDigitsAfterX = true;
+                    }
                 }
                 else if (c == 'x' || c == 'X')
                 {
+                    if (hasX)
+                    {
+                        break;
+                    }
                     sb.Append('x');
+                    hasX = true;
+                }
+                else if (c == '.' || c == ',')
+                {
+                    // Normalisasi desimal: selalu gunakan titik
+                    sb.Append('.');
+                }
+                else
+                {
+                    if (hasX && hasDigitsAfterX)
+                    {
+                        break;
+                    }
                 }
             }
 
@@ -51,7 +74,7 @@ namespace WpfApp1.Shared.Helpers
 
             if (startIndex == -1) return string.Empty;
 
-            int idx = startIndex; 
+            int idx = startIndex;
 
             bool hasX = false;
             int dimensionIterator = startIndex;

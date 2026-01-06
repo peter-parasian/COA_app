@@ -171,7 +171,7 @@ namespace WpfApp1.Core.Services
                         worksheet.Cell(rBottom, 7).Value = strWidthTol;
 
                         worksheet.Cell(rTop, 8).Value = rec.Length;
-                        worksheet.Cell(rBottom, 8).Value = "(4000 ± 15)";
+                        worksheet.Cell(rBottom, 8).Value = "(4000 +15/-0)";
 
                         worksheet.Cell(rTop, 9).Value = string.Format(cultureInvariant, "{0:0.00}", rec.Radius);
                         worksheet.Cell(rTop, 10).Value = string.Format(cultureInvariant, "{0:0.00}", rec.Chamber);
@@ -300,13 +300,14 @@ namespace WpfApp1.Core.Services
                     workbook.SaveAs(fullPath);
                 }
 
-                string pdfPath = System.IO.Path.ChangeExtension(fullPath, ".pdf");
-                ConvertExcelToPdf(fullPath, pdfPath);
+                //string pdfPath = System.IO.Path.ChangeExtension(fullPath, ".pdf");
+                //ConvertExcelToPdf(fullPath, pdfPath);
 
                 return fullPath;
             });
         }
 
+        /*
         private void ConvertExcelToPdf(string excelFile, string pdfFile)
         {
             Microsoft.Office.Interop.Excel.Application? excelApp = null;
@@ -339,7 +340,7 @@ namespace WpfApp1.Core.Services
                         workbook.Close(false);
                         System.Runtime.InteropServices.Marshal.ReleaseComObject(workbook);
                     }
-                    catch { /* Abaikan error saat closing */ }
+                    catch {  }
                     workbook = null;
                 }
 
@@ -350,7 +351,7 @@ namespace WpfApp1.Core.Services
                         excelApp.Quit();
                         System.Runtime.InteropServices.Marshal.ReleaseComObject(excelApp);
                     }
-                    catch { /* Abaikan error saat quitting */ }
+                    catch {  }
                     excelApp = null;
                 }
 
@@ -358,6 +359,7 @@ namespace WpfApp1.Core.Services
                 System.GC.WaitForPendingFinalizers();
             }
         }
+        */
 
         private void ApplyCustomStyleBatch(ClosedXML.Excel.IXLRange range)
         {

@@ -151,7 +151,7 @@
                     <Viewbox Stretch="Uniform">
                         <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
                             <Image Source="pack://application:,,,/Images/logo1.jpg" Height="80"/>
-                            <TextBlock Text="Busbar Copper Strip" FontSize="16" FontWeight="SemiBold" Foreground="White" HorizontalAlignment="Center" Margin="0,5,0,0"/>
+                            <TextBlock Text="Copper Busbar" FontSize="16" FontWeight="SemiBold" Foreground="White" HorizontalAlignment="Center" Margin="0,5,0,0"/>
                         </StackPanel>
                     </Viewbox>
                 </Button>
@@ -248,9 +248,9 @@
 
                         <StackPanel Grid.Column="1" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="20,0,0,0">
                             <Border Background="#FFF4E6" HorizontalAlignment="Right" CornerRadius="3" Padding="8,3" Margin="0,0,0,2">
-                                <TextBlock Text="MODE 1 ACTIVE" FontSize="10" FontWeight="Bold" Foreground="#FD7E14"/>
+                                <TextBlock Text="SUPER TEAM" FontSize="10" FontWeight="Bold" Foreground="#FD7E14"/>
                             </Border>
-                            <TextBlock Text="COA Busbar Strip" FontSize="16" FontWeight="Black" Foreground="#FD7E14" HorizontalAlignment="Right">
+                            <TextBlock Text="COA Copper Busbar" FontSize="16" FontWeight="Black" Foreground="#FD7E14" HorizontalAlignment="Right">
                                 <TextBlock.Effect>
                                     <DropShadowEffect Color="#FFDAC0" BlurRadius="0" ShadowDepth="2" Direction="315" Opacity="0.5"/>
                                 </TextBlock.Effect>
