@@ -18,7 +18,7 @@ namespace WpfApp1.Core.Services
         {
             return await System.Threading.Tasks.Task.Run<string>(() =>
             {
-                string templatePath = @"C:\Users\mrrx\Documents\My Web Sites\H\TEMPLATE_COA_BUSBAR.xlsx";
+                string templatePath = @"C:\Users\mrrx\Documents\My Web Sites\H\TEMPLATEE_COA_BUSBAR.xlsx";
                 string basePath = @"C:\Users\mrrx\Documents\My Web Sites\H\COA";
                 string pathImg1 = @"C:\Users\mrrx\Documents\Custom Office Templates\WpfApp1\WpfApp1\Images\approved_IMG.png";
                 string pathImg2 = @"C:\Users\mrrx\Documents\Custom Office Templates\WpfApp1\WpfApp1\Images\profile_SNI.png";
@@ -96,12 +96,24 @@ namespace WpfApp1.Core.Services
                     int originalStartRowTable2 = 30;
                     int startRowTable2 = originalStartRowTable2;
 
-                    if (totalRowsNeeded > defaultRowsAvailable)
+                    int rowsDiff = totalRowsNeeded - defaultRowsAvailable;
+
+                    if (rowsDiff > 0)
                     {
-                        int rowsToInsert = totalRowsNeeded - defaultRowsAvailable;
-                        worksheet.Row(22).InsertRowsBelow(rowsToInsert);
-                        startRowTable2 = originalStartRowTable2 + rowsToInsert;
+                        worksheet.Row(22).InsertRowsBelow(rowsDiff);
                     }
+                    else if (rowsDiff < 0)
+                    {
+                        int rowsToDelete = System.Math.Abs(rowsDiff);
+                        int deleteStartRow = startRowTable1 + totalRowsNeeded;
+
+                        for (int d = 0; d < rowsToDelete; d++)
+                        {
+                            worksheet.Row(deleteStartRow).Delete();
+                        }
+                    }
+
+                    startRowTable2 = originalStartRowTable2 + rowsDiff;
 
                     var toleranceData = new System.Collections.Generic.List<(double thickness, double width, double nominalThick, double nominalWidth)>();
 
@@ -253,10 +265,10 @@ namespace WpfApp1.Core.Services
                     ApplyCustomStyleBatch(table2Range);
                     ApplyBorders(table2Range);
 
-                    worksheet.Row(lastRowTable2).InsertRowsBelow(6);
+                    worksheet.Row(lastRowTable2).InsertRowsBelow(5);
 
                     int firstInsertedRow = lastRowTable2 + 1;
-                    int lastInsertedRow = firstInsertedRow + 5;
+                    int lastInsertedRow = firstInsertedRow + 4;
 
                     var signatureRange = worksheet.Range(firstInsertedRow, 2, lastInsertedRow, 11);
                     signatureRange.Style.Border.TopBorder = XLBorderStyleValues.None;
@@ -269,9 +281,9 @@ namespace WpfApp1.Core.Services
                     {
                         worksheet.Row(firstInsertedRow + k).Height = 102;
                     }
-                    worksheet.Row(firstInsertedRow + 5).Height = 50;
+                    worksheet.Row(firstInsertedRow + 4).Height = 50;
 
-                    int imageRow = firstInsertedRow + 2;
+                    int imageRow = firstInsertedRow + 1;
 
                     if (_img1Data != null)
                     {
@@ -300,66 +312,9 @@ namespace WpfApp1.Core.Services
                     workbook.SaveAs(fullPath);
                 }
 
-                //string pdfPath = System.IO.Path.ChangeExtension(fullPath, ".pdf");
-                //ConvertExcelToPdf(fullPath, pdfPath);
-
                 return fullPath;
             });
         }
-
-        /*
-        private void ConvertExcelToPdf(string excelFile, string pdfFile)
-        {
-            Microsoft.Office.Interop.Excel.Application? excelApp = null;
-            Microsoft.Office.Interop.Excel.Workbook? workbook = null;
-
-            try
-            {
-                excelApp = new Microsoft.Office.Interop.Excel.Application();
-                excelApp.Visible = false;
-                excelApp.ScreenUpdating = false;
-                excelApp.DisplayAlerts = false;
-
-                workbook = excelApp.Workbooks.Open(excelFile);
-
-                workbook.ExportAsFixedFormat(
-                    Microsoft.Office.Interop.Excel.XlFixedFormatType.xlTypePDF,
-                    pdfFile
-                );
-            }
-            catch (System.Exception ex)
-            {
-                throw new System.Exception("Gagal konversi PDF dengan Microsoft Excel Interop: " + ex.Message, ex);
-            }
-            finally
-            {
-                if (workbook != null)
-                {
-                    try
-                    {
-                        workbook.Close(false);
-                        System.Runtime.InteropServices.Marshal.ReleaseComObject(workbook);
-                    }
-                    catch {  }
-                    workbook = null;
-                }
-
-                if (excelApp != null)
-                {
-                    try
-                    {
-                        excelApp.Quit();
-                        System.Runtime.InteropServices.Marshal.ReleaseComObject(excelApp);
-                    }
-                    catch {  }
-                    excelApp = null;
-                }
-
-                System.GC.Collect();
-                System.GC.WaitForPendingFinalizers();
-            }
-        }
-        */
 
         private void ApplyCustomStyleBatch(ClosedXML.Excel.IXLRange range)
         {
