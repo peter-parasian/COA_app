@@ -5,7 +5,7 @@ using System.Text;
 using WpfApp1.Core.Models;
 using WpfApp1.Data.Repositories;
 using WpfApp1.Shared.Helpers;
-using ExcelDataReader; 
+using ExcelDataReader;
 
 namespace WpfApp1.Core.Services
 {
@@ -185,7 +185,7 @@ namespace WpfApp1.Core.Services
                 {
                     ConfigureDataTable = (_) => new ExcelDataReader.ExcelDataTableConfiguration()
                     {
-                        UseHeaderRow = false 
+                        UseHeaderRow = false
                     }
                 });
 
@@ -235,26 +235,43 @@ namespace WpfApp1.Core.Services
                             return val != null ? val.ToString() ?? "" : "";
                         }
 
-                        record.Thickness = System.Math.Round(StringHelper.ParseCustomDecimal(GetStr(6)), 2);  
-                        record.Width = System.Math.Round(StringHelper.ParseCustomDecimal(GetStr(8)), 2);      
-                        record.Radius = System.Math.Round(StringHelper.ParseCustomDecimal(GetStr(9)), 2);     
-                        record.Chamber = System.Math.Round(StringHelper.ParseCustomDecimal(GetStr(11)), 2);   
-                        record.Electric = System.Math.Round(StringHelper.ParseCustomDecimal(GetStr(20)), 2);  
-                        record.Oxygen = System.Math.Round(StringHelper.ParseCustomDecimal(GetStr(23)), 2);    
+                        record.Thickness = System.Math.Round(StringHelper.ParseCustomDecimal(GetStr(6)), 2);
+                        record.Width = System.Math.Round(StringHelper.ParseCustomDecimal(GetStr(8)), 2);
+                        record.Radius = System.Math.Round(StringHelper.ParseCustomDecimal(GetStr(9)), 2);
+                        record.Chamber = System.Math.Round(StringHelper.ParseCustomDecimal(GetStr(11)), 2);
+                        record.Electric = System.Math.Round(StringHelper.ParseCustomDecimal(GetStr(20)), 2);
+                        record.Oxygen = System.Math.Round(StringHelper.ParseCustomDecimal(GetStr(23)), 2);
 
-                        record.Spectro = StringHelper.ParseCustomDecimal(GetStr(24)); 
-                        record.Resistivity = StringHelper.ParseCustomDecimal(GetStr(19)); 
+                        record.Spectro = StringHelper.ParseCustomDecimal(GetStr(24));
+                        record.Resistivity = StringHelper.ParseCustomDecimal(GetStr(19));
 
-                        record.Length = (int)System.Math.Round(StringHelper.ParseCustomDecimal(GetStr(10)), 0); 
+                        record.Length = (int)System.Math.Round(StringHelper.ParseCustomDecimal(GetStr(10)), 0);
 
-                        record.Elongation = System.Math.Round(MathHelper.GetMergedOrAverageValue(tableYLB, rowIndex, 17), 2); 
-                        record.Tensile = System.Math.Round(MathHelper.GetMergedOrAverageValue(tableYLB, rowIndex, 16), 2);    
+                        object rawT1 = tableYLB.Rows[rowIndex][16];
+                        object rawE1 = tableYLB.Rows[rowIndex][17];
+                        double valT1 = StringHelper.ParseCustomDecimal(rawT1 != null ? rawT1.ToString() : "");
+                        double valE1 = StringHelper.ParseCustomDecimal(rawE1 != null ? rawE1.ToString() : "");
 
-                        record.BendTest = GetStr(22); 
+                        double valT2 = 0;
+                        double valE2 = 0;
+                        if (rowIndex + 1 < rowCount)
+                        {
+                            object rawT2 = tableYLB.Rows[rowIndex + 1][16];
+                            object rawE2 = tableYLB.Rows[rowIndex + 1][17];
+                            valT2 = StringHelper.ParseCustomDecimal(rawT2 != null ? rawT2.ToString() : "");
+                            valE2 = StringHelper.ParseCustomDecimal(rawE2 != null ? rawE2.ToString() : "");
+                        }
+
+                        var calcResult = MathHelper.CalculateTensileAndElongation(valT1, valT2, valE1, valE2);
+
+                        record.Tensile = calcResult.Tensile;
+                        record.Elongation = calcResult.Elongation;
+
+                        record.BendTest = GetStr(22);
 
                         busbarBag.Add(record);
 
-                        rowIndex += 2; 
+                        rowIndex += 2;
                     }
                 }
 
@@ -286,7 +303,7 @@ namespace WpfApp1.Core.Services
 
             if (sheet != null)
             {
-                int rowIndex = 2; 
+                int rowIndex = 2;
                 int rowCount = sheet.Rows.Count;
                 string currentProdDate = string.Empty;
                 int folderMonthNum = DateHelper.GetMonthNumber(month);

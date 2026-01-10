@@ -7,27 +7,45 @@ namespace WpfApp1.Shared.Helpers
 {
     public static class MathHelper
     {
-        public static double GetMergedOrAverageValue(System.Data.DataTable table, int rowIndex, int colIndex)
+        public static (double Tensile, double Elongation) CalculateTensileAndElongation(double t1, double t2, double e1, double e2)
         {
-            if (rowIndex >= table.Rows.Count) return 0.0;
+            double finalTensile = 0;
+            double finalElongation = 0;
 
-            object raw1 = table.Rows[rowIndex][colIndex];
-            string str1 = raw1 != null ? raw1.ToString() ?? "" : "";
-            double val1 = StringHelper.ParseCustomDecimal(str1);
+            bool hasT1 = t1 > 0;
+            bool hasT2 = t2 > 0;
+            bool hasE1 = e1 > 0;
+            bool hasE2 = e2 > 0;
 
-            if (rowIndex + 1 < table.Rows.Count)
+            if (hasT1 && hasT2 && hasE1 && hasE2)
             {
-                object raw2 = table.Rows[rowIndex + 1][colIndex];
-                string str2 = raw2 != null ? raw2.ToString() ?? "" : "";
-                double val2 = StringHelper.ParseCustomDecimal(str2);
-
-                if (val1 == 0) return val2;
-                if (val2 == 0) return val1;
-
-                return (val1 + val2) / 2.0;
+                if (t1 <= t2)
+                {
+                    finalTensile = t1;
+                    finalElongation = e1;
+                }
+                else
+                {
+                    finalTensile = t2;
+                    finalElongation = e2;
+                }
             }
-
-            return val1;
+            else if (hasT1 && hasT2 && (hasE1 || hasE2))
+            {
+                finalTensile = System.Math.Min(t1, t2);
+                finalElongation = System.Math.Max(e1, e2);
+            }
+            else if ((hasT1 || hasT2) && hasE1 && hasE2)
+            {
+                finalTensile = System.Math.Max(t1, t2);
+                finalElongation = System.Math.Max(e1, e2);
+            }
+            else
+            {
+                finalTensile = System.Math.Max(t1, t2);
+                finalElongation = System.Math.Max(e1, e2);
+            }
+            return (System.Math.Round(finalTensile, 2), System.Math.Round(finalElongation, 2));
         }
     }
 }
