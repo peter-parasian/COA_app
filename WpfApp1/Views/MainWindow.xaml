@@ -12,6 +12,7 @@
     Background="#F4F7F6"
     FontFamily="Segoe UI"
     GlowBrush="{DynamicResource MahApps.Brushes.Accent}"
+    Icon="pack://application:,,,/Images/app_logo.ico"
     NonActiveGlowBrush="Gray"
     NonActiveWindowTitleBrush="Gray"
     SaveWindowPosition="True"

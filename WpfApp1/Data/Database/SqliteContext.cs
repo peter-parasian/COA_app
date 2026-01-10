@@ -1,25 +1,37 @@
-﻿using System;
+﻿using Microsoft.Data.Sqlite;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 
 namespace WpfApp1.Data.Database
 {
     public class SqliteContext
     {
-        private const string DbPath = @"C:\sqLite\data_qc.db";
+        private readonly string _dbPath;
 
+        public SqliteContext()
+        {
+            string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+
+            string appFolder = Path.Combine(localAppData, "Database_QC");
+
+            _dbPath = Path.Combine(appFolder, "data_qc.db");
+        }
         public void EnsureDatabaseFolderExists()
         {
-            string? folder = System.IO.Path.GetDirectoryName(DbPath);
-            if (!string.IsNullOrEmpty(folder) && !System.IO.Directory.Exists(folder))
+            string? folder = Path.GetDirectoryName(_dbPath);
+
+            if (!string.IsNullOrEmpty(folder) && !Directory.Exists(folder))
             {
-                System.IO.Directory.CreateDirectory(folder);
+                Directory.CreateDirectory(folder);
             }
         }
 
         public Microsoft.Data.Sqlite.SqliteConnection CreateConnection()
         {
-            var conn = new Microsoft.Data.Sqlite.SqliteConnection($"Data Source={DbPath}");
+            EnsureDatabaseFolderExists();
+            var conn = new Microsoft.Data.Sqlite.SqliteConnection($"Data Source={_dbPath}");
             conn.Open();
 
             using (var pragmaCmd = conn.CreateCommand())
