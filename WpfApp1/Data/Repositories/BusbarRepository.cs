@@ -8,7 +8,8 @@ namespace WpfApp1.Data.Repositories
 {
     public class BusbarRepository
     {
-        private const int BATCH_SIZE = 1000;
+        //private const int BATCH_SIZE = 1000;
+        private const int BATCH_SIZE = 5000;
 
         private System.Collections.Generic.List<BusbarRecord> _busbarBatchBuffer = new System.Collections.Generic.List<BusbarRecord>(BATCH_SIZE);
         private System.Collections.Generic.List<TLJRecord> _tlj350BatchBuffer = new System.Collections.Generic.List<TLJRecord>(BATCH_SIZE);
@@ -104,7 +105,7 @@ namespace WpfApp1.Data.Repositories
             using var cmd = connection.CreateCommand();
             cmd.Transaction = transaction;
 
-            System.Text.StringBuilder sqlBuilder = new System.Text.StringBuilder(BATCH_SIZE * 200);
+            System.Text.StringBuilder sqlBuilder = new System.Text.StringBuilder(BATCH_SIZE * 250); //200
             sqlBuilder.Append(@"INSERT INTO Busbar (
                 Size_mm, Year_folder, Month_folder, Prod_date, 
                 Thickness_mm, Width_mm, Length, Radius, Chamber_mm,
@@ -409,6 +410,8 @@ namespace WpfApp1.Data.Repositories
                 fullRecord.Spectro = ParseDoubleSafe(reader["Spectro_Cu"]);
                 fullRecord.Oxygen = ParseDoubleSafe(reader["Oxygen"]);
 
+                // FILTER DINONAKTIFKAN (DI-KOMENTARI) SESUAI REQUEST
+                /*
                 if (!IsRecordComplete(fullRecord))
                 {
                     continue;
@@ -418,6 +421,7 @@ namespace WpfApp1.Data.Repositories
                 {
                     continue;
                 }
+                */
 
                 results.Add(new BusbarSearchItem
                 {

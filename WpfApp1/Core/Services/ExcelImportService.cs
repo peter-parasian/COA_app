@@ -114,7 +114,8 @@ namespace WpfApp1.Core.Services
 
             var parallelOptions = new System.Threading.Tasks.ParallelOptions
             {
-                MaxDegreeOfParallelism = System.Environment.ProcessorCount
+                //MaxDegreeOfParallelism = System.Environment.ProcessorCount
+                  MaxDegreeOfParallelism = System.Math.Max(1, System.Environment.ProcessorCount - 1)
             };
 
             System.Threading.Tasks.Parallel.ForEach(filesToProcess, parallelOptions, (fileItem) =>

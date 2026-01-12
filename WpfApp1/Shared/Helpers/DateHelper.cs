@@ -38,12 +38,22 @@ namespace WpfApp1.Shared.Helpers
             return rawDate;
         }
 
+        private static readonly System.Collections.Generic.Dictionary<string, int> _monthCache =
+            new System.Collections.Generic.Dictionary<string, int>(System.StringComparer.OrdinalIgnoreCase);
+
         public static int GetMonthNumber(string monthName)
         {
             if (string.IsNullOrWhiteSpace(monthName)) return 0;
+
+            if (_monthCache.TryGetValue(monthName, out int cachedMonth))
+                return cachedMonth;
+
             try
             {
-                return System.DateTime.ParseExact(monthName, "MMMM", CultureInfo.InvariantCulture).Month;
+                int month = System.DateTime.ParseExact(monthName, "MMMM",
+                    System.Globalization.CultureInfo.InvariantCulture).Month;
+                _monthCache[monthName] = month;
+                return month;
             }
             catch
             {

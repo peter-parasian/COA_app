@@ -37,17 +37,20 @@ namespace WpfApp1.Data.Database
             using (var pragmaCmd = conn.CreateCommand())
             {
                 pragmaCmd.CommandText = @"
-                    PRAGMA synchronous = OFF;
-                    PRAGMA journal_mode = MEMORY;
-                    PRAGMA temp_store = MEMORY;
-                    PRAGMA locking_mode = EXCLUSIVE;
-                    PRAGMA cache_size = -64000;
-                    PRAGMA page_size = 4096;
-                    PRAGMA mmap_size = 30000000000;
-                ";
+            PRAGMA synchronous = OFF;
+            PRAGMA journal_mode = WAL;
+            PRAGMA temp_store = MEMORY;
+            PRAGMA locking_mode = EXCLUSIVE;
+            PRAGMA cache_size = -128000;
+            PRAGMA page_size = 8192;
+            PRAGMA mmap_size = 30000000000;
+            PRAGMA automatic_index = OFF;
+            PRAGMA query_only = OFF;
+        ";
                 pragmaCmd.ExecuteNonQuery();
             }
             return conn;
         }
+
     }
 }

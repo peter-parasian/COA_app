@@ -180,7 +180,7 @@ namespace WpfApp1.ViewModels
             _searchCache = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<WpfApp1.Core.Models.BusbarSearchItem>>();
 
             _logTimer = new System.Windows.Threading.DispatcherTimer();
-            _logTimer.Interval = System.TimeSpan.FromMilliseconds(1000);
+            _logTimer.Interval = System.TimeSpan.FromMilliseconds(2000);
             _logTimer.Tick += LogTimer_Tick;
 
             _importService.OnDebugMessage += (msg) => {
