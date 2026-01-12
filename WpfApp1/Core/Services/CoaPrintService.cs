@@ -56,34 +56,79 @@ namespace WpfApp1.Core.Services
                     }
                 }
 
-                string basePath = @"C:\Users\mrrx\Documents\My Web Sites\H\COA"; //C:\Users\HP\Documents\Custom Office Templates\H\COA
-                //@"H:\PUBLIC\01 COA\03 Busbar\NEW"
-
-                //if (!Directory.Exists(@"H:\"))
-                //{
-                //    throw new DirectoryNotFoundException("Drive H: tidak ditemukan! Pastikan komputer terhubung ke jaringan kantor.");
-                //}
+                string basePath = @"C:\Users\mrrx\Documents\My Web Sites\H\COA";
 
                 System.DateTime now = System.DateTime.Now;
                 string yearFolder = now.ToString("yyyy");
 
-                var cultureIndo = new System.Globalization.CultureInfo("id-ID");
-                string monthName = cultureIndo.DateTimeFormat.GetMonthName(now.Month);
-                monthName = cultureIndo.TextInfo.ToTitleCase(monthName);
+                string yearPath = System.IO.Path.Combine(basePath, yearFolder);
 
-                string monthFolder = $"{now.Month}. {monthName}";
-                string finalDirectory = Path.Combine(basePath, yearFolder, monthFolder);
-
-                if (!Directory.Exists(finalDirectory))
+                if (!System.IO.Directory.Exists(yearPath))
                 {
-                    Directory.CreateDirectory(finalDirectory);
+                    System.IO.Directory.CreateDirectory(yearPath);
                 }
 
-                string[] existingFiles = Directory.GetFiles(finalDirectory, "*.xlsx");
+                string finalMonthFolderName = string.Empty;
+                int currentMonthNumber = now.Month;
+                bool folderFound = false;
+
+                try
+                {
+                    string[] existingDirectories = System.IO.Directory.GetDirectories(yearPath);
+
+                    foreach (string dirPath in existingDirectories)
+                    {
+                        string dirName = System.IO.Path.GetFileName(dirPath); 
+
+                        string leadingDigits = string.Empty;
+                        foreach (char c in dirName)
+                        {
+                            if (char.IsDigit(c))
+                            {
+                                leadingDigits += c;
+                            }
+                            else
+                            {
+                                break;
+                            }
+                        }
+
+                        if (!string.IsNullOrEmpty(leadingDigits) && int.TryParse(leadingDigits, out int folderNum))
+                        {
+                            if (folderNum == currentMonthNumber)
+                            {
+                                finalMonthFolderName = dirName;
+                                folderFound = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                }
+
+                if (!folderFound)
+                {
+                    var cultureIndo = new System.Globalization.CultureInfo("id-ID");
+                    string monthName = cultureIndo.DateTimeFormat.GetMonthName(now.Month);
+                    monthName = cultureIndo.TextInfo.ToTitleCase(monthName);
+
+                    finalMonthFolderName = $"{now.Month}. {monthName}";
+                }
+
+                string finalDirectory = System.IO.Path.Combine(yearPath, finalMonthFolderName);
+
+                if (!System.IO.Directory.Exists(finalDirectory))
+                {
+                    System.IO.Directory.CreateDirectory(finalDirectory);
+                }
+
+                string[] existingFiles = System.IO.Directory.GetFiles(finalDirectory, "*.xlsx");
                 int validFileCount = 0;
                 foreach (string filePath in existingFiles)
                 {
-                    string fName = Path.GetFileName(filePath);
+                    string fName = System.IO.Path.GetFileName(filePath);
                     if (!fName.StartsWith("~$"))
                     {
                         validFileCount++;
@@ -95,7 +140,7 @@ namespace WpfApp1.Core.Services
                 string romanMonth = GetRomanMonth(now.Month);
 
                 string fileName = $"{formattedFileNumber}. COA {customerName} {doNumber}.xlsx";
-                string fullPath = Path.Combine(finalDirectory, fileName);
+                string fullPath = System.IO.Path.Combine(finalDirectory, fileName);
 
                 System.Random randomGen = new System.Random();
                 var cultureInvariant = System.Globalization.CultureInfo.InvariantCulture;
