@@ -23,7 +23,16 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Resource Remove="Images\approved_IMG.png" />
+	  <Resource Remove="Images\profile_SNI.png" />
+	  <Resource Remove="Images\TEMPLATEE_COA_BUSBAR.xlsx" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <EmbeddedResource Include="Images\approved_IMG.png" />
 	  <EmbeddedResource Include="Images\app_logo.ico" />
+	  <EmbeddedResource Include="Images\profile_SNI.png" />
+	  <EmbeddedResource Include="Images\TEMPLATEE_COA_BUSBAR.xlsx" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -51,6 +60,12 @@
 	    <Generator>SettingsSingleFileGenerator</Generator>
 	    <LastGenOutput>Settings.Designer.cs</LastGenOutput>
 	  </None>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Resource Update="Images\company_logo.png">
+	    <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+	  </Resource>
 	</ItemGroup>
 
 </Project>

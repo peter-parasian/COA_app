@@ -11,7 +11,7 @@ namespace WpfApp1.Core.Services
 {
     public class ExcelImportService
     {
-        private const string ExcelRootFolder = @"C:\Users\mrrx\Documents\My Web Sites\H\OPERATOR\COPPER BUSBAR & STRIP";
+        private const string ExcelRootFolder = @"C:\Users\mrrx\Documents\My Web Sites\H\OPERATOR\COPPER BUSBAR & STRIP"; //@"H:\OPERATOR\COPPER BUSBAR & STRIP\NEW" // 
 
         private BusbarRepository _repository;
 

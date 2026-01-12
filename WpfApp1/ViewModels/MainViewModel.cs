@@ -19,10 +19,10 @@ namespace WpfApp1.ViewModels
         private System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<WpfApp1.Core.Models.BusbarSearchItem>> _searchCache;
 
         private readonly object _logLock = new object();
-
         private System.Text.StringBuilder _logBuffer = new System.Text.StringBuilder();
+        private System.Windows.Threading.DispatcherTimer _logTimer;
 
-        private DispatcherTimer _logTimer;
+        #region Properties
 
         private string _debugLog = string.Empty;
         public string DebugLog
@@ -115,17 +115,6 @@ namespace WpfApp1.ViewModels
         public System.Windows.Visibility NotificationVisibility =>
             IsNotificationVisible ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
 
-        private async void TriggerSuccessNotification(string message)
-        {
-            NotificationMessage = message;
-            IsNotificationVisible = true;
-
-            await System.Threading.Tasks.Task.Delay(3000);
-
-            IsNotificationVisible = false;
-        }
-
-        public event System.Action<string>? OnShowMessage;
         public System.Collections.ObjectModel.ObservableCollection<string> Years { get; set; } = new System.Collections.ObjectModel.ObservableCollection<string>();
         public System.Collections.ObjectModel.ObservableCollection<string> Months { get; set; } = new System.Collections.ObjectModel.ObservableCollection<string>();
         public System.Collections.ObjectModel.ObservableCollection<string> Standards { get; set; } = new System.Collections.ObjectModel.ObservableCollection<string>();
@@ -170,10 +159,16 @@ namespace WpfApp1.ViewModels
         public System.Collections.ObjectModel.ObservableCollection<WpfApp1.Core.Models.BusbarExportItem> ExportList { get; set; }
             = new System.Collections.ObjectModel.ObservableCollection<WpfApp1.Core.Models.BusbarExportItem>();
 
+        #endregion
+
+        #region Commands
         public System.Windows.Input.ICommand FindCommand { get; }
         public System.Windows.Input.ICommand AddToExportCommand { get; }
         public System.Windows.Input.ICommand RemoveFromExportCommand { get; }
         public System.Windows.Input.ICommand PrintCoaCommand { get; }
+        #endregion
+
+        public event System.Action<string>? OnShowMessage;
 
         public MainViewModel()
         {
@@ -184,7 +179,7 @@ namespace WpfApp1.ViewModels
 
             _searchCache = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<WpfApp1.Core.Models.BusbarSearchItem>>();
 
-            _logTimer = new DispatcherTimer();
+            _logTimer = new System.Windows.Threading.DispatcherTimer();
             _logTimer.Interval = System.TimeSpan.FromMilliseconds(1000);
             _logTimer.Tick += LogTimer_Tick;
 
@@ -207,7 +202,9 @@ namespace WpfApp1.ViewModels
             PrintCoaCommand = new RelayCommand(ExecutePrintCoa);
         }
 
-        private void LogTimer_Tick(object? sender, EventArgs e)
+        #region Logging & Progress
+
+        private void LogTimer_Tick(object? sender, System.EventArgs e)
         {
             lock (_logLock)
             {
@@ -235,7 +232,7 @@ namespace WpfApp1.ViewModels
         private void StopLogTimer()
         {
             _logTimer.Stop();
-            LogTimer_Tick(null, EventArgs.Empty);
+            LogTimer_Tick(null, System.EventArgs.Empty);
         }
 
         private void UpdateProgress(int current, int total)
@@ -244,6 +241,18 @@ namespace WpfApp1.ViewModels
             ProgressMaximum = total;
             ProgressText = total > 0 ? $"Processing file {current} of {total}" : "Scanning files...";
         }
+
+        private async void TriggerSuccessNotification(string message)
+        {
+            NotificationMessage = message;
+            IsNotificationVisible = true;
+            await System.Threading.Tasks.Task.Delay(3000);
+            IsNotificationVisible = false;
+        }
+
+        #endregion
+
+        #region Import Logic
 
         public void ImportExcelToSQLite()
         {
@@ -282,6 +291,18 @@ namespace WpfApp1.ViewModels
             }
         }
 
+        private void ResetCounters()
+        {
+            TotalFilesFound = 0;
+            TotalRowsInserted = 0;
+            DebugLog = "";
+            _searchCache.Clear();
+        }
+
+        #endregion
+
+        #region Navigation & Menu
+
         public void ButtonMode2_Click() { OnShowMessage?.Invoke("MODE 2 belum diimplementasikan"); }
         public void ButtonMode3_Click() { OnShowMessage?.Invoke("MODE 3 belum diimplementasikan"); }
         public void ButtonMode4_Click() { OnShowMessage?.Invoke("MODE 4 belum diimplementasikan"); }
@@ -295,35 +316,23 @@ namespace WpfApp1.ViewModels
             ExportList.Clear();
             ShowBlankPage = false;
             IsNotificationVisible = false;
-        }
-
-        private void ResetCounters()
-        {
-            TotalFilesFound = 0;
-            TotalRowsInserted = 0;
-            DebugLog = "";
             _searchCache.Clear();
         }
 
+        #endregion
+
+        #region Search Logic
+
         private void InitializeSearchData()
         {
-            Months.Add("January");
-            Months.Add("February");
-            Months.Add("March");
-            Months.Add("April");
-            Months.Add("May");
-            Months.Add("June");
-            Months.Add("July");
-            Months.Add("August");
-            Months.Add("September");
-            Months.Add("October");
-            Months.Add("November");
-            Months.Add("December");
+            Months.Add("January"); Months.Add("February"); Months.Add("March");
+            Months.Add("April"); Months.Add("May"); Months.Add("June");
+            Months.Add("July"); Months.Add("August"); Months.Add("September");
+            Months.Add("October"); Months.Add("November"); Months.Add("December");
 
             Standards.Add("JIS");
 
             SearchResults.Clear();
-
             _ = LoadAvailableYears();
         }
 
@@ -364,36 +373,71 @@ namespace WpfApp1.ViewModels
             try
             {
                 string dbMonth = ConvertMonthToEnglish(SelectedMonth);
-                string dbDate = SelectedDate.Value.ToString("dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture);
 
-                string cacheKey = $"{SelectedYear}_{dbMonth}_{dbDate}";
+                string dateSql = SelectedDate.Value.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
+                string dateIndo = SelectedDate.Value.ToString("dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture);
+
+                string cacheKey = $"{SelectedYear}_{dbMonth}_{dateSql}";
 
                 if (_searchCache.ContainsKey(cacheKey))
                 {
                     var cachedList = _searchCache[cacheKey];
-                    SearchResults = new System.Collections.ObjectModel.ObservableCollection<BusbarSearchItem>(cachedList);
-                    if (SearchResults.Count == 0) OnShowMessage?.Invoke("Data tidak ditemukan (Cached).");
-                    return;
+                    if (cachedList != null && cachedList.Count > 0)
+                    {
+                        SearchResults = new System.Collections.ObjectModel.ObservableCollection<BusbarSearchItem>(cachedList);
+                        return;
+                    }
+                    else
+                    {
+                        _searchCache.Remove(cacheKey);
+                    }
                 }
 
-                var data = await System.Threading.Tasks.Task.Run(() => _repository.SearchBusbarRecords(SelectedYear, dbMonth, dbDate));
+                var data = await System.Threading.Tasks.Task.Run(() => _repository.SearchBusbarRecords(SelectedYear, dbMonth, dateSql));
+
+                if (data == null || !data.Any())
+                {
+                    data = await System.Threading.Tasks.Task.Run(() => _repository.SearchBusbarRecords(SelectedYear, dbMonth, dateIndo));
+                }
+
                 var newResults = new System.Collections.ObjectModel.ObservableCollection<BusbarSearchItem>();
                 var listForCache = new System.Collections.Generic.List<BusbarSearchItem>();
 
-                foreach (var item in data)
+                if (data != null)
                 {
-                    newResults.Add(item);
-                    listForCache.Add(item);
+                    foreach (var item in data)
+                    {
+                        newResults.Add(item);
+                        listForCache.Add(item);
+                    }
                 }
 
-                _searchCache[cacheKey] = listForCache;
+                if (listForCache.Count > 0)
+                {
+                    _searchCache[cacheKey] = listForCache;
+                }
 
                 SearchResults = newResults;
 
-                if (SearchResults.Count == 0) OnShowMessage?.Invoke("Data tidak ditemukan untuk kriteria tersebut.");
+                if (SearchResults.Count == 0)
+                {
+                    OnShowMessage?.Invoke("Data tidak ditemukan.");
+                }
             }
-            catch (System.Exception ex) { OnShowMessage?.Invoke($"Terjadi kesalahan saat pencarian: {ex.Message}"); }
+            catch (System.Exception ex)
+            {
+                OnShowMessage?.Invoke($"Terjadi kesalahan saat pencarian: {ex.Message}");
+            }
         }
+
+        private void ResetSearchData()
+        {
+            SelectedYear = null; SelectedMonth = null; SelectedDate = null; SelectedStandard = null; SearchResults.Clear();
+        }
+
+        #endregion
+
+        #region Export & Print Logic
 
         private void ExecuteAddToExport(object? parameter)
         {
@@ -483,6 +527,10 @@ namespace WpfApp1.ViewModels
             }
         }
 
+        #endregion
+
+        #region Helpers
+
         private string ConvertMonthToEnglish(string indoMonth)
         {
             switch (indoMonth)
@@ -503,10 +551,7 @@ namespace WpfApp1.ViewModels
             }
         }
 
-        private void ResetSearchData()
-        {
-            SelectedYear = null; SelectedMonth = null; SelectedDate = null; SelectedStandard = null; SearchResults.Clear();
-        }
+        #endregion
     }
 
     public class RelayCommand : System.Windows.Input.ICommand

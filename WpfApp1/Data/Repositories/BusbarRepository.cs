@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using WpfApp1.Core.Models;
 using WpfApp1.Shared.Helpers;
 using WpfApp1.Data.Database;
-//New Logic Claude
 
 namespace WpfApp1.Data.Repositories
 {
