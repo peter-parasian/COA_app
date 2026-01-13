@@ -78,7 +78,7 @@ namespace WpfApp1.Core.Services
 
                     foreach (string dirPath in existingDirectories)
                     {
-                        string dirName = System.IO.Path.GetFileName(dirPath); 
+                        string dirName = System.IO.Path.GetFileName(dirPath);
 
                         string leadingDigits = string.Empty;
                         foreach (char c in dirName)
@@ -235,6 +235,8 @@ namespace WpfApp1.Core.Services
                             worksheet.Row(rTable2).Height = 102;
                         }
 
+
+
                         for (int i = 0; i < dataCount; i++)
                         {
                             int rTop = startRowTable1 + (i * rowsPerItem);
@@ -249,30 +251,54 @@ namespace WpfApp1.Core.Services
                             string selectedType = exportItem.SelectedType;
 
                             if (!string.IsNullOrEmpty(selectedType) &&
-                                !selectedType.Equals("Select", StringComparison.OrdinalIgnoreCase) &&
-                                !selectedType.Equals("None", StringComparison.OrdinalIgnoreCase))
+                                !selectedType.Equals("Select", System.StringComparison.OrdinalIgnoreCase) &&
+                                !selectedType.Equals("None", System.StringComparison.OrdinalIgnoreCase))
                             {
                                 displaySize = displaySize + " - " + selectedType;
                             }
 
-                            worksheet.Cell(rTop, 2).Value = rec.BatchNo;
+                            // --- TABLE 1 ---
+                            var cellBatch1 = worksheet.Cell(rTop, 2);
+                            cellBatch1.Value = rec.BatchNo;
+                            if (WpfApp1.Shared.Helpers.CellValidationHelper.ShouldHighlightBatchNo(rec.BatchNo))
+                                cellBatch1.Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.Red;
+
                             worksheet.Cell(rTop, 3).Value = displaySize;
                             worksheet.Cell(rTop, 4).Value = "No Dirty\nNo Blackspot\nNo Blisters";
 
                             string strThickTol = string.Format(cultureInvariant, "({0:0.00} \u00B1 {1:0.00})", tol.nominalThick, tol.thickness);
                             string strWidthTol = string.Format(cultureInvariant, "({0:0.00} \u00B1 {1:0.00})", tol.nominalWidth, tol.width);
 
-                            worksheet.Cell(rTop, 6).Value = string.Format(cultureInvariant, "{0:0.00}", rec.Thickness);
+                            var cellThick = worksheet.Cell(rTop, 6);
+                            cellThick.Value = string.Format(cultureInvariant, "{0:0.00}", rec.Thickness);
+                            if (WpfApp1.Shared.Helpers.CellValidationHelper.ShouldHighlightThicknessWithTolerance(
+                                rec.Thickness, tol.nominalThick, tol.thickness))
+                                cellThick.Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.Red;
                             worksheet.Cell(rBottom, 6).Value = strThickTol;
 
-                            worksheet.Cell(rTop, 7).Value = string.Format(cultureInvariant, "{0:0.00}", rec.Width);
+                            var cellWidth = worksheet.Cell(rTop, 7);
+                            cellWidth.Value = string.Format(cultureInvariant, "{0:0.00}", rec.Width);
+                            if (WpfApp1.Shared.Helpers.CellValidationHelper.ShouldHighlightWidthWithTolerance(
+                                rec.Width, tol.nominalWidth, tol.width))
+                                cellWidth.Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.Red;
                             worksheet.Cell(rBottom, 7).Value = strWidthTol;
 
-                            worksheet.Cell(rTop, 8).Value = rec.Length;
+                            var cellLength = worksheet.Cell(rTop, 8);
+                            cellLength.Value = rec.Length;
+                            if (rec.Length <= 0)
+                                cellLength.Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.Red;
                             worksheet.Cell(rBottom, 8).Value = "(4000 +15/-0)";
 
-                            worksheet.Cell(rTop, 9).Value = string.Format(cultureInvariant, "{0:0.00}", rec.Radius);
-                            worksheet.Cell(rTop, 10).Value = string.Format(cultureInvariant, "{0:0.00}", rec.Chamber);
+                            var cellRad = worksheet.Cell(rTop, 9);
+                            cellRad.Value = string.Format(cultureInvariant, "{0:0.00}", rec.Radius);
+                            if (WpfApp1.Shared.Helpers.CellValidationHelper.ShouldHighlightRadius(rec.Radius))
+                                cellRad.Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.Red;
+
+                            var cellCham = worksheet.Cell(rTop, 10);
+                            cellCham.Value = string.Format(cultureInvariant, "{0:0.00}", rec.Chamber);
+                            if (WpfApp1.Shared.Helpers.CellValidationHelper.ShouldHighlightChamber(rec.Chamber))
+                                cellCham.Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.Red;
+
                             worksheet.Cell(rTop, 11).Value = "OK";
 
                             worksheet.Range(rTop, 2, rBottom, 2).Merge();
@@ -282,17 +308,53 @@ namespace WpfApp1.Core.Services
                             worksheet.Range(rTop, 10, rBottom, 10).Merge();
                             worksheet.Range(rTop, 11, rBottom, 11).Merge();
 
-                            worksheet.Cell(rTable2, 2).Value = rec.BatchNo;
+                            // --- TABLE 2 ---
+                            var cellBatch2 = worksheet.Cell(rTable2, 2);
+                            cellBatch2.Value = rec.BatchNo;
+                            if (WpfApp1.Shared.Helpers.CellValidationHelper.ShouldHighlightBatchNo(rec.BatchNo))
+                                cellBatch2.Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.Red;
+
                             worksheet.Cell(rTable2, 3).Value = displaySize;
-                            worksheet.Cell(rTable2, 4).Value = string.Format(cultureInvariant, "{0:0.00}", rec.Electric);
-                            worksheet.Cell(rTable2, 5).Value = string.Format(cultureInvariant, "{0:0.00000}", rec.Resistivity);
-                            worksheet.Cell(rTable2, 6).Value = string.Format(cultureInvariant, "{0:0.00}", rec.Elongation);
-                            worksheet.Cell(rTable2, 7).Value = string.Format(cultureInvariant, "{0:0.00}", rec.Tensile);
+
+                            var cellElec = worksheet.Cell(rTable2, 4);
+                            cellElec.Value = string.Format(cultureInvariant, "{0:0.00}", rec.Electric);
+                            if (WpfApp1.Shared.Helpers.CellValidationHelper.ShouldHighlightElectric(rec.Electric))
+                                cellElec.Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.Red;
+
+                            var cellRes = worksheet.Cell(rTable2, 5);
+                            cellRes.Value = string.Format(cultureInvariant, "{0:0.00000}", rec.Resistivity);
+                            if (WpfApp1.Shared.Helpers.CellValidationHelper.ShouldHighlightResistivity(rec.Resistivity))
+                                cellRes.Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.Red;
+
+                            var cellElong = worksheet.Cell(rTable2, 6);
+                            cellElong.Value = string.Format(cultureInvariant, "{0:0.00}", rec.Elongation);
+                            if (WpfApp1.Shared.Helpers.CellValidationHelper.ShouldHighlightElongation(rec.Elongation))
+                                cellElong.Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.Red;
+
+                            var cellTens = worksheet.Cell(rTable2, 7);
+                            cellTens.Value = string.Format(cultureInvariant, "{0:0.00}", rec.Tensile);
+                            if (WpfApp1.Shared.Helpers.CellValidationHelper.ShouldHighlightTensile(rec.Tensile))
+                                cellTens.Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.Red;
+
                             worksheet.Cell(rTable2, 8).Value = "No Crack";
-                            worksheet.Cell(rTable2, 9).Value = string.Format(cultureInvariant, "{0:0.000}", rec.Spectro);
-                            worksheet.Cell(rTable2, 10).Value = string.Format(cultureInvariant, "{0:0.00}", rec.Oxygen);
+
+                            var cellSpec = worksheet.Cell(rTable2, 9);
+                            cellSpec.Value = string.Format(cultureInvariant, "{0:0.000}", rec.Spectro);
+                            if (WpfApp1.Shared.Helpers.CellValidationHelper.ShouldHighlightSpectro(rec.Spectro))
+                                cellSpec.Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.Red;
+
+                            var cellOxy = worksheet.Cell(rTable2, 10);
+                            cellOxy.Value = string.Format(cultureInvariant, "{0:0.00}", rec.Oxygen);
+                            if (WpfApp1.Shared.Helpers.CellValidationHelper.ShouldHighlightOxygen(rec.Oxygen))
+                                cellOxy.Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.Red;
+
                             worksheet.Cell(rTable2, 11).Value = "OK";
+
+                            worksheet.Row(rTop).Height = 51;
+                            worksheet.Row(rBottom).Height = 51;
+                            worksheet.Row(rTable2).Height = 102;
                         }
+
 
                         var table1Range = worksheet.Range(startRowTable1, 2, startRowTable1 + totalRowsNeeded - 1, 11);
                         ApplyCustomStyleBatch(table1Range);
