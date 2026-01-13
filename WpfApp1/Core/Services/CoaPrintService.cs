@@ -20,6 +20,9 @@ namespace WpfApp1.Core.Services
         {
             return await System.Threading.Tasks.Task.Run<string>(() =>
             {
+
+                string basePath = @"C:\Users\mrrx\Documents\My Web Sites\H\COA";
+
                 var assembly = Assembly.GetExecutingAssembly();
 
                 string resourceTemplate = "WpfApp1.Images.TEMPLATEE_COA_BUSBAR.xlsx";
@@ -56,7 +59,6 @@ namespace WpfApp1.Core.Services
                     }
                 }
 
-                string basePath = @"C:\Users\mrrx\Documents\My Web Sites\H\COA";
 
                 System.DateTime now = System.DateTime.Now;
                 string yearFolder = now.ToString("yyyy");
@@ -257,7 +259,6 @@ namespace WpfApp1.Core.Services
                                 displaySize = displaySize + " - " + selectedType;
                             }
 
-                            // --- TABLE 1 ---
                             var cellBatch1 = worksheet.Cell(rTop, 2);
                             cellBatch1.Value = rec.BatchNo;
                             if (WpfApp1.Shared.Helpers.CellValidationHelper.ShouldHighlightBatchNo(rec.BatchNo))
@@ -285,7 +286,7 @@ namespace WpfApp1.Core.Services
 
                             var cellLength = worksheet.Cell(rTop, 8);
                             cellLength.Value = rec.Length;
-                            if (rec.Length <= 0)
+                            if (WpfApp1.Shared.Helpers.CellValidationHelper.ShouldHighlightLength(rec.Length))
                                 cellLength.Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.Red;
                             worksheet.Cell(rBottom, 8).Value = "(4000 +15/-0)";
 
@@ -308,7 +309,6 @@ namespace WpfApp1.Core.Services
                             worksheet.Range(rTop, 10, rBottom, 10).Merge();
                             worksheet.Range(rTop, 11, rBottom, 11).Merge();
 
-                            // --- TABLE 2 ---
                             var cellBatch2 = worksheet.Cell(rTable2, 2);
                             cellBatch2.Value = rec.BatchNo;
                             if (WpfApp1.Shared.Helpers.CellValidationHelper.ShouldHighlightBatchNo(rec.BatchNo))
@@ -423,6 +423,8 @@ namespace WpfApp1.Core.Services
                         signatureRange.Style.Border.LeftBorder = XLBorderStyleValues.None;
                         signatureRange.Style.Border.RightBorder = XLBorderStyleValues.None;
                         signatureRange.Style.Border.InsideBorder = XLBorderStyleValues.None;
+
+                        signatureRange.Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.NoColor;
 
                         for (int k = 0; k < 5; k++)
                         {
