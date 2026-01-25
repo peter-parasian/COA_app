@@ -1,23 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using WpfApp1.Core.Models;
-using WpfApp1.Shared.Helpers;
-using WpfApp1.Data.Database;
-
-namespace WpfApp1.Data.Repositories
+﻿namespace WpfApp1.Data.Repositories
 {
     public class BusbarRepository
     {
-        //private const int BATCH_SIZE = 1000;
-        private const int BATCH_SIZE = 5000;
+        private const System.Int32 BATCH_SIZE = 5000;
 
-        private System.Collections.Generic.List<BusbarRecord> _busbarBatchBuffer = new System.Collections.Generic.List<BusbarRecord>(BATCH_SIZE);
-        private System.Collections.Generic.List<TLJRecord> _tlj350BatchBuffer = new System.Collections.Generic.List<TLJRecord>(BATCH_SIZE);
-        private System.Collections.Generic.List<TLJRecord> _tlj500BatchBuffer = new System.Collections.Generic.List<TLJRecord>(BATCH_SIZE);
+        private System.Collections.Generic.List<WpfApp1.Core.Models.BusbarRecord> _busbarBatchBuffer =
+            new System.Collections.Generic.List<WpfApp1.Core.Models.BusbarRecord>(BATCH_SIZE);
+        private System.Collections.Generic.List<WpfApp1.Core.Models.TLJRecord> _tlj350BatchBuffer =
+            new System.Collections.Generic.List<WpfApp1.Core.Models.TLJRecord>(BATCH_SIZE);
+        private System.Collections.Generic.List<WpfApp1.Core.Models.TLJRecord> _tlj500BatchBuffer =
+            new System.Collections.Generic.List<WpfApp1.Core.Models.TLJRecord>(BATCH_SIZE);
 
-        private readonly SqliteContext _dbContext;
+        private readonly WpfApp1.Data.Database.SqliteContext _dbContext;
 
-        public BusbarRepository(SqliteContext dbContext)
+        public BusbarRepository(WpfApp1.Data.Database.SqliteContext dbContext)
         {
             _dbContext = dbContext;
         }
@@ -28,9 +24,12 @@ namespace WpfApp1.Data.Repositories
             _tlj350BatchBuffer.Clear();
             _tlj500BatchBuffer.Clear();
 
-            using var cmd = connection.CreateCommand();
+            Microsoft.Data.Sqlite.SqliteCommand? cmd = null;
+            try
+            {
+                cmd = connection.CreateCommand();
 
-            cmd.CommandText = @"
+                cmd.CommandText = @"
                 DROP TABLE IF EXISTS Busbar;
                 CREATE TABLE IF NOT EXISTS Busbar (
                     Id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -41,9 +40,9 @@ namespace WpfApp1.Data.Repositories
                 );
                 CREATE INDEX IF NOT EXISTS IDX_Busbar_LookUp ON Busbar(Size_mm, Prod_date);
             ";
-            cmd.ExecuteNonQuery();
+                cmd.ExecuteNonQuery();
 
-            cmd.CommandText = @"
+                cmd.CommandText = @"
                 DROP TABLE IF EXISTS TLJ500;
                 CREATE TABLE IF NOT EXISTS TLJ500 (
                     Id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -51,9 +50,9 @@ namespace WpfApp1.Data.Repositories
                 );
                 CREATE INDEX IF NOT EXISTS IDX_TLJ500_LookUp ON TLJ500(Size_mm, Prod_date);
             ";
-            cmd.ExecuteNonQuery();
+                cmd.ExecuteNonQuery();
 
-            cmd.CommandText = @"
+                cmd.CommandText = @"
                 DROP TABLE IF EXISTS TLJ350;
                 CREATE TABLE IF NOT EXISTS TLJ350 (
                     Id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -61,10 +60,18 @@ namespace WpfApp1.Data.Repositories
                 );
                 CREATE INDEX IF NOT EXISTS IDX_TLJ350_LookUp ON TLJ350(Size_mm, Prod_date);
             ";
-            cmd.ExecuteNonQuery();
+                cmd.ExecuteNonQuery();
+            }
+            finally
+            {
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                }
+            }
         }
 
-        public void InsertBusbarRow(Microsoft.Data.Sqlite.SqliteConnection connection, Microsoft.Data.Sqlite.SqliteTransaction transaction, BusbarRecord record)
+        public void InsertBusbarRow(Microsoft.Data.Sqlite.SqliteConnection connection, Microsoft.Data.Sqlite.SqliteTransaction transaction, WpfApp1.Core.Models.BusbarRecord record)
         {
             _busbarBatchBuffer.Add(record);
             if (_busbarBatchBuffer.Count >= BATCH_SIZE)
@@ -73,7 +80,7 @@ namespace WpfApp1.Data.Repositories
             }
         }
 
-        public void InsertTLJ350_Row(Microsoft.Data.Sqlite.SqliteConnection connection, Microsoft.Data.Sqlite.SqliteTransaction transaction, TLJRecord record)
+        public void InsertTLJ350_Row(Microsoft.Data.Sqlite.SqliteConnection connection, Microsoft.Data.Sqlite.SqliteTransaction transaction, WpfApp1.Core.Models.TLJRecord record)
         {
             _tlj350BatchBuffer.Add(record);
             if (_tlj350BatchBuffer.Count >= BATCH_SIZE)
@@ -82,7 +89,7 @@ namespace WpfApp1.Data.Repositories
             }
         }
 
-        public void InsertTLJ500_Row(Microsoft.Data.Sqlite.SqliteConnection connection, Microsoft.Data.Sqlite.SqliteTransaction transaction, TLJRecord record)
+        public void InsertTLJ500_Row(Microsoft.Data.Sqlite.SqliteConnection connection, Microsoft.Data.Sqlite.SqliteTransaction transaction, WpfApp1.Core.Models.TLJRecord record)
         {
             _tlj500BatchBuffer.Add(record);
             if (_tlj500BatchBuffer.Count >= BATCH_SIZE)
@@ -102,111 +109,140 @@ namespace WpfApp1.Data.Repositories
         {
             if (_busbarBatchBuffer.Count == 0) return;
 
-            using var cmd = connection.CreateCommand();
-            cmd.Transaction = transaction;
+            Microsoft.Data.Sqlite.SqliteCommand? cmd = null;
+            try
+            {
+                cmd = connection.CreateCommand();
+                cmd.Transaction = transaction;
 
-            System.Text.StringBuilder sqlBuilder = new System.Text.StringBuilder(BATCH_SIZE * 250); //200
-            sqlBuilder.Append(@"INSERT INTO Busbar (
+                System.Text.StringBuilder sqlBuilder = new System.Text.StringBuilder(BATCH_SIZE * 250);
+                sqlBuilder.Append(@"INSERT INTO Busbar (
                 Size_mm, Year_folder, Month_folder, Prod_date, 
                 Thickness_mm, Width_mm, Length, Radius, Chamber_mm,
                 Electric_IACS, Weight, Elongation, Tensile,
                 Bend_test, Spectro_Cu, Oxygen
             ) VALUES ");
 
-            for (int i = 0; i < _busbarBatchBuffer.Count; i++)
-            {
-                if (i > 0) sqlBuilder.Append(",");
-                sqlBuilder.Append($"(@s{i}, @y{i}, @m{i}, @d{i}, @t{i}, @wd{i}, @l{i}, @r{i}, @c{i}, @e{i}, @wt{i}, @el{i}, @tn{i}, @bt{i}, @sp{i}, @ox{i})");
+                for (System.Int32 i = 0; i < _busbarBatchBuffer.Count; i++)
+                {
+                    if (i > 0) sqlBuilder.Append(",");
+                    sqlBuilder.Append($"(@s{i}, @y{i}, @m{i}, @d{i}, @t{i}, @wd{i}, @l{i}, @r{i}, @c{i}, @e{i}, @wt{i}, @el{i}, @tn{i}, @bt{i}, @sp{i}, @ox{i})");
 
-                var item = _busbarBatchBuffer[i];
-                cmd.Parameters.AddWithValue($"@s{i}", item.Size);
-                cmd.Parameters.AddWithValue($"@y{i}", item.Year.Trim());
-                cmd.Parameters.AddWithValue($"@m{i}", item.Month.Trim());
-                cmd.Parameters.AddWithValue($"@d{i}", item.ProdDate);
-                cmd.Parameters.AddWithValue($"@t{i}", item.Thickness);
-                cmd.Parameters.AddWithValue($"@wd{i}", item.Width);
-                cmd.Parameters.AddWithValue($"@l{i}", item.Length);
-                cmd.Parameters.AddWithValue($"@r{i}", item.Radius);
-                cmd.Parameters.AddWithValue($"@c{i}", item.Chamber);
-                cmd.Parameters.AddWithValue($"@wt{i}", item.Resistivity);
-                cmd.Parameters.AddWithValue($"@e{i}", item.Electric);
-                cmd.Parameters.AddWithValue($"@el{i}", item.Elongation);
-                cmd.Parameters.AddWithValue($"@tn{i}", item.Tensile);
-                cmd.Parameters.AddWithValue($"@bt{i}", string.IsNullOrEmpty(item.BendTest) ? (object)System.DBNull.Value : item.BendTest);
-                cmd.Parameters.AddWithValue($"@sp{i}", item.Spectro);
-                cmd.Parameters.AddWithValue($"@ox{i}", item.Oxygen);
+                    WpfApp1.Core.Models.BusbarRecord item = _busbarBatchBuffer[i];
+                    cmd.Parameters.AddWithValue($"@s{i}", item.Size);
+                    cmd.Parameters.AddWithValue($"@y{i}", item.Year.Trim());
+                    cmd.Parameters.AddWithValue($"@m{i}", item.Month.Trim());
+                    cmd.Parameters.AddWithValue($"@d{i}", item.ProdDate);
+                    cmd.Parameters.AddWithValue($"@t{i}", item.Thickness);
+                    cmd.Parameters.AddWithValue($"@wd{i}", item.Width);
+                    cmd.Parameters.AddWithValue($"@l{i}", item.Length);
+                    cmd.Parameters.AddWithValue($"@r{i}", item.Radius);
+                    cmd.Parameters.AddWithValue($"@c{i}", item.Chamber);
+                    cmd.Parameters.AddWithValue($"@wt{i}", item.Resistivity);
+                    cmd.Parameters.AddWithValue($"@e{i}", item.Electric);
+                    cmd.Parameters.AddWithValue($"@el{i}", item.Elongation);
+                    cmd.Parameters.AddWithValue($"@tn{i}", item.Tensile);
+                    cmd.Parameters.AddWithValue($"@bt{i}", System.String.IsNullOrEmpty(item.BendTest) ? (System.Object)System.DBNull.Value : item.BendTest);
+                    cmd.Parameters.AddWithValue($"@sp{i}", item.Spectro);
+                    cmd.Parameters.AddWithValue($"@ox{i}", item.Oxygen);
+                }
+
+                cmd.CommandText = sqlBuilder.ToString();
+                cmd.ExecuteNonQuery();
             }
-
-            cmd.CommandText = sqlBuilder.ToString();
-            cmd.ExecuteNonQuery();
-            _busbarBatchBuffer.Clear();
+            finally
+            {
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                }
+                _busbarBatchBuffer.Clear();
+            }
         }
 
         private void FlushTLJBatch(
            Microsoft.Data.Sqlite.SqliteConnection connection,
            Microsoft.Data.Sqlite.SqliteTransaction transaction,
-           string tableName,
-           System.Collections.Generic.List<TLJRecord> buffer)
+           System.String tableName,
+           System.Collections.Generic.List<WpfApp1.Core.Models.TLJRecord> buffer)
         {
             if (buffer.Count == 0) return;
 
-            using var cmd = connection.CreateCommand();
-            cmd.Transaction = transaction;
-
-            System.Text.StringBuilder sqlBuilder = new System.Text.StringBuilder(buffer.Count * 150);
-            sqlBuilder.Append($"INSERT INTO {tableName} (Size_mm, Year_folder, Month_folder, Prod_date, Batch_no) VALUES ");
-
-            for (int i = 0; i < buffer.Count; i++)
+            Microsoft.Data.Sqlite.SqliteCommand? cmd = null;
+            try
             {
-                if (i > 0) sqlBuilder.Append(",");
-                sqlBuilder.Append($"(@s{i}, @y{i}, @m{i}, @d{i}, @b{i})");
+                cmd = connection.CreateCommand();
+                cmd.Transaction = transaction;
 
-                var item = buffer[i];
-                cmd.Parameters.AddWithValue($"@s{i}", item.Size);
-                cmd.Parameters.AddWithValue($"@y{i}", item.Year.Trim());
-                cmd.Parameters.AddWithValue($"@m{i}", item.Month.Trim());
-                cmd.Parameters.AddWithValue($"@d{i}", item.ProdDate);
-                cmd.Parameters.AddWithValue($"@b{i}", string.IsNullOrEmpty(item.BatchNo) ? (object)System.DBNull.Value : item.BatchNo);
+                System.Text.StringBuilder sqlBuilder = new System.Text.StringBuilder(buffer.Count * 150);
+                sqlBuilder.Append($"INSERT INTO {tableName} (Size_mm, Year_folder, Month_folder, Prod_date, Batch_no) VALUES ");
+
+                for (System.Int32 i = 0; i < buffer.Count; i++)
+                {
+                    if (i > 0) sqlBuilder.Append(",");
+                    sqlBuilder.Append($"(@s{i}, @y{i}, @m{i}, @d{i}, @b{i})");
+
+                    WpfApp1.Core.Models.TLJRecord item = buffer[i];
+                    cmd.Parameters.AddWithValue($"@s{i}", item.Size);
+                    cmd.Parameters.AddWithValue($"@y{i}", item.Year.Trim());
+                    cmd.Parameters.AddWithValue($"@m{i}", item.Month.Trim());
+                    cmd.Parameters.AddWithValue($"@d{i}", item.ProdDate);
+                    cmd.Parameters.AddWithValue($"@b{i}", System.String.IsNullOrEmpty(item.BatchNo) ? (System.Object)System.DBNull.Value : item.BatchNo);
+                }
+
+                cmd.CommandText = sqlBuilder.ToString();
+                cmd.ExecuteNonQuery();
             }
-
-            cmd.CommandText = sqlBuilder.ToString();
-            cmd.ExecuteNonQuery();
-            buffer.Clear();
+            finally
+            {
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                }
+                buffer.Clear();
+            }
         }
 
         public void UpdateBusbarBatchNumbers(Microsoft.Data.Sqlite.SqliteConnection connection, Microsoft.Data.Sqlite.SqliteTransaction transaction)
         {
             try
             {
-                var cache350 = LoadTLJCache(connection, transaction, "TLJ350");
-                var cache500 = LoadTLJCache(connection, transaction, "TLJ500");
+                System.Collections.Generic.Dictionary<System.String, System.Collections.Generic.List<WpfApp1.Core.Models.TLJRecord>> cache350 = LoadTLJCache(connection, transaction, "TLJ350");
+                System.Collections.Generic.Dictionary<System.String, System.Collections.Generic.List<WpfApp1.Core.Models.TLJRecord>> cache500 = LoadTLJCache(connection, transaction, "TLJ500");
 
-                using var selectBusbarCmd = connection.CreateCommand();
-                selectBusbarCmd.Transaction = transaction;
-                selectBusbarCmd.CommandText = @"
+                Microsoft.Data.Sqlite.SqliteCommand? selectBusbarCmd = null;
+                Microsoft.Data.Sqlite.SqliteDataReader? reader = null;
+
+                try
+                {
+                    selectBusbarCmd = connection.CreateCommand();
+                    selectBusbarCmd.Transaction = transaction;
+                    selectBusbarCmd.CommandText = @"
                     SELECT Id, Size_mm, Prod_date 
                     FROM Busbar 
                     WHERE (Batch_no IS NULL OR Batch_no = '')
                     ORDER BY Prod_date ASC
                 ";
 
-                var updateBatch = new System.Collections.Generic.List<(int Id, string Batch)>(5000);
-                var usedBatchNumbers = new System.Collections.Generic.HashSet<string>();
+                    System.Collections.Generic.List<(System.Int32 Id, System.String Batch)> updateBatch =
+                        new System.Collections.Generic.List<(System.Int32, System.String)>(5000);
+                    System.Collections.Generic.HashSet<System.String> usedBatchNumbers =
+                        new System.Collections.Generic.HashSet<System.String>();
 
-                using (var reader = selectBusbarCmd.ExecuteReader())
-                {
+                    reader = selectBusbarCmd.ExecuteReader();
                     while (reader.Read())
                     {
-                        int id = reader.GetInt32(0);
-                        string size = reader.GetString(1);
-                        string dateStr = reader.GetString(2);
+                        System.Int32 id = reader.GetInt32(0);
+                        System.String size = reader.GetString(1);
+                        System.String dateStr = reader.GetString(2);
 
-                        string targetTable = StringHelper.DetermineTLJTable(size);
-                        var targetCache = (targetTable == "TLJ350") ? cache350 : cache500;
+                        System.String targetTable = WpfApp1.Shared.Helpers.StringHelper.DetermineTLJTable(size);
+                        System.Collections.Generic.Dictionary<System.String, System.Collections.Generic.List<WpfApp1.Core.Models.TLJRecord>> targetCache =
+                            (targetTable == "TLJ350") ? cache350 : cache500;
 
-                        string batchNo = FindClosestAvailableBatch(targetCache, size, dateStr, usedBatchNumbers);
+                        System.String batchNo = FindClosestAvailableBatch(targetCache, size, dateStr, usedBatchNumbers);
 
-                        if (!string.IsNullOrEmpty(batchNo))
+                        if (!System.String.IsNullOrEmpty(batchNo))
                         {
                             updateBatch.Add((id, batchNo));
                             usedBatchNumbers.Add($"{size}|{batchNo}");
@@ -218,11 +254,16 @@ namespace WpfApp1.Data.Repositories
                             updateBatch.Clear();
                         }
                     }
-                }
 
-                if (updateBatch.Count > 0)
+                    if (updateBatch.Count > 0)
+                    {
+                        ExecuteBulkUpdate(connection, transaction, updateBatch);
+                    }
+                }
+                finally
                 {
-                    ExecuteBulkUpdate(connection, transaction, updateBatch);
+                    if (reader != null) reader.Dispose();
+                    if (selectBusbarCmd != null) selectBusbarCmd.Dispose();
                 }
             }
             catch (System.Exception)
@@ -234,83 +275,106 @@ namespace WpfApp1.Data.Repositories
         private void ExecuteBulkUpdate(
             Microsoft.Data.Sqlite.SqliteConnection connection,
             Microsoft.Data.Sqlite.SqliteTransaction transaction,
-            System.Collections.Generic.List<(int Id, string Batch)> updates)
+            System.Collections.Generic.List<(System.Int32 Id, System.String Batch)> updates)
         {
             if (updates.Count == 0) return;
 
-            using var cmd = connection.CreateCommand();
-            cmd.Transaction = transaction;
-
-            cmd.CommandText = "CREATE TEMP TABLE IF NOT EXISTS TempBusbarUpdates (Id INTEGER PRIMARY KEY, Batch_no TEXT)";
-            cmd.ExecuteNonQuery();
-
-            cmd.CommandText = "DELETE FROM TempBusbarUpdates";
-            cmd.ExecuteNonQuery();
-
-            var sqlBuilder = new System.Text.StringBuilder();
-            sqlBuilder.Append("INSERT INTO TempBusbarUpdates (Id, Batch_no) VALUES ");
-
-            for (int i = 0; i < updates.Count; i++)
+            Microsoft.Data.Sqlite.SqliteCommand? cmd = null;
+            try
             {
-                if (i > 0) sqlBuilder.Append(",");
-                sqlBuilder.Append($"(@id{i}, @b{i})");
-                cmd.Parameters.AddWithValue($"@id{i}", updates[i].Id);
-                cmd.Parameters.AddWithValue($"@b{i}", updates[i].Batch);
-            }
+                cmd = connection.CreateCommand();
+                cmd.Transaction = transaction;
 
-            cmd.CommandText = sqlBuilder.ToString();
-            cmd.ExecuteNonQuery();
+                cmd.CommandText = "CREATE TEMP TABLE IF NOT EXISTS TempBusbarUpdates (Id INTEGER PRIMARY KEY, Batch_no TEXT)";
+                cmd.ExecuteNonQuery();
 
-            cmd.CommandText = @"
+                cmd.CommandText = "DELETE FROM TempBusbarUpdates";
+                cmd.ExecuteNonQuery();
+
+                System.Text.StringBuilder sqlBuilder = new System.Text.StringBuilder();
+                sqlBuilder.Append("INSERT INTO TempBusbarUpdates (Id, Batch_no) VALUES ");
+
+                for (System.Int32 i = 0; i < updates.Count; i++)
+                {
+                    if (i > 0) sqlBuilder.Append(",");
+                    sqlBuilder.Append($"(@id{i}, @b{i})");
+                    cmd.Parameters.AddWithValue($"@id{i}", updates[i].Id);
+                    cmd.Parameters.AddWithValue($"@b{i}", updates[i].Batch);
+                }
+
+                cmd.CommandText = sqlBuilder.ToString();
+                cmd.ExecuteNonQuery();
+
+                cmd.CommandText = @"
                 UPDATE Busbar
                 SET Batch_no = (SELECT Batch_no FROM TempBusbarUpdates WHERE TempBusbarUpdates.Id = Busbar.Id)
                 WHERE Id IN (SELECT Id FROM TempBusbarUpdates);
             ";
-            cmd.Parameters.Clear();
-            cmd.ExecuteNonQuery();
+                cmd.Parameters.Clear();
+                cmd.ExecuteNonQuery();
 
-            cmd.CommandText = "DROP TABLE TempBusbarUpdates";
-            cmd.ExecuteNonQuery();
+                cmd.CommandText = "DROP TABLE TempBusbarUpdates";
+                cmd.ExecuteNonQuery();
+            }
+            finally
+            {
+                if (cmd != null)
+                {
+                    cmd.Dispose();
+                }
+            }
         }
 
-        private System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<TLJRecord>> LoadTLJCache(
+        private System.Collections.Generic.Dictionary<System.String, System.Collections.Generic.List<WpfApp1.Core.Models.TLJRecord>> LoadTLJCache(
             Microsoft.Data.Sqlite.SqliteConnection connection,
             Microsoft.Data.Sqlite.SqliteTransaction trans,
-            string tableName)
+            System.String tableName)
         {
-            var cache = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<TLJRecord>>(500);
+            System.Collections.Generic.Dictionary<System.String, System.Collections.Generic.List<WpfApp1.Core.Models.TLJRecord>> cache =
+                new System.Collections.Generic.Dictionary<System.String, System.Collections.Generic.List<WpfApp1.Core.Models.TLJRecord>>(500);
 
-            using var cmd = connection.CreateCommand();
-            cmd.Transaction = trans;
-            cmd.CommandText = $"SELECT Size_mm, Prod_date, Batch_no FROM {tableName} WHERE Batch_no IS NOT NULL AND Batch_no != ''";
+            Microsoft.Data.Sqlite.SqliteCommand? cmd = null;
+            Microsoft.Data.Sqlite.SqliteDataReader? reader = null;
 
-            using var reader = cmd.ExecuteReader();
-            while (reader.Read())
+            try
             {
-                string size = reader.GetString(0);
-                string dateStr = reader.GetString(1);
-                string batch = reader.GetString(2);
+                cmd = connection.CreateCommand();
+                cmd.Transaction = trans;
+                cmd.CommandText = $"SELECT Size_mm, Prod_date, Batch_no FROM {tableName} WHERE Batch_no IS NOT NULL AND Batch_no != ''";
 
-                if (!System.DateTime.TryParseExact(dateStr, "dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out System.DateTime dt))
+                reader = cmd.ExecuteReader();
+                while (reader.Read())
                 {
-                    continue;
+                    System.String size = reader.GetString(0);
+                    System.String dateStr = reader.GetString(1);
+                    System.String batch = reader.GetString(2);
+
+                    if (!System.DateTime.TryParseExact(dateStr, "dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out System.DateTime dt))
+                    {
+                        continue;
+                    }
+
+                    if (!cache.ContainsKey(size))
+                    {
+                        cache[size] = new System.Collections.Generic.List<WpfApp1.Core.Models.TLJRecord>(100);
+                    }
+
+                    cache[size].Add(new WpfApp1.Core.Models.TLJRecord
+                    {
+                        Size = size,
+                        ProdDate = dateStr,
+                        ParsedDate = dt,
+                        BatchNo = batch
+                    });
                 }
-
-                if (!cache.ContainsKey(size))
-                {
-                    cache[size] = new System.Collections.Generic.List<TLJRecord>(100);
-                }
-
-                cache[size].Add(new TLJRecord
-                {
-                    Size = size,
-                    ProdDate = dateStr,
-                    ParsedDate = dt,
-                    BatchNo = batch
-                });
+            }
+            finally
+            {
+                if (reader != null) reader.Dispose();
+                if (cmd != null) cmd.Dispose();
             }
 
-            foreach (var key in cache.Keys)
+            foreach (System.String key in cache.Keys)
             {
                 cache[key].Sort((a, b) => a.ParsedDate.CompareTo(b.ParsedDate));
             }
@@ -318,32 +382,32 @@ namespace WpfApp1.Data.Repositories
             return cache;
         }
 
-        private string FindClosestAvailableBatch(
-            System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<TLJRecord>> cache,
-            string size,
-            string targetDateStr,
-            System.Collections.Generic.HashSet<string> usedBatchNumbers)
+        private System.String FindClosestAvailableBatch(
+            System.Collections.Generic.Dictionary<System.String, System.Collections.Generic.List<WpfApp1.Core.Models.TLJRecord>> cache,
+            System.String size,
+            System.String targetDateStr,
+            System.Collections.Generic.HashSet<System.String> usedBatchNumbers)
         {
-            if (!cache.ContainsKey(size)) return string.Empty;
+            if (!cache.ContainsKey(size)) return System.String.Empty;
 
             if (!System.DateTime.TryParseExact(targetDateStr, "dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out System.DateTime targetDate))
             {
-                return string.Empty;
+                return System.String.Empty;
             }
 
-            var list = cache[size];
+            System.Collections.Generic.List<WpfApp1.Core.Models.TLJRecord> list = cache[size];
 
-            TLJRecord? bestCandidate = null;
+            WpfApp1.Core.Models.TLJRecord? bestCandidate = null;
             System.TimeSpan smallestGap = System.TimeSpan.MaxValue;
 
-            foreach (var rec in list)
+            foreach (WpfApp1.Core.Models.TLJRecord rec in list)
             {
                 if (rec.ParsedDate > targetDate)
                 {
                     break;
                 }
 
-                string batchKey = $"{size}|{rec.BatchNo}";
+                System.String batchKey = $"{size}|{rec.BatchNo}";
                 if (usedBatchNumbers.Contains(batchKey))
                 {
                     continue;
@@ -360,139 +424,118 @@ namespace WpfApp1.Data.Repositories
 
             if (bestCandidate.HasValue)
             {
-                return StringHelper.ProcessRawBatchString(bestCandidate.Value.BatchNo);
+                return WpfApp1.Shared.Helpers.StringHelper.ProcessRawBatchString(bestCandidate.Value.BatchNo);
             }
 
-            return string.Empty;
+            return System.String.Empty;
         }
 
-        public System.Collections.Generic.List<BusbarSearchItem> SearchBusbarRecords(string year, string month, string prodDate)
+        public System.Collections.Generic.List<WpfApp1.Core.Models.BusbarSearchItem> SearchBusbarRecords(System.String year, System.String month, System.String prodDate)
         {
-            var results = new System.Collections.Generic.List<BusbarSearchItem>();
+            System.Collections.Generic.List<WpfApp1.Core.Models.BusbarSearchItem> results = new System.Collections.Generic.List<WpfApp1.Core.Models.BusbarSearchItem>();
 
-            using var conn = _dbContext.CreateConnection();
+            Microsoft.Data.Sqlite.SqliteConnection? conn = null;
+            Microsoft.Data.Sqlite.SqliteCommand? command = null;
+            Microsoft.Data.Sqlite.SqliteDataReader? reader = null;
 
-            using var command = conn.CreateCommand();
+            try
+            {
+                conn = _dbContext.CreateConnection();
+                command = conn.CreateCommand();
 
-            command.CommandText = @"
+                command.CommandText = @"
                 SELECT * FROM Busbar 
                 WHERE Year_folder = @year 
                   AND Month_folder = @month 
                   AND Prod_date = @prodDate";
 
-            command.Parameters.AddWithValue("@year", year);
-            command.Parameters.AddWithValue("@month", month);
-            command.Parameters.AddWithValue("@prodDate", prodDate);
+                command.Parameters.AddWithValue("@year", year);
+                command.Parameters.AddWithValue("@month", month);
+                command.Parameters.AddWithValue("@prodDate", prodDate);
 
-            using var reader = command.ExecuteReader();
-            while (reader.Read())
+                reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    WpfApp1.Core.Models.BusbarRecord fullRecord = new WpfApp1.Core.Models.BusbarRecord();
+
+                    fullRecord.Id = reader.GetInt32(reader.GetOrdinal("Id"));
+
+                    fullRecord.Size = reader["Size_mm"] as System.String ?? System.String.Empty;
+                    fullRecord.Year = reader["Year_folder"] as System.String ?? System.String.Empty;
+                    fullRecord.Month = reader["Month_folder"] as System.String ?? System.String.Empty;
+                    fullRecord.ProdDate = reader["Prod_date"] as System.String ?? System.String.Empty;
+                    fullRecord.BendTest = reader["Bend_test"] as System.String ?? System.String.Empty;
+                    fullRecord.BatchNo = reader["Batch_no"] as System.String ?? System.String.Empty;
+
+                    fullRecord.Thickness = ParseDoubleSafe(reader["Thickness_mm"]);
+                    fullRecord.Width = ParseDoubleSafe(reader["Width_mm"]);
+                    fullRecord.Length = ParseIntSafe(reader["Length"]);
+                    fullRecord.Radius = ParseDoubleSafe(reader["Radius"]);
+                    fullRecord.Chamber = ParseDoubleSafe(reader["Chamber_mm"]);
+                    fullRecord.Electric = ParseDoubleSafe(reader["Electric_IACS"]);
+                    fullRecord.Resistivity = ParseDoubleSafe(reader["Weight"]);
+                    fullRecord.Elongation = ParseDoubleSafe(reader["Elongation"]);
+                    fullRecord.Tensile = ParseDoubleSafe(reader["Tensile"]);
+                    fullRecord.Spectro = ParseDoubleSafe(reader["Spectro_Cu"]);
+                    fullRecord.Oxygen = ParseDoubleSafe(reader["Oxygen"]);
+
+                    results.Add(new WpfApp1.Core.Models.BusbarSearchItem
+                    {
+                        No = fullRecord.Id,
+                        Specification = fullRecord.Size,
+                        DateProd = fullRecord.ProdDate,
+                        FullRecord = fullRecord
+                    });
+                }
+            }
+            finally
             {
-                BusbarRecord fullRecord = new BusbarRecord();
-
-                fullRecord.Id = reader.GetInt32(reader.GetOrdinal("Id"));
-
-                fullRecord.Size = reader["Size_mm"] as string ?? string.Empty;
-                fullRecord.Year = reader["Year_folder"] as string ?? string.Empty;
-                fullRecord.Month = reader["Month_folder"] as string ?? string.Empty;
-                fullRecord.ProdDate = reader["Prod_date"] as string ?? string.Empty;
-                fullRecord.BendTest = reader["Bend_test"] as string ?? string.Empty;
-                fullRecord.BatchNo = reader["Batch_no"] as string ?? string.Empty;
-
-                fullRecord.Thickness = ParseDoubleSafe(reader["Thickness_mm"]);
-                fullRecord.Width = ParseDoubleSafe(reader["Width_mm"]);
-                fullRecord.Length = ParseIntSafe(reader["Length"]);
-                fullRecord.Radius = ParseDoubleSafe(reader["Radius"]);
-                fullRecord.Chamber = ParseDoubleSafe(reader["Chamber_mm"]);
-                fullRecord.Electric = ParseDoubleSafe(reader["Electric_IACS"]);
-                fullRecord.Resistivity = ParseDoubleSafe(reader["Weight"]);
-                fullRecord.Elongation = ParseDoubleSafe(reader["Elongation"]);
-                fullRecord.Tensile = ParseDoubleSafe(reader["Tensile"]);
-                fullRecord.Spectro = ParseDoubleSafe(reader["Spectro_Cu"]);
-                fullRecord.Oxygen = ParseDoubleSafe(reader["Oxygen"]);
-
-                // FILTER DINONAKTIFKAN (DI-KOMENTARI) SESUAI REQUEST
-                /*
-                if (!IsRecordComplete(fullRecord))
-                {
-                    continue;
-                }
-
-                if (!fullRecord.BendTest.Equals("OK", System.StringComparison.OrdinalIgnoreCase))
-                {
-                    continue;
-                }
-                */
-
-                results.Add(new BusbarSearchItem
-                {
-                    No = fullRecord.Id,
-                    Specification = fullRecord.Size,
-                    DateProd = fullRecord.ProdDate,
-                    FullRecord = fullRecord
-                });
+                if (reader != null) reader.Dispose();
+                if (command != null) command.Dispose();
+                if (conn != null) conn.Dispose();
             }
 
             return results;
         }
 
-        private bool IsRecordComplete(BusbarRecord record)
-        {
-            if (string.IsNullOrWhiteSpace(record.BatchNo)) return false;
-            if (string.IsNullOrWhiteSpace(record.Size)) return false;
-            if (string.IsNullOrWhiteSpace(record.BendTest)) return false;
-            if (string.IsNullOrWhiteSpace(record.Year)) return false;
-            if (string.IsNullOrWhiteSpace(record.Month)) return false;
-            if (string.IsNullOrWhiteSpace(record.ProdDate)) return false;
-
-            if (record.Length <= 0) return false;
-            if (record.Thickness <= 0) return false;
-            if (record.Width <= 0) return false;
-            if (record.Radius <= 0) return false;
-            if (record.Chamber <= 0) return false;
-            if (record.Electric <= 0) return false;
-            if (record.Resistivity <= 0) return false;
-            if (record.Elongation <= 0) return false;
-            if (record.Tensile <= 0) return false;
-            if (record.Spectro <= 0) return false;
-            if (record.Oxygen <= 0) return false;
-
-            return true;
-        }
-
-        private double ParseDoubleSafe(object value)
+        private System.Double ParseDoubleSafe(System.Object value)
         {
             if (value == null || value == System.DBNull.Value) return 0.0;
-            if (value is double d) return d;
-            if (value is float f) return (double)f;
-            if (value is int i) return (double)i;
-            if (value is long l) return (double)l;
-            if (value is string s && double.TryParse(s, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double result)) return result;
+            if (value is System.Double d) return d;
+            if (value is System.Single f) return (System.Double)f;
+            if (value is System.Int32 i) return (System.Double)i;
+            if (value is System.Int64 l) return (System.Double)l;
+            if (value is System.String s && System.Double.TryParse(s, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double result)) return result;
             return 0.0;
         }
 
-        private int ParseIntSafe(object value)
+        private System.Int32 ParseIntSafe(System.Object value)
         {
             if (value == null || value == System.DBNull.Value) return 0;
-            if (value is long l) return (int)l;
-            if (value is int i) return i;
-            if (value is string s && int.TryParse(s, out int result)) return result;
-            if (value is double d) return (int)d;
-            if (value is float f) return (int)f;
+            if (value is System.Int64 l) return (System.Int32)l;
+            if (value is System.Int32 i) return i;
+            if (value is System.String s && System.Int32.TryParse(s, out int result)) return result;
+            if (value is System.Double d) return (System.Int32)d;
+            if (value is System.Single f) return (System.Int32)f;
             return 0;
         }
 
-        public System.Collections.Generic.List<string> GetAvailableYears()
+        public System.Collections.Generic.List<System.String> GetAvailableYears()
         {
-            var years = new System.Collections.Generic.List<string>();
+            System.Collections.Generic.List<System.String> years = new System.Collections.Generic.List<System.String>();
+
+            Microsoft.Data.Sqlite.SqliteConnection? conn = null;
+            Microsoft.Data.Sqlite.SqliteCommand? command = null;
+            Microsoft.Data.Sqlite.SqliteDataReader? reader = null;
 
             try
             {
-                using var conn = _dbContext.CreateConnection();
-                using var command = conn.CreateCommand();
+                conn = _dbContext.CreateConnection();
+                command = conn.CreateCommand();
 
                 command.CommandText = "SELECT DISTINCT Year_folder FROM Busbar ORDER BY Year_folder DESC";
 
-                using var reader = command.ExecuteReader();
+                reader = command.ExecuteReader();
                 while (reader.Read())
                 {
                     years.Add(reader.GetString(0));
@@ -500,6 +543,12 @@ namespace WpfApp1.Data.Repositories
             }
             catch (System.Exception)
             {
+            }
+            finally
+            {
+                if (reader != null) reader.Dispose();
+                if (command != null) command.Dispose();
+                if (conn != null) conn.Dispose();
             }
 
             return years;

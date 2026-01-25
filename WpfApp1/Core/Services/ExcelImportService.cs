@@ -1,34 +1,27 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Text;
-using WpfApp1.Core.Models;
-using WpfApp1.Data.Repositories;
-using WpfApp1.Shared.Helpers;
-using ExcelDataReader;
+﻿using ExcelDataReader;
 
 namespace WpfApp1.Core.Services
 {
     public class ExcelImportService
     {
-        private const string ExcelRootFolder = @"C:\Users\mrrx\Documents\My Web Sites\H\OPERATOR\COPPER BUSBAR & STRIP"; 
+        private const System.String ExcelRootFolder = @"C:\Users\mrrx\Documents\My Web Sites\H\OPERATOR\COPPER BUSBAR & STRIP";
 
-        private BusbarRepository _repository;
+        private WpfApp1.Data.Repositories.BusbarRepository _repository;
 
-        public event System.Action<string>? OnDebugMessage;
+        public event System.Action<System.String>? OnDebugMessage;
 
-        public event System.Action<int, int>? OnProgress;
+        public event System.Action<System.Int32, System.Int32>? OnProgress;
 
-        public ExcelImportService(BusbarRepository repository)
+        public ExcelImportService(WpfApp1.Data.Repositories.BusbarRepository repository)
         {
             _repository = repository;
 
             System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
         }
 
-        public int TotalFilesFound { get; private set; }
-        public int TotalRowsInserted { get; private set; }
-        private int _currentFileIndex = 0;
+        public System.Int32 TotalFilesFound { get; private set; }
+        public System.Int32 TotalRowsInserted { get; private set; }
+        private System.Int32 _currentFileIndex = 0;
 
         public void Import(Microsoft.Data.Sqlite.SqliteConnection connection, Microsoft.Data.Sqlite.SqliteTransaction transaction)
         {
@@ -48,7 +41,7 @@ namespace WpfApp1.Core.Services
             _repository.UpdateBusbarBatchNumbers(connection, transaction);
         }
 
-        private void AppendDebug(string message)
+        private void AppendDebug(System.String message)
         {
             if (OnDebugMessage != null) OnDebugMessage.Invoke(message);
         }
@@ -60,13 +53,13 @@ namespace WpfApp1.Core.Services
                 throw new System.IO.DirectoryNotFoundException($"Folder root Excel tidak ditemukan: {ExcelRootFolder}");
             }
 
-            foreach (string yearDir in System.IO.Directory.GetDirectories(ExcelRootFolder))
+            foreach (System.String yearDir in System.IO.Directory.GetDirectories(ExcelRootFolder))
             {
-                foreach (string monthDir in System.IO.Directory.GetDirectories(yearDir))
+                foreach (System.String monthDir in System.IO.Directory.GetDirectories(yearDir))
                 {
-                    foreach (string file in System.IO.Directory.GetFiles(monthDir, "*.xlsx"))
+                    foreach (System.String file in System.IO.Directory.GetFiles(monthDir, "*.xlsx"))
                     {
-                        string fileName = System.IO.Path.GetFileName(file);
+                        System.String fileName = System.IO.Path.GetFileName(file);
                         if (!fileName.StartsWith("~$"))
                         {
                             TotalFilesFound++;
@@ -85,47 +78,51 @@ namespace WpfApp1.Core.Services
                 throw new System.IO.DirectoryNotFoundException($"Folder root Excel tidak ditemukan: {ExcelRootFolder}");
             }
 
-            var filesToProcess = new System.Collections.Generic.List<string>();
+            System.Collections.Generic.List<System.String> filesToProcess = new System.Collections.Generic.List<System.String>();
 
-            foreach (string yearDir in System.IO.Directory.GetDirectories(ExcelRootFolder))
+            foreach (System.String yearDir in System.IO.Directory.GetDirectories(ExcelRootFolder))
             {
-                string year = new System.IO.DirectoryInfo(yearDir).Name.Trim();
+                System.String year = new System.IO.DirectoryInfo(yearDir).Name.Trim();
 
-                foreach (string monthDir in System.IO.Directory.GetDirectories(yearDir))
+                foreach (System.String monthDir in System.IO.Directory.GetDirectories(yearDir))
                 {
-                    string rawMonth = new System.IO.DirectoryInfo(monthDir).Name.Trim();
-                    string normalizedMonth = DateHelper.NormalizeMonthFolder(rawMonth);
+                    System.String rawMonth = new System.IO.DirectoryInfo(monthDir).Name.Trim();
+                    System.String normalizedMonth = WpfApp1.Shared.Helpers.DateHelper.NormalizeMonthFolder(rawMonth);
 
-                    foreach (string file in System.IO.Directory.GetFiles(monthDir, "*.xlsx"))
+                    foreach (System.String file in System.IO.Directory.GetFiles(monthDir, "*.xlsx"))
                     {
-                        string fileName = System.IO.Path.GetFileName(file);
+                        System.String fileName = System.IO.Path.GetFileName(file);
 
                         if (fileName.StartsWith("~$"))
+                        {
                             continue;
+                        }
 
                         filesToProcess.Add(file + "|" + year + "|" + normalizedMonth);
                     }
                 }
             }
 
-            var concurrentBusbarData = new System.Collections.Concurrent.ConcurrentBag<BusbarRecord>();
-            var concurrentTLJ350Data = new System.Collections.Concurrent.ConcurrentBag<TLJRecord>();
-            var concurrentTLJ500Data = new System.Collections.Concurrent.ConcurrentBag<TLJRecord>();
+            System.Collections.Concurrent.ConcurrentBag<WpfApp1.Core.Models.BusbarRecord> concurrentBusbarData =
+                new System.Collections.Concurrent.ConcurrentBag<WpfApp1.Core.Models.BusbarRecord>();
+            System.Collections.Concurrent.ConcurrentBag<WpfApp1.Core.Models.TLJRecord> concurrentTLJ350Data =
+                new System.Collections.Concurrent.ConcurrentBag<WpfApp1.Core.Models.TLJRecord>();
+            System.Collections.Concurrent.ConcurrentBag<WpfApp1.Core.Models.TLJRecord> concurrentTLJ500Data =
+                new System.Collections.Concurrent.ConcurrentBag<WpfApp1.Core.Models.TLJRecord>();
 
-            var parallelOptions = new System.Threading.Tasks.ParallelOptions
+            System.Threading.Tasks.ParallelOptions parallelOptions = new System.Threading.Tasks.ParallelOptions
             {
-                //MaxDegreeOfParallelism = System.Environment.ProcessorCount
-                  MaxDegreeOfParallelism = System.Math.Max(1, System.Environment.ProcessorCount - 1)
+                MaxDegreeOfParallelism = System.Math.Max(1, System.Environment.ProcessorCount - 1)
             };
 
             System.Threading.Tasks.Parallel.ForEach(filesToProcess, parallelOptions, (fileItem) =>
             {
                 try
                 {
-                    string[] parts = fileItem.Split(new[] { '|' }, 3);
-                    string filePath = parts[0];
-                    string year = parts[1];
-                    string month = parts[2];
+                    System.String[] parts = fileItem.Split(new[] { '|' }, 3);
+                    System.String filePath = parts[0];
+                    System.String year = parts[1];
+                    System.String month = parts[2];
 
                     ProcessSingleExcelFileToMemory(
                         filePath,
@@ -136,7 +133,7 @@ namespace WpfApp1.Core.Services
                         concurrentTLJ500Data
                     );
 
-                    int currentIndex = System.Threading.Interlocked.Increment(ref _currentFileIndex);
+                    System.Int32 currentIndex = System.Threading.Interlocked.Increment(ref _currentFileIndex);
                     OnProgress?.Invoke(currentIndex, TotalFilesFound);
                 }
                 catch (System.Exception ex)
@@ -145,21 +142,21 @@ namespace WpfApp1.Core.Services
                 }
             });
 
-            int rowsInsertedCount = 0;
+            System.Int32 rowsInsertedCount = 0;
 
-            foreach (var record in concurrentBusbarData)
+            foreach (WpfApp1.Core.Models.BusbarRecord record in concurrentBusbarData)
             {
                 _repository.InsertBusbarRow(connection, transaction, record);
                 rowsInsertedCount++;
             }
 
-            foreach (var record in concurrentTLJ350Data)
+            foreach (WpfApp1.Core.Models.TLJRecord record in concurrentTLJ350Data)
             {
                 _repository.InsertTLJ350_Row(connection, transaction, record);
                 rowsInsertedCount++;
             }
 
-            foreach (var record in concurrentTLJ500Data)
+            foreach (WpfApp1.Core.Models.TLJRecord record in concurrentTLJ500Data)
             {
                 _repository.InsertTLJ500_Row(connection, transaction, record);
                 rowsInsertedCount++;
@@ -169,20 +166,23 @@ namespace WpfApp1.Core.Services
         }
 
         private void ProcessSingleExcelFileToMemory(
-            string filePath,
-            string year,
-            string month,
-            System.Collections.Concurrent.ConcurrentBag<BusbarRecord> busbarBag,
-            System.Collections.Concurrent.ConcurrentBag<TLJRecord> tlj350Bag,
-            System.Collections.Concurrent.ConcurrentBag<TLJRecord> tlj500Bag)
+            System.String filePath,
+            System.String year,
+            System.String month,
+            System.Collections.Concurrent.ConcurrentBag<WpfApp1.Core.Models.BusbarRecord> busbarBag,
+            System.Collections.Concurrent.ConcurrentBag<WpfApp1.Core.Models.TLJRecord> tlj350Bag,
+            System.Collections.Concurrent.ConcurrentBag<WpfApp1.Core.Models.TLJRecord> tlj500Bag)
         {
+            System.IO.FileStream? stream = null;
+            ExcelDataReader.IExcelDataReader? reader = null;
+
             try
             {
-                using var stream = System.IO.File.Open(filePath, System.IO.FileMode.Open, System.IO.FileAccess.Read, System.IO.FileShare.ReadWrite);
+                stream = System.IO.File.Open(filePath, System.IO.FileMode.Open, System.IO.FileAccess.Read, System.IO.FileShare.ReadWrite);
 
-                using var reader = ExcelDataReader.ExcelReaderFactory.CreateReader(stream);
+                reader = ExcelDataReader.ExcelReaderFactory.CreateReader(stream);
 
-                var result = reader.AsDataSet(new ExcelDataReader.ExcelDataSetConfiguration()
+                System.Data.DataSet result = reader.AsDataSet(new ExcelDataReader.ExcelDataSetConfiguration()
                 {
                     ConfigureDataTable = (_) => new ExcelDataReader.ExcelDataTableConfiguration()
                     {
@@ -202,68 +202,71 @@ namespace WpfApp1.Core.Services
 
                 if (tableYLB != null)
                 {
-                    int rowIndex = 2;
-                    int rowCount = tableYLB.Rows.Count;
-                    string currentProdDate = string.Empty;
-                    int folderMonthNum = DateHelper.GetMonthNumber(month);
-                    int.TryParse(year, out int folderYearNum);
+                    System.Int32 rowIndex = 2;
+                    System.Int32 rowCount = tableYLB.Rows.Count;
+                    System.String currentProdDate = System.String.Empty;
+                    System.Int32 folderMonthNum = WpfApp1.Shared.Helpers.DateHelper.GetMonthNumber(month);
+                    System.Int32.TryParse(year, out int folderYearNum);
 
                     while (rowIndex < rowCount)
                     {
-                        object rawSize = tableYLB.Rows[rowIndex][2];
-                        string sizeValue_YLB = rawSize != null ? rawSize.ToString() ?? "" : "";
+                        System.Object rawSize = tableYLB.Rows[rowIndex][2];
+                        System.String sizeValue_YLB = rawSize != null ? rawSize.ToString() ?? "" : "";
 
-                        if (string.IsNullOrWhiteSpace(sizeValue_YLB)) break;
-
-                        object rawDateObj = tableYLB.Rows[rowIndex][1];
-                        string rawDateFromCell = rawDateObj != null ? rawDateObj.ToString()?.Trim() ?? "" : "";
-
-                        if (!string.IsNullOrEmpty(rawDateFromCell))
+                        if (System.String.IsNullOrWhiteSpace(sizeValue_YLB))
                         {
-                            currentProdDate = DateHelper.StandardizeDate(rawDateFromCell, folderMonthNum, folderYearNum);
+                            break;
                         }
 
-                        BusbarRecord record = new BusbarRecord();
-                        record.Size = StringHelper.CleanSizeText(sizeValue_YLB);
+                        System.Object rawDateObj = tableYLB.Rows[rowIndex][1];
+                        System.String rawDateFromCell = rawDateObj != null ? rawDateObj.ToString()?.Trim() ?? "" : "";
+
+                        if (!System.String.IsNullOrEmpty(rawDateFromCell))
+                        {
+                            currentProdDate = WpfApp1.Shared.Helpers.DateHelper.StandardizeDate(rawDateFromCell, folderMonthNum, folderYearNum);
+                        }
+
+                        WpfApp1.Core.Models.BusbarRecord record = new WpfApp1.Core.Models.BusbarRecord();
+                        record.Size = WpfApp1.Shared.Helpers.StringHelper.CleanSizeText(sizeValue_YLB);
                         record.Year = year;
                         record.Month = month;
                         record.ProdDate = currentProdDate;
 
-                        string GetStr(int colIdx)
+                        System.String GetStr(System.Int32 colIdx)
                         {
                             if (colIdx >= tableYLB.Columns.Count) return "";
-                            object val = tableYLB.Rows[rowIndex][colIdx];
+                            System.Object val = tableYLB.Rows[rowIndex][colIdx];
                             return val != null ? val.ToString() ?? "" : "";
                         }
 
-                        record.Thickness = System.Math.Round(StringHelper.ParseCustomDecimal(GetStr(6)), 2);
-                        record.Width = System.Math.Round(StringHelper.ParseCustomDecimal(GetStr(8)), 2);
-                        record.Radius = System.Math.Round(StringHelper.ParseCustomDecimal(GetStr(9)), 2);
-                        record.Chamber = System.Math.Round(StringHelper.ParseCustomDecimal(GetStr(11)), 2);
-                        record.Electric = System.Math.Round(StringHelper.ParseCustomDecimal(GetStr(20)), 2);
-                        record.Oxygen = System.Math.Round(StringHelper.ParseCustomDecimal(GetStr(23)), 2);
+                        record.Thickness = System.Math.Round(WpfApp1.Shared.Helpers.StringHelper.ParseCustomDecimal(GetStr(6)), 2);
+                        record.Width = System.Math.Round(WpfApp1.Shared.Helpers.StringHelper.ParseCustomDecimal(GetStr(8)), 2);
+                        record.Radius = System.Math.Round(WpfApp1.Shared.Helpers.StringHelper.ParseCustomDecimal(GetStr(9)), 2);
+                        record.Chamber = System.Math.Round(WpfApp1.Shared.Helpers.StringHelper.ParseCustomDecimal(GetStr(11)), 2);
+                        record.Electric = System.Math.Round(WpfApp1.Shared.Helpers.StringHelper.ParseCustomDecimal(GetStr(20)), 2);
+                        record.Oxygen = System.Math.Round(WpfApp1.Shared.Helpers.StringHelper.ParseCustomDecimal(GetStr(23)), 2);
 
-                        record.Spectro = StringHelper.ParseCustomDecimal(GetStr(24));
-                        record.Resistivity = StringHelper.ParseCustomDecimal(GetStr(19));
+                        record.Spectro = WpfApp1.Shared.Helpers.StringHelper.ParseCustomDecimal(GetStr(24));
+                        record.Resistivity = WpfApp1.Shared.Helpers.StringHelper.ParseCustomDecimal(GetStr(19));
 
-                        record.Length = (int)System.Math.Round(StringHelper.ParseCustomDecimal(GetStr(10)), 0);
+                        record.Length = (int)System.Math.Round(WpfApp1.Shared.Helpers.StringHelper.ParseCustomDecimal(GetStr(10)), 0);
 
-                        object rawT1 = tableYLB.Rows[rowIndex][16];
-                        object rawE1 = tableYLB.Rows[rowIndex][17];
-                        double valT1 = StringHelper.ParseCustomDecimal(rawT1 != null ? rawT1.ToString() : "");
-                        double valE1 = StringHelper.ParseCustomDecimal(rawE1 != null ? rawE1.ToString() : "");
+                        System.Object rawT1 = tableYLB.Rows[rowIndex][16];
+                        System.Object rawE1 = tableYLB.Rows[rowIndex][17];
+                        System.Double valT1 = WpfApp1.Shared.Helpers.StringHelper.ParseCustomDecimal(rawT1 != null ? rawT1.ToString() : "");
+                        System.Double valE1 = WpfApp1.Shared.Helpers.StringHelper.ParseCustomDecimal(rawE1 != null ? rawE1.ToString() : "");
 
-                        double valT2 = 0;
-                        double valE2 = 0;
+                        System.Double valT2 = 0;
+                        System.Double valE2 = 0;
                         if (rowIndex + 1 < rowCount)
                         {
-                            object rawT2 = tableYLB.Rows[rowIndex + 1][16];
-                            object rawE2 = tableYLB.Rows[rowIndex + 1][17];
-                            valT2 = StringHelper.ParseCustomDecimal(rawT2 != null ? rawT2.ToString() : "");
-                            valE2 = StringHelper.ParseCustomDecimal(rawE2 != null ? rawE2.ToString() : "");
+                            System.Object rawT2 = tableYLB.Rows[rowIndex + 1][16];
+                            System.Object rawE2 = tableYLB.Rows[rowIndex + 1][17];
+                            valT2 = WpfApp1.Shared.Helpers.StringHelper.ParseCustomDecimal(rawT2 != null ? rawT2.ToString() : "");
+                            valE2 = WpfApp1.Shared.Helpers.StringHelper.ParseCustomDecimal(rawE2 != null ? rawE2.ToString() : "");
                         }
 
-                        var calcResult = MathHelper.CalculateTensileAndElongation(valT1, valT2, valE1, valE2);
+                        (System.Double Tensile, System.Double Elongation) calcResult = WpfApp1.Shared.Helpers.MathHelper.CalculateTensileAndElongation(valT1, valT2, valE1, valE2);
 
                         record.Tensile = calcResult.Tensile;
                         record.Elongation = calcResult.Elongation;
@@ -283,14 +286,25 @@ namespace WpfApp1.Core.Services
             {
                 AppendDebug($"ERROR FILE (READ): {System.IO.Path.GetFileName(filePath)} -> {ex.Message}");
             }
+            finally
+            {
+                if (reader != null)
+                {
+                    reader.Dispose();
+                }
+                if (stream != null)
+                {
+                    stream.Dispose();
+                }
+            }
         }
 
         private void ProcessTLJSheetToMemory(
             System.Data.DataSet dataSet,
-            string sheetName,
-            string year,
-            string month,
-            System.Collections.Concurrent.ConcurrentBag<TLJRecord> bag)
+            System.String sheetName,
+            System.String year,
+            System.String month,
+            System.Collections.Concurrent.ConcurrentBag<WpfApp1.Core.Models.TLJRecord> bag)
         {
             System.Data.DataTable? sheet = null;
             foreach (System.Data.DataTable table in dataSet.Tables)
@@ -304,35 +318,41 @@ namespace WpfApp1.Core.Services
 
             if (sheet != null)
             {
-                int rowIndex = 2;
-                int rowCount = sheet.Rows.Count;
-                string currentProdDate = string.Empty;
-                int folderMonthNum = DateHelper.GetMonthNumber(month);
-                int.TryParse(year, out int folderYearNum);
+                System.Int32 rowIndex = 2;
+                System.Int32 rowCount = sheet.Rows.Count;
+                System.String currentProdDate = System.String.Empty;
+                System.Int32 folderMonthNum = WpfApp1.Shared.Helpers.DateHelper.GetMonthNumber(month);
+                System.Int32.TryParse(year, out int folderYearNum);
 
                 while (rowIndex < rowCount)
                 {
-                    if (3 >= sheet.Columns.Count) break;
-
-                    object rawSize = sheet.Rows[rowIndex][3];
-                    string sizeValue = rawSize != null ? rawSize.ToString() ?? "" : "";
-
-                    if (string.IsNullOrWhiteSpace(sizeValue)) break;
-
-                    object rawDate = sheet.Rows[rowIndex][1];
-                    string rawDateStr = rawDate != null ? rawDate.ToString()?.Trim() ?? "" : "";
-
-                    if (!string.IsNullOrEmpty(rawDateStr))
+                    if (3 >= sheet.Columns.Count)
                     {
-                        currentProdDate = DateHelper.StandardizeDate(rawDateStr, folderMonthNum, folderYearNum);
+                        break;
                     }
 
-                    object rawBatch = sheet.Rows[rowIndex][2];
-                    string batchValue = rawBatch != null ? rawBatch.ToString() ?? "" : "";
+                    System.Object rawSize = sheet.Rows[rowIndex][3];
+                    System.String sizeValue = rawSize != null ? rawSize.ToString() ?? "" : "";
 
-                    TLJRecord record = new TLJRecord
+                    if (System.String.IsNullOrWhiteSpace(sizeValue))
                     {
-                        Size = StringHelper.CleanSizeText(sizeValue),
+                        break;
+                    }
+
+                    System.Object rawDate = sheet.Rows[rowIndex][1];
+                    System.String rawDateStr = rawDate != null ? rawDate.ToString()?.Trim() ?? "" : "";
+
+                    if (!System.String.IsNullOrEmpty(rawDateStr))
+                    {
+                        currentProdDate = WpfApp1.Shared.Helpers.DateHelper.StandardizeDate(rawDateStr, folderMonthNum, folderYearNum);
+                    }
+
+                    System.Object rawBatch = sheet.Rows[rowIndex][2];
+                    System.String batchValue = rawBatch != null ? rawBatch.ToString() ?? "" : "";
+
+                    WpfApp1.Core.Models.TLJRecord record = new WpfApp1.Core.Models.TLJRecord
+                    {
+                        Size = WpfApp1.Shared.Helpers.StringHelper.CleanSizeText(sizeValue),
                         Year = year,
                         Month = month,
                         ProdDate = currentProdDate,

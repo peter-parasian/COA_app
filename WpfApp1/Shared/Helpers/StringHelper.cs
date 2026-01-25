@@ -1,25 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace WpfApp1.Shared.Helpers
+﻿namespace WpfApp1.Shared.Helpers
 {
     public static class StringHelper
     {
-        public static string CleanSizeCOA(string rawSize)
+        public static System.String CleanSizeCOA(System.String rawSize)
         {
-            if (string.IsNullOrWhiteSpace(rawSize))
+            if (System.String.IsNullOrWhiteSpace(rawSize))
             {
-                return string.Empty;
+                return System.String.Empty;
             }
 
             System.Text.StringBuilder sb = new System.Text.StringBuilder();
-            bool hasX = false;
-            bool hasDigitsAfterX = false;
+            System.Boolean hasX = false;
+            System.Boolean hasDigitsAfterX = false;
 
-            foreach (char c in rawSize)
+            foreach (System.Char c in rawSize)
             {
-                if (char.IsDigit(c))
+                if (System.Char.IsDigit(c))
                 {
                     sb.Append(c);
                     if (hasX)
@@ -38,7 +34,6 @@ namespace WpfApp1.Shared.Helpers
                 }
                 else if (c == '.' || c == ',')
                 {
-                    // Normalisasi desimal: selalu gunakan titik
                     sb.Append('.');
                 }
                 else
@@ -53,43 +48,49 @@ namespace WpfApp1.Shared.Helpers
             return sb.ToString();
         }
 
-        public static string CleanSizeText(string raw)
+        public static System.String CleanSizeText(System.String raw)
         {
-            if (string.IsNullOrWhiteSpace(raw)) return string.Empty;
+            if (System.String.IsNullOrWhiteSpace(raw))
+            {
+                return System.String.Empty;
+            }
 
             System.Text.StringBuilder resultBuilder = new System.Text.StringBuilder();
 
-            string text = raw.ToUpper();
+            System.String text = raw.ToUpper();
 
-            int startIndex = -1;
+            System.Int32 startIndex = -1;
 
-            for (int i = 0; i < text.Length; i++)
+            for (System.Int32 i = 0; i < text.Length; i++)
             {
-                if (char.IsDigit(text[i]))
+                if (System.Char.IsDigit(text[i]))
                 {
                     startIndex = i;
                     break;
                 }
             }
 
-            if (startIndex == -1) return string.Empty;
+            if (startIndex == -1)
+            {
+                return System.String.Empty;
+            }
 
-            int idx = startIndex;
+            System.Int32 idx = startIndex;
 
-            bool hasX = false;
-            int dimensionIterator = startIndex;
+            System.Boolean hasX = false;
+            System.Int32 dimensionIterator = startIndex;
 
             while (dimensionIterator < text.Length)
             {
-                char c = text[dimensionIterator];
+                System.Char c = text[dimensionIterator];
 
-                if (char.IsDigit(c))
+                if (System.Char.IsDigit(c))
                 {
                     resultBuilder.Append(c);
                 }
                 else if (c == 'X')
                 {
-                    if (dimensionIterator + 1 < text.Length && char.IsDigit(text[dimensionIterator + 1]))
+                    if (dimensionIterator + 1 < text.Length && System.Char.IsDigit(text[dimensionIterator + 1]))
                     {
                         resultBuilder.Append('x');
                         hasX = true;
@@ -101,43 +102,49 @@ namespace WpfApp1.Shared.Helpers
                 }
                 else
                 {
-                    if (hasX) break;
+                    if (hasX)
+                    {
+                        break;
+                    }
                 }
                 dimensionIterator++;
             }
 
-            if (!hasX || resultBuilder.Length == 0) return string.Empty;
+            if (!hasX || resultBuilder.Length == 0)
+            {
+                return System.String.Empty;
+            }
 
-            string keyword = string.Empty;
+            System.String keyword = System.String.Empty;
 
             System.Text.StringBuilder remainingBuilder = new System.Text.StringBuilder();
-            for (int k = dimensionIterator; k < text.Length; k++)
+            for (System.Int32 k = dimensionIterator; k < text.Length; k++)
             {
-                if (char.IsLetterOrDigit(text[k]))
+                if (System.Char.IsLetterOrDigit(text[k]))
                 {
                     remainingBuilder.Append(text[k]);
                 }
             }
-            string cleanRemaining = remainingBuilder.ToString();
+            System.String cleanRemaining = remainingBuilder.ToString();
 
             if (cleanRemaining.Contains("FR"))
             {
-                int frIndex = cleanRemaining.IndexOf("FR");
+                System.Int32 frIndex = cleanRemaining.IndexOf("FR");
                 if (frIndex >= 0)
                 {
                     keyword = "FR";
                 }
             }
-            else if (!string.IsNullOrEmpty(cleanRemaining))
+            else if (!System.String.IsNullOrEmpty(cleanRemaining))
             {
-                for (int j = 0; j < cleanRemaining.Length; j++)
+                for (System.Int32 j = 0; j < cleanRemaining.Length; j++)
                 {
                     if (cleanRemaining[j] == 'B' && j + 1 < cleanRemaining.Length &&
-                        char.IsDigit(cleanRemaining[j + 1]))
+                        System.Char.IsDigit(cleanRemaining[j + 1]))
                     {
-                        int bStart = j;
-                        int bEnd = j + 1;
-                        while (bEnd < cleanRemaining.Length && char.IsDigit(cleanRemaining[bEnd]))
+                        System.Int32 bStart = j;
+                        System.Int32 bEnd = j + 1;
+                        while (bEnd < cleanRemaining.Length && System.Char.IsDigit(cleanRemaining[bEnd]))
                         {
                             bEnd++;
                         }
@@ -151,7 +158,7 @@ namespace WpfApp1.Shared.Helpers
                 }
             }
 
-            if (!string.IsNullOrEmpty(keyword))
+            if (!System.String.IsNullOrEmpty(keyword))
             {
                 resultBuilder.Append(' ');
                 resultBuilder.Append(keyword);
@@ -160,20 +167,23 @@ namespace WpfApp1.Shared.Helpers
             return resultBuilder.ToString();
         }
 
-        public static string DetermineTLJTable(string size_mm)
+        public static System.String DetermineTLJTable(System.String size_mm)
         {
-            string cleanSize = size_mm.ToUpper().Replace(" ", "");
+            System.String cleanSize = size_mm.ToUpper().Replace(" ", "");
 
-            int xIndex = cleanSize.IndexOf('X');
-            if (xIndex == -1) return "TLJ500";
-
-            string beforeX = cleanSize.Substring(0, xIndex);
-            string afterX = cleanSize.Substring(xIndex + 1);
-
-            string afterXDigits = "";
-            for (int i = 0; i < afterX.Length; i++)
+            System.Int32 xIndex = cleanSize.IndexOf('X');
+            if (xIndex == -1)
             {
-                if (char.IsDigit(afterX[i]))
+                return "TLJ500";
+            }
+
+            System.String beforeX = cleanSize.Substring(0, xIndex);
+            System.String afterX = cleanSize.Substring(xIndex + 1);
+
+            System.String afterXDigits = "";
+            for (System.Int32 i = 0; i < afterX.Length; i++)
+            {
+                if (System.Char.IsDigit(afterX[i]))
                 {
                     afterXDigits += afterX[i];
                 }
@@ -183,8 +193,8 @@ namespace WpfApp1.Shared.Helpers
                 }
             }
 
-            if (int.TryParse(beforeX, out int firstDimension) &&
-                int.TryParse(afterXDigits, out int secondDimension))
+            if (System.Int32.TryParse(beforeX, out System.Int32 firstDimension) &&
+                System.Int32.TryParse(afterXDigits, out System.Int32 secondDimension))
             {
                 if (firstDimension <= 10 && secondDimension <= 100)
                 {
@@ -195,25 +205,37 @@ namespace WpfApp1.Shared.Helpers
             return "TLJ500";
         }
 
-        public static string ProcessRawBatchString(string rawBatch)
+        public static System.String ProcessRawBatchString(System.String rawBatch)
         {
-            if (string.IsNullOrEmpty(rawBatch)) return string.Empty;
-
-            var batchList = new System.Collections.Generic.List<string>();
-            string[] batches = rawBatch.Split(new[] { '\n', '\r' }, System.StringSplitOptions.RemoveEmptyEntries);
-            foreach (string b in batches)
+            if (System.String.IsNullOrEmpty(rawBatch))
             {
-                string t = b.Trim();
-                if (!string.IsNullOrEmpty(t)) batchList.Add(t);
+                return System.String.Empty;
             }
-            return string.Join("\n", batchList);
+
+            System.Collections.Generic.List<System.String> batchList = new System.Collections.Generic.List<System.String>();
+            System.String[] batches = rawBatch.Split(new[] { '\n', '\r' }, System.StringSplitOptions.RemoveEmptyEntries);
+            foreach (System.String b in batches)
+            {
+                System.String t = b.Trim();
+                if (!System.String.IsNullOrEmpty(t))
+                {
+                    batchList.Add(t);
+                }
+            }
+            return System.String.Join("\n", batchList);
         }
 
-        public static double ParseCustomDecimal(string rawInput)
+        public static System.Double ParseCustomDecimal(System.String rawInput)
         {
-            if (string.IsNullOrWhiteSpace(rawInput)) return 0.0;
-            string cleanInput = rawInput.Replace(",", ".").Trim();
-            if (double.TryParse(cleanInput, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double result)) return result;
+            if (System.String.IsNullOrWhiteSpace(rawInput))
+            {
+                return 0.0;
+            }
+            System.String cleanInput = rawInput.Replace(",", ".").Trim();
+            if (System.Double.TryParse(cleanInput, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out System.Double result))
+            {
+                return result;
+            }
             return 0.0;
         }
     }

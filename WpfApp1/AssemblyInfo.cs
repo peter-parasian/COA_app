@@ -1,6 +1,4 @@
-using System.Windows;
-
-[assembly: ThemeInfo(
-    ResourceDictionaryLocation.None,
-    ResourceDictionaryLocation.SourceAssembly
+[assembly: System.Windows.ThemeInfo(
+    System.Windows.ResourceDictionaryLocation.None,
+    System.Windows.ResourceDictionaryLocation.SourceAssembly
 )]

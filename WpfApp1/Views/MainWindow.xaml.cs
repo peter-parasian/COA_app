@@ -1,10 +1,6 @@
-﻿using System.Threading.Tasks;
-using System.Windows;
-using MahApps.Metro.Controls;
-
-namespace WpfApp1.Views
+﻿namespace WpfApp1.Views
 {
-    public partial class MainWindow : MetroWindow
+    public partial class MainWindow : MahApps.Metro.Controls.MetroWindow
     {
         private WpfApp1.ViewModels.MainViewModel _viewModel;
 
@@ -17,7 +13,7 @@ namespace WpfApp1.Views
             this.StateChanged += MainWindow_StateChanged;
         }
 
-        private void MainWindow_StateChanged(object sender, System.EventArgs e)
+        private void MainWindow_StateChanged(System.Object sender, System.EventArgs e)
         {
             if (this.WindowState == System.Windows.WindowState.Minimized)
             {
@@ -26,9 +22,12 @@ namespace WpfApp1.Views
             }
         }
 
-        private async void ButtonMode1_Click(object sender, System.Windows.RoutedEventArgs e)
+        private async void ButtonMode1_Click(System.Object sender, System.Windows.RoutedEventArgs e)
         {
-            if (_viewModel.IsBusy) return;
+            if (_viewModel.IsBusy)
+            {
+                return;
+            }
 
             _viewModel.BusyMessage = "Importing Excel to Database...";
             _viewModel.IsBusy = true;
@@ -71,10 +70,10 @@ namespace WpfApp1.Views
             }
         }
 
-        private void ButtonMode2_Click(object sender, System.Windows.RoutedEventArgs e) { _viewModel.ButtonMode2_Click(); }
-        private void ButtonMode3_Click(object sender, System.Windows.RoutedEventArgs e) { _viewModel.ButtonMode3_Click(); }
-        private void ButtonMode4_Click(object sender, System.Windows.RoutedEventArgs e) { _viewModel.ButtonMode4_Click(); }
-        private void ButtonBack_Click(object sender, System.Windows.RoutedEventArgs e) { _viewModel.BackToMenu(); }
+        private void ButtonMode2_Click(System.Object sender, System.Windows.RoutedEventArgs e) { _viewModel.ButtonMode2_Click(); }
+        private void ButtonMode3_Click(System.Object sender, System.Windows.RoutedEventArgs e) { _viewModel.ButtonMode3_Click(); }
+        private void ButtonMode4_Click(System.Object sender, System.Windows.RoutedEventArgs e) { _viewModel.ButtonMode4_Click(); }
+        private void ButtonBack_Click(System.Object sender, System.Windows.RoutedEventArgs e) { _viewModel.BackToMenu(); }
 
         protected override void OnClosed(System.EventArgs e)
         {

@@ -2,88 +2,94 @@
 {
     public static class CellValidationHelper
     {
-        public static bool ShouldHighlightBatchNo(string batchNo)
+        public static System.Boolean ShouldHighlightBatchNo(System.String batchNo)
         {
-            return string.IsNullOrWhiteSpace(batchNo);
+            return System.String.IsNullOrWhiteSpace(batchNo);
         }
 
-        public static bool ShouldHighlightLength(int length)
+        public static System.Boolean ShouldHighlightLength(System.Int32 length)
         {
             return length <= 0 || length < 4015 || length > 4000;
         }
 
-        public static bool ShouldHighlightThickness(double thickness)
+        public static System.Boolean ShouldHighlightThickness(System.Double thickness)
         {
             return thickness <= 0;
         }
 
-        public static bool ShouldHighlightWidth(double width)
+        public static System.Boolean ShouldHighlightWidth(System.Double width)
         {
             return width <= 0;
         }
 
-        public static bool ShouldHighlightRadius(double radius)
+        public static System.Boolean ShouldHighlightRadius(System.Double radius)
         {
             return radius <= 0;
         }
 
-        public static bool ShouldHighlightChamber(double chamber)
+        public static System.Boolean ShouldHighlightChamber(System.Double chamber)
         {
             return chamber <= 0 || chamber > 3.5;
         }
 
-        public static bool ShouldHighlightElectric(double electric)
+        public static System.Boolean ShouldHighlightElectric(System.Double electric)
         {
             return electric <= 0 || electric < 100;
         }
 
-        public static bool ShouldHighlightResistivity(double resistivity)
+        public static System.Boolean ShouldHighlightResistivity(System.Double resistivity)
         {
             return resistivity <= 0 || resistivity > 0.15328;
         }
 
-        public static bool ShouldHighlightElongation(double elongation)
+        public static System.Boolean ShouldHighlightElongation(System.Double elongation)
         {
             return elongation <= 0 || elongation < 15;
         }
 
-        public static bool ShouldHighlightTensile(double tensile)
+        public static System.Boolean ShouldHighlightTensile(System.Double tensile)
         {
             return tensile <= 0 || tensile < 245 || tensile > 315;
         }
 
-        public static bool ShouldHighlightSpectro(double spectro)
+        public static System.Boolean ShouldHighlightSpectro(System.Double spectro)
         {
             return spectro <= 0 || spectro < 99.96;
         }
 
-        public static bool ShouldHighlightOxygen(double oxygen)
+        public static System.Boolean ShouldHighlightOxygen(System.Double oxygen)
         {
             return oxygen <= 0 || oxygen > 10;
         }
 
-        public static bool ShouldHighlightThicknessWithTolerance(
-            double actualThickness,
-            double nominalThickness,
-            double tolerance)
+        public static System.Boolean ShouldHighlightThicknessWithTolerance(
+            System.Double actualThickness,
+            System.Double nominalThickness,
+            System.Double tolerance)
         {
-            if (actualThickness <= 0) return true;
+            if (actualThickness <= 0)
+            {
+                return true;
+            }
 
-            double lowerBound = nominalThickness - tolerance;
-            double upperBound = nominalThickness + tolerance;
+            System.Double lowerBound = nominalThickness - tolerance;
+            System.Double upperBound = nominalThickness + tolerance;
 
             return actualThickness < lowerBound || actualThickness > upperBound;
         }
 
-        public static bool ShouldHighlightWidthWithTolerance(
-            double actualWidth,
-            double nominalWidth,
-            double tolerance)
+        public static System.Boolean ShouldHighlightWidthWithTolerance(
+            System.Double actualWidth,
+            System.Double nominalWidth,
+            System.Double tolerance)
         {
-            if (actualWidth <= 0) return true;
+            if (actualWidth <= 0)
+            {
+                return true;
+            }
 
-            double lowerBound = nominalWidth - tolerance;
-            double upperBound = nominalWidth + tolerance;
+            System.Double lowerBound = nominalWidth - tolerance;
+            System.Double upperBound = nominalWidth + tolerance;
 
             return actualWidth < lowerBound || actualWidth > upperBound;
         }

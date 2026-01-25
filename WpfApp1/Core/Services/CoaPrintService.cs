@@ -1,91 +1,119 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
-using ClosedXML.Excel;
-
-namespace WpfApp1.Core.Services
+﻿namespace WpfApp1.Core.Services
 {
     public class CoaPrintService
     {
         private byte[]? _img1Data = null;
         private byte[]? _img2Data = null;
 
-        public async System.Threading.Tasks.Task<string> GenerateCoaExcel(
-            string customerName,
-            string poNumber,
-            string doNumber,
+        public async System.Threading.Tasks.Task<System.String> GenerateCoaExcel(
+            System.String customerName,
+            System.String poNumber,
+            System.String doNumber,
             System.Collections.Generic.List<WpfApp1.Core.Models.BusbarExportItem> dataList,
-            string standardName)
+            System.String standardName)
         {
-            return await System.Threading.Tasks.Task.Run<string>(() =>
+            return await System.Threading.Tasks.Task.Run<System.String>(() =>
             {
+                System.String basePath = @"C:\Users\mrrx\Documents\My Web Sites\H\COA";
 
-                string basePath = @"C:\Users\mrrx\Documents\My Web Sites\H\COA";
+                System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
 
-                var assembly = Assembly.GetExecutingAssembly();
-
-                string resourceTemplate = "WpfApp1.Images.TEMPLATEE_COA_BUSBAR.xlsx";
-                string resourceImg1 = "WpfApp1.Images.approved_IMG.png";
-                string resourceImg2 = "WpfApp1.Images.profile_SNI.png";
+                System.String resourceTemplate = "WpfApp1.Images.TEMPLATEE_COA_BUSBAR.xlsx";
+                System.String resourceImg1 = "WpfApp1.Images.approved_IMG.png";
+                System.String resourceImg2 = "WpfApp1.Images.profile_SNI.png";
 
                 if (_img1Data == null)
                 {
-                    using (Stream stream = assembly.GetManifestResourceStream(resourceImg1))
+                    System.IO.Stream? stream = null;
+                    try
                     {
+                        stream = assembly.GetManifestResourceStream(resourceImg1);
                         if (stream != null)
                         {
-                            using (MemoryStream ms = new MemoryStream())
+                            System.IO.MemoryStream? ms = null;
+                            try
                             {
+                                ms = new System.IO.MemoryStream();
                                 stream.CopyTo(ms);
                                 _img1Data = ms.ToArray();
                             }
+                            finally
+                            {
+                                if (ms != null)
+                                {
+                                    ms.Dispose();
+                                }
+                            }
+                        }
+                    }
+                    finally
+                    {
+                        if (stream != null)
+                        {
+                            stream.Dispose();
                         }
                     }
                 }
 
                 if (_img2Data == null)
                 {
-                    using (Stream stream = assembly.GetManifestResourceStream(resourceImg2))
+                    System.IO.Stream? stream = null;
+                    try
                     {
+                        stream = assembly.GetManifestResourceStream(resourceImg2);
                         if (stream != null)
                         {
-                            using (MemoryStream ms = new MemoryStream())
+                            System.IO.MemoryStream? ms = null;
+                            try
                             {
+                                ms = new System.IO.MemoryStream();
                                 stream.CopyTo(ms);
                                 _img2Data = ms.ToArray();
                             }
+                            finally
+                            {
+                                if (ms != null)
+                                {
+                                    ms.Dispose();
+                                }
+                            }
+                        }
+                    }
+                    finally
+                    {
+                        if (stream != null)
+                        {
+                            stream.Dispose();
                         }
                     }
                 }
 
-
                 System.DateTime now = System.DateTime.Now;
-                string yearFolder = now.ToString("yyyy");
+                System.String yearFolder = now.ToString("yyyy");
 
-                string yearPath = System.IO.Path.Combine(basePath, yearFolder);
+                System.String yearPath = System.IO.Path.Combine(basePath, yearFolder);
 
                 if (!System.IO.Directory.Exists(yearPath))
                 {
                     System.IO.Directory.CreateDirectory(yearPath);
                 }
 
-                string finalMonthFolderName = string.Empty;
-                int currentMonthNumber = now.Month;
-                bool folderFound = false;
+                System.String finalMonthFolderName = System.String.Empty;
+                System.Int32 currentMonthNumber = now.Month;
+                System.Boolean folderFound = false;
 
                 try
                 {
-                    string[] existingDirectories = System.IO.Directory.GetDirectories(yearPath);
+                    System.String[] existingDirectories = System.IO.Directory.GetDirectories(yearPath);
 
-                    foreach (string dirPath in existingDirectories)
+                    foreach (System.String dirPath in existingDirectories)
                     {
-                        string dirName = System.IO.Path.GetFileName(dirPath);
+                        System.String dirName = System.IO.Path.GetFileName(dirPath);
 
-                        string leadingDigits = string.Empty;
-                        foreach (char c in dirName)
+                        System.String leadingDigits = System.String.Empty;
+                        foreach (System.Char c in dirName)
                         {
-                            if (char.IsDigit(c))
+                            if (System.Char.IsDigit(c))
                             {
                                 leadingDigits += c;
                             }
@@ -95,7 +123,7 @@ namespace WpfApp1.Core.Services
                             }
                         }
 
-                        if (!string.IsNullOrEmpty(leadingDigits) && int.TryParse(leadingDigits, out int folderNum))
+                        if (!System.String.IsNullOrEmpty(leadingDigits) && System.Int32.TryParse(leadingDigits, out int folderNum))
                         {
                             if (folderNum == currentMonthNumber)
                             {
@@ -112,51 +140,56 @@ namespace WpfApp1.Core.Services
 
                 if (!folderFound)
                 {
-                    var cultureIndo = new System.Globalization.CultureInfo("id-ID");
-                    string monthName = cultureIndo.DateTimeFormat.GetMonthName(now.Month);
+                    System.Globalization.CultureInfo cultureIndo = new System.Globalization.CultureInfo("id-ID");
+                    System.String monthName = cultureIndo.DateTimeFormat.GetMonthName(now.Month);
                     monthName = cultureIndo.TextInfo.ToTitleCase(monthName);
 
                     finalMonthFolderName = $"{now.Month}. {monthName}";
                 }
 
-                string finalDirectory = System.IO.Path.Combine(yearPath, finalMonthFolderName);
+                System.String finalDirectory = System.IO.Path.Combine(yearPath, finalMonthFolderName);
 
                 if (!System.IO.Directory.Exists(finalDirectory))
                 {
                     System.IO.Directory.CreateDirectory(finalDirectory);
                 }
 
-                string[] existingFiles = System.IO.Directory.GetFiles(finalDirectory, "*.xlsx");
-                int validFileCount = 0;
-                foreach (string filePath in existingFiles)
+                System.String[] existingFiles = System.IO.Directory.GetFiles(finalDirectory, "*.xlsx");
+                System.Int32 validFileCount = 0;
+                foreach (System.String filePath in existingFiles)
                 {
-                    string fName = System.IO.Path.GetFileName(filePath);
+                    System.String fName = System.IO.Path.GetFileName(filePath);
                     if (!fName.StartsWith("~$"))
                     {
                         validFileCount++;
                     }
                 }
 
-                int nomorFile = validFileCount + 1;
-                string formattedFileNumber = nomorFile.ToString("000");
-                string romanMonth = GetRomanMonth(now.Month);
+                System.Int32 nomorFile = validFileCount + 1;
+                System.String formattedFileNumber = nomorFile.ToString("000");
+                System.String romanMonth = GetRomanMonth(now.Month);
 
-                string fileName = $"{formattedFileNumber}. COA {customerName} {doNumber}.xlsx";
-                string fullPath = System.IO.Path.Combine(finalDirectory, fileName);
+                System.String fileName = $"{formattedFileNumber}. COA {customerName} {doNumber}.xlsx";
+                System.String fullPath = System.IO.Path.Combine(finalDirectory, fileName);
 
                 System.Random randomGen = new System.Random();
-                var cultureInvariant = System.Globalization.CultureInfo.InvariantCulture;
+                System.Globalization.CultureInfo cultureInvariant = System.Globalization.CultureInfo.InvariantCulture;
 
-                using (Stream templateStream = assembly.GetManifestResourceStream(resourceTemplate))
+                System.IO.Stream? templateStream = null;
+                try
                 {
+                    templateStream = assembly.GetManifestResourceStream(resourceTemplate);
                     if (templateStream == null)
                     {
-                        throw new FileNotFoundException($"Template Embedded Resource tidak ditemukan: '{resourceTemplate}'. \nPastikan 'Build Action' file Excel diset ke 'Embedded Resource'.");
+                        throw new System.IO.FileNotFoundException($"Template Embedded Resource tidak ditemukan: '{resourceTemplate}'. \nPastikan 'Build Action' file Excel diset ke 'Embedded Resource'.");
                     }
 
-                    using (var workbook = new ClosedXML.Excel.XLWorkbook(templateStream))
+                    ClosedXML.Excel.XLWorkbook? workbook = null;
+                    try
                     {
-                        var worksheet = workbook.Worksheet(1);
+                        workbook = new ClosedXML.Excel.XLWorkbook(templateStream);
+
+                        ClosedXML.Excel.IXLWorksheet worksheet = workbook.Worksheet(1);
                         worksheet.Style.Font.FontName = "Montserrat";
 
                         worksheet.Cell("C12").Value = ": " + poNumber;
@@ -164,16 +197,16 @@ namespace WpfApp1.Core.Services
                         worksheet.Cell("J13").Value = ": " + now.ToString("dd/MM/yyyy");
                         worksheet.Cell("J14").Value = ": " + $"{formattedFileNumber}/{romanMonth}/{now.Year}";
 
-                        int dataCount = dataList.Count;
-                        int rowsPerItem = 2;
-                        int totalRowsNeeded = dataCount * rowsPerItem;
-                        int defaultRowsAvailable = 3;
+                        System.Int32 dataCount = dataList.Count;
+                        System.Int32 rowsPerItem = 2;
+                        System.Int32 totalRowsNeeded = dataCount * rowsPerItem;
+                        System.Int32 defaultRowsAvailable = 3;
 
-                        int startRowTable1 = 20;
-                        int originalStartRowTable2 = 30;
-                        int startRowTable2 = originalStartRowTable2;
+                        System.Int32 startRowTable1 = 20;
+                        System.Int32 originalStartRowTable2 = 30;
+                        System.Int32 startRowTable2 = originalStartRowTable2;
 
-                        int rowsDiff = totalRowsNeeded - defaultRowsAvailable;
+                        System.Int32 rowsDiff = totalRowsNeeded - defaultRowsAvailable;
 
                         if (rowsDiff > 0)
                         {
@@ -181,9 +214,9 @@ namespace WpfApp1.Core.Services
                         }
                         else if (rowsDiff < 0)
                         {
-                            int rowsToDelete = System.Math.Abs(rowsDiff);
-                            int deleteStartRow = startRowTable1 + totalRowsNeeded;
-                            for (int d = 0; d < rowsToDelete; d++)
+                            System.Int32 rowsToDelete = System.Math.Abs(rowsDiff);
+                            System.Int32 deleteStartRow = startRowTable1 + totalRowsNeeded;
+                            for (System.Int32 d = 0; d < rowsToDelete; d++)
                             {
                                 worksheet.Row(deleteStartRow).Delete();
                             }
@@ -191,20 +224,21 @@ namespace WpfApp1.Core.Services
 
                         startRowTable2 = originalStartRowTable2 + rowsDiff;
 
-                        var toleranceData = new System.Collections.Generic.List<(double thickness, double width, double nominalThick, double nominalWidth)>();
+                        System.Collections.Generic.List<(System.Double thickness, System.Double width, System.Double nominalThick, System.Double nominalWidth)> toleranceData =
+                            new System.Collections.Generic.List<(System.Double, System.Double, System.Double, System.Double)>();
 
-                        for (int i = 0; i < dataCount; i++)
+                        for (System.Int32 i = 0; i < dataCount; i++)
                         {
-                            var exportItem = dataList[i];
-                            var rec = exportItem.RecordData;
-                            string cleanSizeStr = WpfApp1.Shared.Helpers.StringHelper.CleanSizeCOA(rec.Size);
+                            WpfApp1.Core.Models.BusbarExportItem exportItem = dataList[i];
+                            WpfApp1.Core.Models.BusbarRecord rec = exportItem.RecordData;
+                            System.String cleanSizeStr = WpfApp1.Shared.Helpers.StringHelper.CleanSizeCOA(rec.Size);
 
-                            double finalTolThickness = 0;
-                            double finalTolWidth = 0;
+                            System.Double finalTolThickness = 0;
+                            System.Double finalTolWidth = 0;
 
                             if (standardName == "JIS")
                             {
-                                var calculatedTols = WpfApp1.Shared.Helpers.ToleranceJIS.CalculateFromDbString(cleanSizeStr);
+                                (System.Double Thickness, System.Double Width) calculatedTols = WpfApp1.Shared.Helpers.ToleranceJIS.CalculateFromDbString(cleanSizeStr);
                                 finalTolThickness = calculatedTols.Thickness;
                                 finalTolWidth = calculatedTols.Width;
                             }
@@ -214,91 +248,101 @@ namespace WpfApp1.Core.Services
                                 finalTolWidth = System.Math.Round((randomGen.NextDouble() * 1.0) + 0.50, 2);
                             }
 
-                            double nominalThick = 0;
-                            double nominalWidth = 0;
-                            string[] parts = cleanSizeStr.Split('x');
+                            System.Double nominalThick = 0;
+                            System.Double nominalWidth = 0;
+                            System.String[] parts = cleanSizeStr.Split('x');
                             if (parts.Length >= 2)
                             {
-                                double.TryParse(parts[0], System.Globalization.NumberStyles.Float, cultureInvariant, out nominalThick);
-                                double.TryParse(parts[1], System.Globalization.NumberStyles.Float, cultureInvariant, out nominalWidth);
+                                System.Double.TryParse(parts[0], System.Globalization.NumberStyles.Float, cultureInvariant, out nominalThick);
+                                System.Double.TryParse(parts[1], System.Globalization.NumberStyles.Float, cultureInvariant, out nominalWidth);
                             }
 
                             toleranceData.Add((finalTolThickness, finalTolWidth, nominalThick, nominalWidth));
                         }
 
-                        for (int i = 0; i < dataCount; i++)
+                        for (System.Int32 i = 0; i < dataCount; i++)
                         {
-                            int rTop = startRowTable1 + (i * rowsPerItem);
-                            int rBottom = rTop + 1;
-                            int rTable2 = startRowTable2 + i;
+                            System.Int32 rTop = startRowTable1 + (i * rowsPerItem);
+                            System.Int32 rBottom = rTop + 1;
+                            System.Int32 rTable2 = startRowTable2 + i;
 
                             worksheet.Row(rTop).Height = 51;
                             worksheet.Row(rBottom).Height = 51;
                             worksheet.Row(rTable2).Height = 102;
                         }
 
-
-
-                        for (int i = 0; i < dataCount; i++)
+                        for (System.Int32 i = 0; i < dataCount; i++)
                         {
-                            int rTop = startRowTable1 + (i * rowsPerItem);
-                            int rBottom = rTop + 1;
-                            int rTable2 = startRowTable2 + i;
+                            System.Int32 rTop = startRowTable1 + (i * rowsPerItem);
+                            System.Int32 rBottom = rTop + 1;
+                            System.Int32 rTable2 = startRowTable2 + i;
 
-                            var exportItem = dataList[i];
-                            var rec = exportItem.RecordData;
-                            var tol = toleranceData[i];
+                            WpfApp1.Core.Models.BusbarExportItem exportItem = dataList[i];
+                            WpfApp1.Core.Models.BusbarRecord rec = exportItem.RecordData;
+                            (System.Double thickness, System.Double width, System.Double nominalThick, System.Double nominalWidth) tol = toleranceData[i];
 
-                            string displaySize = WpfApp1.Shared.Helpers.StringHelper.CleanSizeCOA(rec.Size).Replace("x", " x ");
-                            string selectedType = exportItem.SelectedType;
+                            System.String displaySize = WpfApp1.Shared.Helpers.StringHelper.CleanSizeCOA(rec.Size).Replace("x", " x ");
+                            System.String selectedType = exportItem.SelectedType;
 
-                            if (!string.IsNullOrEmpty(selectedType) &&
+                            if (!System.String.IsNullOrEmpty(selectedType) &&
                                 !selectedType.Equals("Select", System.StringComparison.OrdinalIgnoreCase) &&
                                 !selectedType.Equals("None", System.StringComparison.OrdinalIgnoreCase))
                             {
                                 displaySize = displaySize + " - " + selectedType;
                             }
 
-                            var cellBatch1 = worksheet.Cell(rTop, 2);
+                            ClosedXML.Excel.IXLCell cellBatch1 = worksheet.Cell(rTop, 2);
                             cellBatch1.Value = rec.BatchNo;
                             if (WpfApp1.Shared.Helpers.CellValidationHelper.ShouldHighlightBatchNo(rec.BatchNo))
+                            {
                                 cellBatch1.Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.Red;
+                            }
 
                             worksheet.Cell(rTop, 3).Value = displaySize;
                             worksheet.Cell(rTop, 4).Value = "No Dirty\nNo Blackspot\nNo Blisters";
 
-                            string strThickTol = string.Format(cultureInvariant, "({0:0.00} \u00B1 {1:0.00})", tol.nominalThick, tol.thickness);
-                            string strWidthTol = string.Format(cultureInvariant, "({0:0.00} \u00B1 {1:0.00})", tol.nominalWidth, tol.width);
+                            System.String strThickTol = System.String.Format(cultureInvariant, "({0:0.00} \u00B1 {1:0.00})", tol.nominalThick, tol.thickness);
+                            System.String strWidthTol = System.String.Format(cultureInvariant, "({0:0.00} \u00B1 {1:0.00})", tol.nominalWidth, tol.width);
 
-                            var cellThick = worksheet.Cell(rTop, 6);
-                            cellThick.Value = string.Format(cultureInvariant, "{0:0.00}", rec.Thickness);
+                            ClosedXML.Excel.IXLCell cellThick = worksheet.Cell(rTop, 6);
+                            cellThick.Value = System.String.Format(cultureInvariant, "{0:0.00}", rec.Thickness);
                             if (WpfApp1.Shared.Helpers.CellValidationHelper.ShouldHighlightThicknessWithTolerance(
                                 rec.Thickness, tol.nominalThick, tol.thickness))
+                            {
                                 cellThick.Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.Red;
+                            }
                             worksheet.Cell(rBottom, 6).Value = strThickTol;
 
-                            var cellWidth = worksheet.Cell(rTop, 7);
-                            cellWidth.Value = string.Format(cultureInvariant, "{0:0.00}", rec.Width);
+                            ClosedXML.Excel.IXLCell cellWidth = worksheet.Cell(rTop, 7);
+                            cellWidth.Value = System.String.Format(cultureInvariant, "{0:0.00}", rec.Width);
                             if (WpfApp1.Shared.Helpers.CellValidationHelper.ShouldHighlightWidthWithTolerance(
                                 rec.Width, tol.nominalWidth, tol.width))
+                            {
                                 cellWidth.Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.Red;
+                            }
                             worksheet.Cell(rBottom, 7).Value = strWidthTol;
 
-                            var cellLength = worksheet.Cell(rTop, 8);
+                            ClosedXML.Excel.IXLCell cellLength = worksheet.Cell(rTop, 8);
                             cellLength.Value = rec.Length;
                             if (WpfApp1.Shared.Helpers.CellValidationHelper.ShouldHighlightLength(rec.Length))
+                            {
                                 cellLength.Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.Red;
+                            }
                             worksheet.Cell(rBottom, 8).Value = "(4000 +15/-0)";
 
-                            var cellRad = worksheet.Cell(rTop, 9);
-                            cellRad.Value = string.Format(cultureInvariant, "{0:0.00}", rec.Radius);
+                            ClosedXML.Excel.IXLCell cellRad = worksheet.Cell(rTop, 9);
+                            cellRad.Value = System.String.Format(cultureInvariant, "{0:0.00}", rec.Radius);
                             if (WpfApp1.Shared.Helpers.CellValidationHelper.ShouldHighlightRadius(rec.Radius))
+                            {
                                 cellRad.Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.Red;
+                            }
 
-                            var cellCham = worksheet.Cell(rTop, 10);
-                            cellCham.Value = string.Format(cultureInvariant, "{0:0.00}", rec.Chamber);
+                            ClosedXML.Excel.IXLCell cellCham = worksheet.Cell(rTop, 10);
+                            cellCham.Value = System.String.Format(cultureInvariant, "{0:0.00}", rec.Chamber);
                             if (WpfApp1.Shared.Helpers.CellValidationHelper.ShouldHighlightChamber(rec.Chamber))
+                            {
                                 cellCham.Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.Red;
+                            }
 
                             worksheet.Cell(rTop, 11).Value = "OK";
 
@@ -309,44 +353,58 @@ namespace WpfApp1.Core.Services
                             worksheet.Range(rTop, 10, rBottom, 10).Merge();
                             worksheet.Range(rTop, 11, rBottom, 11).Merge();
 
-                            var cellBatch2 = worksheet.Cell(rTable2, 2);
+                            ClosedXML.Excel.IXLCell cellBatch2 = worksheet.Cell(rTable2, 2);
                             cellBatch2.Value = rec.BatchNo;
                             if (WpfApp1.Shared.Helpers.CellValidationHelper.ShouldHighlightBatchNo(rec.BatchNo))
+                            {
                                 cellBatch2.Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.Red;
+                            }
 
                             worksheet.Cell(rTable2, 3).Value = displaySize;
 
-                            var cellElec = worksheet.Cell(rTable2, 4);
-                            cellElec.Value = string.Format(cultureInvariant, "{0:0.00}", rec.Electric);
+                            ClosedXML.Excel.IXLCell cellElec = worksheet.Cell(rTable2, 4);
+                            cellElec.Value = System.String.Format(cultureInvariant, "{0:0.00}", rec.Electric);
                             if (WpfApp1.Shared.Helpers.CellValidationHelper.ShouldHighlightElectric(rec.Electric))
+                            {
                                 cellElec.Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.Red;
+                            }
 
-                            var cellRes = worksheet.Cell(rTable2, 5);
-                            cellRes.Value = string.Format(cultureInvariant, "{0:0.00000}", rec.Resistivity);
+                            ClosedXML.Excel.IXLCell cellRes = worksheet.Cell(rTable2, 5);
+                            cellRes.Value = System.String.Format(cultureInvariant, "{0:0.00000}", rec.Resistivity);
                             if (WpfApp1.Shared.Helpers.CellValidationHelper.ShouldHighlightResistivity(rec.Resistivity))
+                            {
                                 cellRes.Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.Red;
+                            }
 
-                            var cellElong = worksheet.Cell(rTable2, 6);
-                            cellElong.Value = string.Format(cultureInvariant, "{0:0.00}", rec.Elongation);
+                            ClosedXML.Excel.IXLCell cellElong = worksheet.Cell(rTable2, 6);
+                            cellElong.Value = System.String.Format(cultureInvariant, "{0:0.00}", rec.Elongation);
                             if (WpfApp1.Shared.Helpers.CellValidationHelper.ShouldHighlightElongation(rec.Elongation))
+                            {
                                 cellElong.Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.Red;
+                            }
 
-                            var cellTens = worksheet.Cell(rTable2, 7);
-                            cellTens.Value = string.Format(cultureInvariant, "{0:0.00}", rec.Tensile);
+                            ClosedXML.Excel.IXLCell cellTens = worksheet.Cell(rTable2, 7);
+                            cellTens.Value = System.String.Format(cultureInvariant, "{0:0.00}", rec.Tensile);
                             if (WpfApp1.Shared.Helpers.CellValidationHelper.ShouldHighlightTensile(rec.Tensile))
+                            {
                                 cellTens.Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.Red;
+                            }
 
                             worksheet.Cell(rTable2, 8).Value = "No Crack";
 
-                            var cellSpec = worksheet.Cell(rTable2, 9);
-                            cellSpec.Value = string.Format(cultureInvariant, "{0:0.000}", rec.Spectro);
+                            ClosedXML.Excel.IXLCell cellSpec = worksheet.Cell(rTable2, 9);
+                            cellSpec.Value = System.String.Format(cultureInvariant, "{0:0.000}", rec.Spectro);
                             if (WpfApp1.Shared.Helpers.CellValidationHelper.ShouldHighlightSpectro(rec.Spectro))
+                            {
                                 cellSpec.Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.Red;
+                            }
 
-                            var cellOxy = worksheet.Cell(rTable2, 10);
-                            cellOxy.Value = string.Format(cultureInvariant, "{0:0.00}", rec.Oxygen);
+                            ClosedXML.Excel.IXLCell cellOxy = worksheet.Cell(rTable2, 10);
+                            cellOxy.Value = System.String.Format(cultureInvariant, "{0:0.00}", rec.Oxygen);
                             if (WpfApp1.Shared.Helpers.CellValidationHelper.ShouldHighlightOxygen(rec.Oxygen))
+                            {
                                 cellOxy.Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.Red;
+                            }
 
                             worksheet.Cell(rTable2, 11).Value = "OK";
 
@@ -356,99 +414,113 @@ namespace WpfApp1.Core.Services
                         }
 
 
-                        var table1Range = worksheet.Range(startRowTable1, 2, startRowTable1 + totalRowsNeeded - 1, 11);
+                        ClosedXML.Excel.IXLRange table1Range = worksheet.Range(startRowTable1, 2, startRowTable1 + totalRowsNeeded - 1, 11);
                         ApplyCustomStyleBatch(table1Range);
                         ApplyBorders(table1Range);
 
-                        for (int i = 0; i < dataCount; i++)
+                        for (System.Int32 i = 0; i < dataCount; i++)
                         {
-                            int rTop = startRowTable1 + (i * rowsPerItem);
-                            int rBottom = rTop + 1;
+                            System.Int32 rTop = startRowTable1 + (i * rowsPerItem);
+                            System.Int32 rBottom = rTop + 1;
 
-                            var cellThickVal = worksheet.Cell(rTop, 6);
+                            ClosedXML.Excel.IXLCell cellThickVal = worksheet.Cell(rTop, 6);
                             cellThickVal.Style.Font.Bold = true;
                             cellThickVal.Style.Font.FontSize = 22;
-                            cellThickVal.Style.Alignment.Vertical = XLAlignmentVerticalValues.Bottom;
-                            cellThickVal.Style.Border.BottomBorder = XLBorderStyleValues.None;
+                            cellThickVal.Style.Alignment.Vertical = ClosedXML.Excel.XLAlignmentVerticalValues.Bottom;
+                            cellThickVal.Style.Border.BottomBorder = ClosedXML.Excel.XLBorderStyleValues.None;
 
-                            var cellThickTol = worksheet.Cell(rBottom, 6);
+                            ClosedXML.Excel.IXLCell cellThickTol = worksheet.Cell(rBottom, 6);
                             cellThickTol.Style.Font.Bold = false;
                             cellThickTol.Style.Font.Italic = true;
                             cellThickTol.Style.Font.FontSize = 22;
-                            cellThickTol.Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
-                            cellThickTol.Style.Border.TopBorder = XLBorderStyleValues.None;
+                            cellThickTol.Style.Alignment.Vertical = ClosedXML.Excel.XLAlignmentVerticalValues.Top;
+                            cellThickTol.Style.Border.TopBorder = ClosedXML.Excel.XLBorderStyleValues.None;
 
-                            var cellWidthVal = worksheet.Cell(rTop, 7);
+                            ClosedXML.Excel.IXLCell cellWidthVal = worksheet.Cell(rTop, 7);
                             cellWidthVal.Style.Font.Bold = true;
                             cellWidthVal.Style.Font.FontSize = 22;
-                            cellWidthVal.Style.Alignment.Vertical = XLAlignmentVerticalValues.Bottom;
-                            cellWidthVal.Style.Border.BottomBorder = XLBorderStyleValues.None;
+                            cellWidthVal.Style.Alignment.Vertical = ClosedXML.Excel.XLAlignmentVerticalValues.Bottom;
+                            cellWidthVal.Style.Border.BottomBorder = ClosedXML.Excel.XLBorderStyleValues.None;
 
-                            var cellWidthTol = worksheet.Cell(rBottom, 7);
+                            ClosedXML.Excel.IXLCell cellWidthTol = worksheet.Cell(rBottom, 7);
                             cellWidthTol.Style.Font.Bold = false;
                             cellWidthTol.Style.Font.Italic = true;
                             cellWidthTol.Style.Font.FontSize = 22;
-                            cellWidthTol.Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
-                            cellWidthTol.Style.Border.TopBorder = XLBorderStyleValues.None;
+                            cellWidthTol.Style.Alignment.Vertical = ClosedXML.Excel.XLAlignmentVerticalValues.Top;
+                            cellWidthTol.Style.Border.TopBorder = ClosedXML.Excel.XLBorderStyleValues.None;
 
-                            var cellLengthVal = worksheet.Cell(rTop, 8);
+                            ClosedXML.Excel.IXLCell cellLengthVal = worksheet.Cell(rTop, 8);
                             cellLengthVal.Style.NumberFormat.Format = "0";
                             cellLengthVal.Style.Font.Bold = true;
                             cellLengthVal.Style.Font.FontSize = 22;
-                            cellLengthVal.Style.Alignment.Vertical = XLAlignmentVerticalValues.Bottom;
-                            cellLengthVal.Style.Border.BottomBorder = XLBorderStyleValues.None;
+                            cellLengthVal.Style.Alignment.Vertical = ClosedXML.Excel.XLAlignmentVerticalValues.Bottom;
+                            cellLengthVal.Style.Border.BottomBorder = ClosedXML.Excel.XLBorderStyleValues.None;
 
-                            var cellLengthTol = worksheet.Cell(rBottom, 8);
+                            ClosedXML.Excel.IXLCell cellLengthTol = worksheet.Cell(rBottom, 8);
                             cellLengthTol.Style.Font.Bold = false;
                             cellLengthTol.Style.Font.Italic = true;
                             cellLengthTol.Style.Font.FontSize = 22;
-                            cellLengthTol.Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
-                            cellLengthTol.Style.Border.TopBorder = XLBorderStyleValues.None;
+                            cellLengthTol.Style.Alignment.Vertical = ClosedXML.Excel.XLAlignmentVerticalValues.Top;
+                            cellLengthTol.Style.Border.TopBorder = ClosedXML.Excel.XLBorderStyleValues.None;
 
                             worksheet.Cell(rTop, 4).Style.Alignment.WrapText = true;
                         }
 
-                        int lastRowTable2 = startRowTable2 + dataCount - 1;
-                        var table2Range = worksheet.Range(startRowTable2, 2, lastRowTable2, 11);
+                        System.Int32 lastRowTable2 = startRowTable2 + dataCount - 1;
+                        ClosedXML.Excel.IXLRange table2Range = worksheet.Range(startRowTable2, 2, lastRowTable2, 11);
                         ApplyCustomStyleBatch(table2Range);
                         ApplyBorders(table2Range);
 
                         worksheet.Row(lastRowTable2).InsertRowsBelow(5);
-                        int firstInsertedRow = lastRowTable2 + 1;
-                        int lastInsertedRow = firstInsertedRow + 4;
+                        System.Int32 firstInsertedRow = lastRowTable2 + 1;
+                        System.Int32 lastInsertedRow = firstInsertedRow + 4;
 
-                        var signatureRange = worksheet.Range(firstInsertedRow, 2, lastInsertedRow, 11);
-                        signatureRange.Style.Border.TopBorder = XLBorderStyleValues.None;
-                        signatureRange.Style.Border.BottomBorder = XLBorderStyleValues.None;
-                        signatureRange.Style.Border.LeftBorder = XLBorderStyleValues.None;
-                        signatureRange.Style.Border.RightBorder = XLBorderStyleValues.None;
-                        signatureRange.Style.Border.InsideBorder = XLBorderStyleValues.None;
+                        ClosedXML.Excel.IXLRange signatureRange = worksheet.Range(firstInsertedRow, 2, lastInsertedRow, 11);
+                        signatureRange.Style.Border.TopBorder = ClosedXML.Excel.XLBorderStyleValues.None;
+                        signatureRange.Style.Border.BottomBorder = ClosedXML.Excel.XLBorderStyleValues.None;
+                        signatureRange.Style.Border.LeftBorder = ClosedXML.Excel.XLBorderStyleValues.None;
+                        signatureRange.Style.Border.RightBorder = ClosedXML.Excel.XLBorderStyleValues.None;
+                        signatureRange.Style.Border.InsideBorder = ClosedXML.Excel.XLBorderStyleValues.None;
 
                         signatureRange.Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.NoColor;
 
-                        for (int k = 0; k < 5; k++)
+                        for (System.Int32 k = 0; k < 5; k++)
                         {
                             worksheet.Row(firstInsertedRow + k).Height = 102;
                         }
                         worksheet.Row(firstInsertedRow + 4).Height = 50;
 
-                        int imageRow = firstInsertedRow + 1;
+                        System.Int32 imageRow = firstInsertedRow + 1;
 
                         if (_img1Data != null)
                         {
-                            using (var ms1 = new System.IO.MemoryStream(_img1Data))
+                            System.IO.MemoryStream? ms1 = null;
+                            try
                             {
-                                var pic1 = worksheet.AddPicture(ms1);
+                                ms1 = new System.IO.MemoryStream(_img1Data);
+                                ClosedXML.Excel.Drawings.IXLPicture pic1 = worksheet.AddPicture(ms1);
                                 pic1.MoveTo(worksheet.Cell(imageRow, 11));
                             }
+                            catch
+                            {
+                                if (ms1 != null) ms1.Dispose();
+                                throw;
+                            }
+                            if (ms1 != null) ms1.Dispose();
                         }
 
                         if (_img2Data != null)
                         {
-                            using (var ms2 = new System.IO.MemoryStream(_img2Data))
+                            System.IO.MemoryStream? ms2 = null;
+                            try
                             {
-                                var pic2 = worksheet.AddPicture(ms2);
+                                ms2 = new System.IO.MemoryStream(_img2Data);
+                                ClosedXML.Excel.Drawings.IXLPicture pic2 = worksheet.AddPicture(ms2);
                                 pic2.MoveTo(worksheet.Cell(imageRow, 2));
+                            }
+                            finally
+                            {
+                                if (ms2 != null) ms2.Dispose();
                             }
                         }
 
@@ -459,6 +531,20 @@ namespace WpfApp1.Core.Services
                         worksheet.PageSetup.PagesWide = 1;
 
                         workbook.SaveAs(fullPath);
+                    }
+                    finally
+                    {
+                        if (workbook != null)
+                        {
+                            workbook.Dispose();
+                        }
+                    }
+                }
+                finally
+                {
+                    if (templateStream != null)
+                    {
+                        templateStream.Dispose();
                     }
                 }
 
@@ -490,7 +576,7 @@ namespace WpfApp1.Core.Services
             _img2Data = null;
         }
 
-        private string GetRomanMonth(int month)
+        private System.String GetRomanMonth(System.Int32 month)
         {
             switch (month)
             {

@@ -1,41 +1,37 @@
-﻿using Microsoft.Data.Sqlite;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
-
-namespace WpfApp1.Data.Database
+﻿namespace WpfApp1.Data.Database
 {
     public class SqliteContext
     {
-        private readonly string _dbPath;
+        private readonly System.String _dbPath;
 
         public SqliteContext()
         {
-            string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            System.String localAppData = System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData);
 
-            string appFolder = Path.Combine(localAppData, "Database_QC");
+            System.String appFolder = System.IO.Path.Combine(localAppData, "Database_QC");
 
-            _dbPath = Path.Combine(appFolder, "data_qc.db");
+            _dbPath = System.IO.Path.Combine(appFolder, "data_qc.db");
         }
         public void EnsureDatabaseFolderExists()
         {
-            string? folder = Path.GetDirectoryName(_dbPath);
+            System.String? folder = System.IO.Path.GetDirectoryName(_dbPath);
 
-            if (!string.IsNullOrEmpty(folder) && !Directory.Exists(folder))
+            if (!System.String.IsNullOrEmpty(folder) && !System.IO.Directory.Exists(folder))
             {
-                Directory.CreateDirectory(folder);
+                System.IO.Directory.CreateDirectory(folder);
             }
         }
 
         public Microsoft.Data.Sqlite.SqliteConnection CreateConnection()
         {
             EnsureDatabaseFolderExists();
-            var conn = new Microsoft.Data.Sqlite.SqliteConnection($"Data Source={_dbPath}");
+            Microsoft.Data.Sqlite.SqliteConnection conn = new Microsoft.Data.Sqlite.SqliteConnection($"Data Source={_dbPath}");
             conn.Open();
 
-            using (var pragmaCmd = conn.CreateCommand())
+            Microsoft.Data.Sqlite.SqliteCommand? pragmaCmd = null;
+            try
             {
+                pragmaCmd = conn.CreateCommand();
                 pragmaCmd.CommandText = @"
             PRAGMA synchronous = OFF;
             PRAGMA journal_mode = WAL;
@@ -48,6 +44,13 @@ namespace WpfApp1.Data.Database
             PRAGMA query_only = OFF;
         ";
                 pragmaCmd.ExecuteNonQuery();
+            }
+            finally
+            {
+                if (pragmaCmd != null)
+                {
+                    pragmaCmd.Dispose();
+                }
             }
             return conn;
         }
