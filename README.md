@@ -43,6 +43,3 @@ Proyek ini mengikuti filosofi **"Pragmatic Human-Readable"**:
 
 ## 📸 Tangkapan Layar (Screenshots)
 *(Tambahkan tangkapan layar Menu Utama, Grid Pencarian, dan Contoh Excel COA di sini)*
-
-## 📄 Lisensi
-Hak Cipta © 2026 PT. Indowire Prima Industrindo. Dilindungi Undang-Undang.
