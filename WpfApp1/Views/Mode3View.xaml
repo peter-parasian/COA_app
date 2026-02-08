@@ -87,8 +87,8 @@
                                 Foreground="#6C757D"
                                 Text="SIZE" />
                             <ComboBox
-                                Width="140"
-                                Controls:TextBoxHelper.Watermark="Select Size"
+                                Width="100"
+                                Controls:TextBoxHelper.Watermark="Size"
                                 ItemsSource="{Binding SizeOptions}"
                                 SelectedItem="{Binding SelectedSize}"
                                 Style="{StaticResource MahApps.Styles.ComboBox}" />
@@ -102,7 +102,7 @@
                                 Foreground="#6C757D"
                                 Text="CUSTOMER" />
                             <ComboBox
-                                Width="180"
+                                Width="160"
                                 Controls:TextBoxHelper.Watermark="Select Customer"
                                 ItemsSource="{Binding CustomerOptions}"
                                 SelectedItem="{Binding SelectedCustomer}"
@@ -178,9 +178,9 @@
 
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="4*" />
+                <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="15" />
-                <ColumnDefinition Width="6*" />
+                <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
             <Border
@@ -234,21 +234,31 @@
                                 Binding="{Binding No}"
                                 ElementStyle="{StaticResource CenteredCellStyle}"
                                 Header="NO" />
+
                             <DataGridTextColumn
-                                Width="1*"
+                                Width="0.6*"
                                 Binding="{Binding Specification}"
                                 ElementStyle="{StaticResource CenteredCellStyle}"
-                                Header="SIZE (SPEC)" />
+                                Header="SIZE" />
+
                             <DataGridTextColumn
-                                Width="2*"
+                                Width="1.5*"
+                                Binding="{Binding LotNo}"
+                                ElementStyle="{StaticResource CenteredCellStyle}"
+                                Header="LOT NO" />
+
+                            <DataGridTextColumn
+                                Width="1.5*"
                                 Binding="{Binding CustomerName}"
                                 ElementStyle="{StaticResource CenteredCellStyle}"
                                 Header="CUSTOMER" />
+
                             <DataGridTextColumn
-                                Width="1.2*"
+                                Width="1*"
                                 Binding="{Binding DateProd}"
                                 ElementStyle="{StaticResource CenteredCellStyle}"
                                 Header="PROD DATE" />
+
                             <DataGridTemplateColumn Width="60" Header="ACTION">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
@@ -408,7 +418,6 @@
                                         <DataTemplate>
                                             <StackPanel Orientation="Horizontal">
                                                 <TextBlock VerticalAlignment="Center" Text="{Binding SheetName}" />
-
                                                 <Button
                                                     Margin="10,0,0,0"
                                                     Padding="5"
@@ -480,19 +489,46 @@
                         Style="{StaticResource MahApps.Styles.DataGrid}"
                         VirtualizingPanel.IsVirtualizing="True"
                         VirtualizingPanel.VirtualizationMode="Recycling">
+                        <DataGrid.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem
+                                    Command="{Binding DataContext.RemoveFromExportCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                    CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.SelectedItem}"
+                                    FontFamily="Segoe MDL2 Assets"
+                                    Header="Hapus dari List"
+                                    Icon="&#xE74D;" />
+                            </ContextMenu>
+                        </DataGrid.ContextMenu>
+
                         <DataGrid.Columns>
                             <DataGridTextColumn
-                                Width="2*"
+                                Width="0.6*"
+                                Binding="{Binding Specification}"
+                                ElementStyle="{StaticResource CenteredCellStyle}"
+                                Header="SIZE"
+                                IsReadOnly="True" />
+
+                            <DataGridTextColumn
+                                Width="1.5*"
                                 Binding="{Binding CustomerName}"
                                 ElementStyle="{StaticResource CenteredCellStyle}"
                                 Header="CUSTOMER"
                                 IsReadOnly="True" />
+
+                            <DataGridTextColumn
+                                Width="1.5*"
+                                Binding="{Binding LotNo}"
+                                ElementStyle="{StaticResource CenteredCellStyle}"
+                                Header="LOT NO"
+                                IsReadOnly="True" />
+
                             <DataGridTextColumn
                                 Width="1*"
                                 Binding="{Binding DateProd}"
                                 ElementStyle="{StaticResource CenteredCellStyle}"
                                 Header="PROD DATE"
                                 IsReadOnly="True" />
+
                             <DataGridTemplateColumn Width="70" Header="ACTION">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
@@ -505,9 +541,12 @@
                                             Command="{Binding DataContext.RemoveFromExportCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                             CommandParameter="{Binding}"
                                             Content="×"
+                                            Cursor="Hand"
                                             FontSize="18"
                                             Foreground="White"
-                                            Style="{StaticResource MahApps.Styles.Button.Square}" />
+                                            IsEnabled="{Binding DataContext.IsNotBusy, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            Style="{StaticResource MahApps.Styles.Button.Square}"
+                                            ToolTip="Hapus dari daftar" />
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>

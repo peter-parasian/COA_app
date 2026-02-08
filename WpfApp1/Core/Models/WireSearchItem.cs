@@ -6,6 +6,9 @@
         public string Specification { get; set; } = string.Empty;
         public string CustomerName { get; set; } = string.Empty;
         public string DateProd { get; set; } = string.Empty;
+
+        public string LotNo => FullRecord.Lot;
+
         public WireRecord FullRecord { get; set; }
     }
 }

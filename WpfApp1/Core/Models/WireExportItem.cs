@@ -20,6 +20,8 @@ namespace WpfApp1.Core.Models
 
         public string DateProd => _record.Date;
 
+        public string LotNo => _record.Lot;
+
         public event PropertyChangedEventHandler? PropertyChanged;
 
         protected void OnPropertyChanged([CallerMemberName] string propertyName = "")
