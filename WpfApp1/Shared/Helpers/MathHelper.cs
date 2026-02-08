@@ -1,17 +1,21 @@
-﻿namespace WpfApp1.Shared.Helpers
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+using WpfApp1.Shared.Helpers;
+
+namespace WpfApp1.Shared.Helpers
 {
     public static class MathHelper
     {
-        public static (System.Double Tensile, System.Double Elongation) CalculateTensileAndElongation(
-            System.Double t1, System.Double t2, System.Double e1, System.Double e2)
+        public static (double Tensile, double Elongation) CalculateTensileAndElongation(double t1, double t2, double e1, double e2)
         {
-            System.Double finalTensile = 0;
-            System.Double finalElongation = 0;
+            double finalTensile = 0;
+            double finalElongation = 0;
 
-            System.Boolean hasT1 = t1 > 0;
-            System.Boolean hasT2 = t2 > 0;
-            System.Boolean hasE1 = e1 > 0;
-            System.Boolean hasE2 = e2 > 0;
+            bool hasT1 = t1 > 0;
+            bool hasT2 = t2 > 0;
+            bool hasE1 = e1 > 0;
+            bool hasE2 = e2 > 0;
 
             if (hasT1 && hasT2 && hasE1 && hasE2)
             {

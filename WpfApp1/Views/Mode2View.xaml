@@ -1,0 +1,624 @@
+<UserControl
+    x:Class="WpfApp1.Views.Mode2View"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:Controls="http://metro.mahapps.com/winfx/xaml/controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="700"
+    d:DesignWidth="1100"
+    mc:Ignorable="d">
+
+    <Grid Margin="15,20,15,15">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Margin="0,0,0,15">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <Button
+                Margin="0,0,15,0"
+                VerticalAlignment="Center"
+                Click="ButtonBack_Click"
+                Style="{StaticResource CircleBackBtnStyle}"
+                ToolTip="Kembali ke Menu Utama">
+                <TextBlock
+                    FontFamily="Segoe MDL2 Assets"
+                    FontSize="20"
+                    FontWeight="Bold"
+                    Text="&#xE72B;" />
+            </Button>
+
+            <Border
+                Grid.Column="1"
+                Padding="15,10"
+                Background="White"
+                BorderBrush="#DEE2E6"
+                BorderThickness="1"
+                CornerRadius="4">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <Grid Grid.Column="0" VerticalAlignment="Center">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="20" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="15" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="15" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="15" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                            <TextBlock
+                                FontSize="14"
+                                FontWeight="Bold"
+                                Foreground="#28A745"
+                                Text="MODE 2 VIEW" />
+                            <TextBlock
+                                FontSize="11"
+                                Foreground="#6C757D"
+                                Text="DATABASE SEARCH" />
+                        </StackPanel>
+
+                        <Border
+                            Grid.Column="1"
+                            Width="1"
+                            Height="35"
+                            HorizontalAlignment="Center"
+                            Background="#CED4DA" />
+
+                        <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                            <TextBlock
+                                Margin="0,0,0,2"
+                                FontSize="11"
+                                FontWeight="SemiBold"
+                                Foreground="#6C757D"
+                                Text="YEAR" />
+                            <ComboBox
+                                Width="120"
+                                Controls:TextBoxHelper.Watermark="Select Year"
+                                ItemsSource="{Binding Years}"
+                                SelectedItem="{Binding SelectedYear}"
+                                Style="{StaticResource MahApps.Styles.ComboBox}" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="4" VerticalAlignment="Center">
+                            <TextBlock
+                                Margin="0,0,0,2"
+                                FontSize="11"
+                                FontWeight="SemiBold"
+                                Foreground="#6C757D"
+                                Text="MONTH" />
+                            <ComboBox
+                                Width="150"
+                                Controls:TextBoxHelper.Watermark="Select Month"
+                                ItemsSource="{Binding Months}"
+                                SelectedItem="{Binding SelectedMonth}"
+                                Style="{StaticResource MahApps.Styles.ComboBox}" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="6" VerticalAlignment="Center">
+                            <TextBlock
+                                Margin="0,0,0,2"
+                                FontSize="11"
+                                FontWeight="SemiBold"
+                                Foreground="#6C757D"
+                                Text="PRODUCTION DATE" />
+                            <DatePicker
+                                Width="160"
+                                Controls:TextBoxHelper.Watermark="Select Date"
+                                SelectedDate="{Binding SelectedDate}"
+                                Style="{StaticResource MahApps.Styles.DatePicker}" />
+                        </StackPanel>
+
+                        <Button
+                            Grid.Column="8"
+                            Width="100"
+                            Height="38"
+                            VerticalAlignment="Bottom"
+                            Command="{Binding FindCommand}"
+                            Content="FIND"
+                            Controls:ControlsHelper.ContentCharacterCasing="Upper"
+                            FontSize="13"
+                            FontWeight="SemiBold"
+                            IsEnabled="{Binding IsNotBusy}"
+                            Style="{StaticResource MahApps.Styles.Button.Square.Accent}" />
+                    </Grid>
+
+                    <StackPanel
+                        Grid.Column="1"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center">
+
+                        <Border
+                            Margin="0,0,0,5"
+                            Padding="10,4"
+                            HorizontalAlignment="Right"
+                            Background="#D7F2FF"
+                            BorderBrush="#007BFF"
+                            BorderThickness="1"
+                            CornerRadius="4">
+                            <TextBlock
+                                FontSize="12"
+                                FontWeight="Black"
+                                Foreground="#004085"
+                                Text="MODE 2 : SIEMENS" />
+                        </Border>
+
+                        <TextBlock
+                            HorizontalAlignment="Right"
+                            FontSize="24"
+                            FontWeight="Black"
+                            Foreground="#0066CC"
+                            Text="COA PT Simens">
+                            <TextBlock.Effect>
+                                <DropShadowEffect
+                                    BlurRadius="5"
+                                    Direction="315"
+                                    Opacity="0.5"
+                                    ShadowDepth="3"
+                                    Color="#ADD8E6" />
+                            </TextBlock.Effect>
+                        </TextBlock>
+                    </StackPanel>
+
+                </Grid>
+            </Border>
+        </Grid>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="4*" />
+                <ColumnDefinition Width="15" />
+                <ColumnDefinition Width="6*" />
+            </Grid.ColumnDefinitions>
+
+            <Border
+                Grid.Column="0"
+                Background="White"
+                BorderBrush="#DEE2E6"
+                BorderThickness="1"
+                CornerRadius="4">
+                <DockPanel>
+                    <Border
+                        Padding="15,10"
+                        Background="#F8F9FA"
+                        BorderBrush="#E9ECEF"
+                        BorderThickness="0,0,0,1"
+                        CornerRadius="4,4,0,0"
+                        DockPanel.Dock="Top">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock
+                                Margin="0,0,8,0"
+                                VerticalAlignment="Center"
+                                FontFamily="Segoe MDL2 Assets"
+                                Foreground="#6C757D"
+                                Text="&#xE721;" />
+                            <TextBlock
+                                FontSize="14"
+                                FontWeight="Bold"
+                                Foreground="#495057"
+                                Text="SEARCH RESULTS" />
+                        </StackPanel>
+                    </Border>
+
+                    <DataGrid
+                        x:Name="GridSearchResults"
+                        AutoGenerateColumns="False"
+                        BorderThickness="0"
+                        CanUserReorderColumns="False"
+                        CanUserResizeColumns="False"
+                        CanUserSortColumns="True"
+                        ColumnHeaderStyle="{StaticResource CenteredColumnHeaderStyle}"
+                        EnableRowVirtualization="True"
+                        GridLinesVisibility="Horizontal"
+                        HeadersVisibility="Column"
+                        IsReadOnly="True"
+                        ItemsSource="{Binding SearchResults}"
+                        ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                        ScrollViewer.VerticalScrollBarVisibility="Auto"
+                        Style="{StaticResource MahApps.Styles.DataGrid}"
+                        VirtualizingPanel.IsVirtualizing="True"
+                        VirtualizingPanel.VirtualizationMode="Recycling">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn
+                                Width="50"
+                                Binding="{Binding No}"
+                                ElementStyle="{StaticResource CenteredCellStyle}"
+                                Header="NO" />
+                            <DataGridTextColumn
+                                Width="*"
+                                Binding="{Binding Specification}"
+                                ElementStyle="{StaticResource CenteredCellStyle}"
+                                Header="SIZE (SPEC)" />
+                            <DataGridTextColumn
+                                Width="100"
+                                Binding="{Binding DateProd}"
+                                ElementStyle="{StaticResource CenteredCellStyle}"
+                                Header="PROD DATE" />
+                            <DataGridTemplateColumn Width="70" Header="ACTION">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button
+                                            Width="30"
+                                            Height="26"
+                                            Padding="0,-2,0,0"
+                                            Background="#28A745"
+                                            BorderThickness="0"
+                                            Command="{Binding DataContext.AddToExportCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            CommandParameter="{Binding}"
+                                            Content="+"
+                                            Cursor="Hand"
+                                            FontSize="16"
+                                            Foreground="White"
+                                            IsEnabled="{Binding DataContext.IsNotBusy, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            Style="{StaticResource MahApps.Styles.Button.Square}"
+                                            ToolTip="Tambahkan ke daftar" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </Border>
+
+            <Border
+                Grid.Column="2"
+                Background="White"
+                BorderBrush="#DEE2E6"
+                BorderThickness="1"
+                CornerRadius="4">
+                <DockPanel>
+                    <Border
+                        Padding="15,10"
+                        Background="#F8F9FA"
+                        BorderBrush="#E9ECEF"
+                        BorderThickness="0,0,0,1"
+                        CornerRadius="4,4,0,0"
+                        DockPanel.Dock="Top">
+                        <Grid>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock
+                                    Margin="0,0,8,0"
+                                    VerticalAlignment="Center"
+                                    FontFamily="Segoe MDL2 Assets"
+                                    Foreground="#28A745"
+                                    Text="&#xE7BF;" />
+                                <TextBlock
+                                    FontSize="14"
+                                    FontWeight="Bold"
+                                    Foreground="#28A745"
+                                    Text="EXPORT LIST" />
+                            </StackPanel>
+                            <Border
+                                Padding="10,2"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                                Background="#FD7E14"
+                                CornerRadius="10">
+                                <TextBlock
+                                    FontSize="11"
+                                    FontWeight="Bold"
+                                    Foreground="White"
+                                    Text="{Binding SelectedSheet.Items.Count, StringFormat='{}{0} Items', FallbackValue='0 Items'}" />
+                            </Border>
+                        </Grid>
+                    </Border>
+
+                    <Border
+                        DockPanel.Dock="Bottom"
+                        Padding="5,2"
+                        Background="#F1F3F5"
+                        BorderBrush="#DEE2E6"
+                        BorderThickness="0,1,0,0">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Margin="0,0,10,0" Orientation="Horizontal">
+                                <Button
+                                    Margin="0,0,2,0"
+                                    Padding="8,5"
+                                    Command="{Binding AddSheetCommand}"
+                                    Cursor="Hand"
+                                    Style="{StaticResource MahApps.Styles.Button.Flat}"
+                                    ToolTip="Tambah Sheet Baru">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            FontFamily="Segoe MDL2 Assets"
+                                            Foreground="#28A745"
+                                            Text="&#xE710;" />
+                                        <TextBlock
+                                            VerticalAlignment="Center"
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Text="Add Sheet" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+
+                            <ListBox
+                                Grid.Column="1"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                ItemsSource="{Binding Sheets}"
+                                ScrollViewer.HorizontalScrollBarVisibility="Hidden"
+                                SelectedItem="{Binding SelectedSheet}">
+                                <ListBox.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal" />
+                                    </ItemsPanelTemplate>
+                                </ListBox.ItemsPanel>
+                                <ListBox.ItemContainerStyle>
+                                    <Style BasedOn="{StaticResource MahApps.Styles.ListBoxItem}" TargetType="ListBoxItem">
+                                        <Setter Property="Margin" Value="0,0,2,0" />
+                                        <Setter Property="Padding" Value="10,6,5,6" />
+                                        <Setter Property="Background" Value="#E9ECEF" />
+                                        <Setter Property="Foreground" Value="#495057" />
+                                        <Setter Property="Cursor" Value="Hand" />
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="ListBoxItem">
+                                                    <Border
+                                                        Padding="{TemplateBinding Padding}"
+                                                        Background="{TemplateBinding Background}"
+                                                        BorderBrush="#DEE2E6"
+                                                        BorderThickness="1,1,1,0"
+                                                        CornerRadius="3,3,0,0">
+                                                        <ContentPresenter />
+                                                    </Border>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                        <Style.Triggers>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter Property="Background" Value="White" />
+                                                <Setter Property="Foreground" Value="#28A745" />
+                                                <Setter Property="FontWeight" Value="Bold" />
+                                                <Setter Property="Panel.ZIndex" Value="1" />
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </ListBox.ItemContainerStyle>
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock VerticalAlignment="Center" Text="{Binding SheetName}" />
+                                            <Button
+                                                Command="{Binding DataContext.RemoveSheetCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                CommandParameter="{Binding}"
+                                                Style="{StaticResource TabCloseBtnStyle}"
+                                                ToolTip="Hapus Sheet" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </Grid>
+                    </Border>
+
+                    <DataGrid
+                        x:Name="GridBasket"
+                        AutoGenerateColumns="False"
+                        BorderThickness="0"
+                        CanUserReorderColumns="False"
+                        CanUserResizeColumns="False"
+                        CanUserSortColumns="True"
+                        ColumnHeaderStyle="{StaticResource CenteredColumnHeaderStyle}"
+                        EnableRowVirtualization="True"
+                        GridLinesVisibility="Horizontal"
+                        HeadersVisibility="Column"
+                        IsReadOnly="False"
+                        ItemsSource="{Binding SelectedSheet.Items}"
+                        ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                        ScrollViewer.VerticalScrollBarVisibility="Auto"
+                        Style="{StaticResource MahApps.Styles.DataGrid}"
+                        VirtualizingPanel.IsVirtualizing="True"
+                        VirtualizingPanel.VirtualizationMode="Recycling">
+                        <DataGrid.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem
+                                    Command="{Binding DataContext.RemoveFromExportCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                    CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.SelectedItem}"
+                                    FontFamily="Segoe MDL2 Assets"
+                                    Header="Hapus dari List"
+                                    Icon="&#xE74D;" />
+                            </ContextMenu>
+                        </DataGrid.ContextMenu>
+
+                        <DataGrid.Columns>
+                            <DataGridTextColumn
+                                Width="50"
+                                Binding="{Binding Id}"
+                                ElementStyle="{StaticResource CenteredCellStyle}"
+                                Header="ID"
+                                IsReadOnly="True" />
+                            <DataGridTextColumn
+                                Width="*"
+                                Binding="{Binding Specification}"
+                                ElementStyle="{StaticResource CenteredCellStyle}"
+                                Header="SIZE (SPEC)"
+                                IsReadOnly="True" />
+                            <DataGridTextColumn
+                                Width="100"
+                                Binding="{Binding DateProd}"
+                                ElementStyle="{StaticResource CenteredCellStyle}"
+                                Header="PROD DATE"
+                                IsReadOnly="True" />
+                            <DataGridTemplateColumn Width="150" Header="TYPE">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ComboBox
+                                            Margin="2"
+                                            HorizontalAlignment="Stretch"
+                                            VerticalAlignment="Center"
+                                            ItemsSource="{Binding DataContext.TypeOptions, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            SelectedItem="{Binding SelectedType, UpdateSourceTrigger=PropertyChanged}"
+                                            Style="{StaticResource MahApps.Styles.ComboBox}" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Width="70" Header="ACTION">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button
+                                            Width="30"
+                                            Height="26"
+                                            Padding="0,-4,0,0"
+                                            Background="#DC3545"
+                                            BorderThickness="0"
+                                            Command="{Binding DataContext.RemoveFromExportCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            CommandParameter="{Binding}"
+                                            Content="×"
+                                            Cursor="Hand"
+                                            FontSize="18"
+                                            Foreground="White"
+                                            IsEnabled="{Binding DataContext.IsNotBusy, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            Style="{StaticResource MahApps.Styles.Button.Square}"
+                                            ToolTip="Hapus dari daftar" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </Border>
+        </Grid>
+
+        <Grid Grid.Row="2" Margin="0,15,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <Border
+                Grid.Column="0"
+                Margin="0,0,10,0"
+                Padding="15,10"
+                VerticalAlignment="Center"
+                Background="White"
+                BorderBrush="#DEE2E6"
+                BorderThickness="1"
+                CornerRadius="4">
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="10" />
+                        <ColumnDefinition Width="1.2*" />
+                        <ColumnDefinition Width="20" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="10" />
+                        <ColumnDefinition Width="1.5*" />
+                        <ColumnDefinition Width="20" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="10" />
+                        <ColumnDefinition Width="1.5*" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock
+                        Grid.Column="0"
+                        VerticalAlignment="Center"
+                        FontSize="12"
+                        FontWeight="Bold"
+                        Foreground="#6C757D"
+                        Text="Standard:" />
+                    <ComboBox
+                        Grid.Column="2"
+                        VerticalAlignment="Center"
+                        Controls:TextBoxHelper.Watermark="Select Standard"
+                        ItemsSource="{Binding Standards}"
+                        SelectedItem="{Binding SelectedStandard}"
+                        Template="{StaticResource UpComboBoxControlTemplate}" />
+
+                    <TextBlock
+                        Grid.Column="4"
+                        VerticalAlignment="Center"
+                        FontSize="12"
+                        FontWeight="Bold"
+                        Foreground="#6C757D"
+                        Text="DO Number:" />
+                    <TextBox
+                        Grid.Column="6"
+                        VerticalAlignment="Center"
+                        Controls:TextBoxHelper.ClearTextButton="True"
+                        Controls:TextBoxHelper.Watermark="Input DO Number"
+                        Text="{Binding DoNumber, UpdateSourceTrigger=PropertyChanged}" />
+
+                    <TextBlock
+                        Grid.Column="8"
+                        VerticalAlignment="Center"
+                        FontSize="12"
+                        FontWeight="Bold"
+                        Foreground="#6C757D"
+                        Text="PO Number:" />
+                    <TextBox
+                        Grid.Column="10"
+                        VerticalAlignment="Center"
+                        Controls:TextBoxHelper.ClearTextButton="True"
+                        Controls:TextBoxHelper.Watermark="Input PO Number"
+                        Text="{Binding PoNumber, UpdateSourceTrigger=PropertyChanged}" />
+                </Grid>
+            </Border>
+
+            <Button
+                Grid.Column="1"
+                Width="200"
+                Height="Auto"
+                MinWidth="150"
+                Padding="15,10"
+                VerticalAlignment="Center"
+                Command="{Binding PrintCoaCommand}"
+                Content="PRINT COA"
+                Controls:ControlsHelper.ContentCharacterCasing="Upper"
+                FontSize="16"
+                FontWeight="Bold"
+                IsEnabled="{Binding IsNotBusy}"
+                Style="{StaticResource MahApps.Styles.Button.Square.Accent}"
+                ToolTip="Export data terpilih ke Excel" />
+        </Grid>
+
+        <Border
+            Grid.RowSpan="3"
+            Margin="0,10,0,0"
+            Padding="30,15"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Top"
+            Background="#FD7E14"
+            CornerRadius="5"
+            Effect="{DynamicResource MahApps.DropShadowEffect.Dialog}"
+            Visibility="{Binding NotificationVisibility}">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock
+                    Margin="0,0,10,0"
+                    VerticalAlignment="Center"
+                    FontFamily="Segoe MDL2 Assets"
+                    FontSize="18"
+                    Foreground="White"
+                    Text="&#xE930;" />
+                <TextBlock
+                    VerticalAlignment="Center"
+                    FontSize="14"
+                    FontWeight="SemiBold"
+                    Foreground="White"
+                    Text="{Binding NotificationMessage}" />
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

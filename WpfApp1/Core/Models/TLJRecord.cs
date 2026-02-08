@@ -1,12 +1,12 @@
-﻿namespace WpfApp1.Core.Models
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace WpfApp1.Core.Models
 {
     public struct TLJRecord
     {
-        public System.String Size;
-        public System.String Year;
-        public System.String Month;
-        public System.String ProdDate;
-        public System.String BatchNo;
+        public string Size, Year, Month, ProdDate, BatchNo;
         public System.DateTime ParsedDate;
     }
 }

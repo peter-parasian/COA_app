@@ -11,6 +11,8 @@
 		<NoWarn>1591</NoWarn>
 		<AssemblyName>Quality App</AssemblyName>
 		<ApplicationIcon>Images\app_logo.ico</ApplicationIcon>
+		<ServerGarbageCollection>false</ServerGarbageCollection>
+		<ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -23,37 +25,104 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Resource Remove="Images\approved_IMG.png" />
-	  <Resource Remove="Images\profile_SNI.png" />
-	  <Resource Remove="Images\TEMPLATEE_COA_BUSBAR.xlsx" />
+		<Resource Remove="Images\approved_IMG.png" />
+		<Resource Remove="Images\approved_IMG_v2.png" />
+		<Resource Remove="Images\company_logo.png" />
+		<Resource Remove="Images\document_no.png" />
+		<Resource Remove="Images\document_no_simens.png" />
+		<Resource Remove="Images\logo_COA.png" />
+		<Resource Remove="Images\NEW_Data_Wire.xlsx" />
+		<Resource Remove="Images\profile_SNI.png" />
+		<Resource Remove="Images\Size_120_Canning.xlsx" />
+		<Resource Remove="Images\Size_120_Indolakto.xlsx" />
+		<Resource Remove="Images\Size_120_Multi.xlsx" />
+		<Resource Remove="Images\Size_120_Nestle.xlsx" />
+		<Resource Remove="Images\Size_124_Canning.xlsx" />
+		<Resource Remove="Images\Size_124_Cometa.xlsx" />
+		<Resource Remove="Images\Size_124_Multi.xlsx" />
+		<Resource Remove="Images\Size_138_Almicos.xlsx" />
+		<Resource Remove="Images\Size_138_Avia.xlsx" />
+		<Resource Remove="Images\Size_138_Eka.xlsx" />
+		<Resource Remove="Images\Size_138_Lautan.xlsx" />
+		<Resource Remove="Images\Size_138_Masami.xlsx" />
+		<Resource Remove="Images\Size_138_Metal.xlsx" />
+		<Resource Remove="Images\Size_138_Multi.xlsx" />
+		<Resource Remove="Images\Size_138_Prisma.xlsx" />
+		<Resource Remove="Images\Size_138__Cometa.xlsx" />
+		<Resource Remove="Images\Size_150_Avia.xlsx" />
+		<Resource Remove="Images\Size_150_Multi.xlsx" />
+		<Resource Remove="Images\Size_150__Cometa.xlsx" />
+		<Resource Remove="Images\Size_160_Indowire.xlsx" />
+		<Resource Remove="Images\Size_160_Magnakabel.xlsx" />
+		<Resource Remove="Images\Size_160_Metal.xlsx" />
+		<Resource Remove="Images\Size_180_ JJ.xlsx" />
+		<Resource Remove="Images\TEMPLATEE_COA_BUSBAR.xlsx" />
+		<Resource Remove="Images\TEMPLATEE_COA_SIMEN.xlsx" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <EmbeddedResource Include="Images\approved_IMG.png" />
-	  <EmbeddedResource Include="Images\app_logo.ico" />
-	  <EmbeddedResource Include="Images\profile_SNI.png" />
-	  <EmbeddedResource Include="Images\TEMPLATEE_COA_BUSBAR.xlsx" />
+		<EmbeddedResource Include="Images\approved_IMG_v2.png" />
+		<EmbeddedResource Include="Images\app_logo.ico" />
+		<EmbeddedResource Include="Images\company_logo.png">
+		  <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</EmbeddedResource>
+		<EmbeddedResource Include="Images\document_no.png" />
+		<EmbeddedResource Include="Images\document_no_simens.png" />
+		<EmbeddedResource Include="Images\logo_COA.png" />
+		<EmbeddedResource Include="Images\NEW_Data_Wire.xlsx" />
+		<EmbeddedResource Include="Images\profile_SNI.png" />
+		<EmbeddedResource Include="Images\Size_120_Canning.xlsx" />
+		<EmbeddedResource Include="Images\Size_120_Indolakto.xlsx" />
+		<EmbeddedResource Include="Images\Size_120_Multi.xlsx" />
+		<EmbeddedResource Include="Images\Size_120_Nestle.xlsx" />
+		<EmbeddedResource Include="Images\Size_124_Canning.xlsx" />
+		<EmbeddedResource Include="Images\Size_124_Cometa.xlsx" />
+		<EmbeddedResource Include="Images\Size_124_Multi.xlsx" />
+		<EmbeddedResource Include="Images\Size_138_Almicos.xlsx" />
+		<EmbeddedResource Include="Images\Size_138_Avia.xlsx" />
+		<EmbeddedResource Include="Images\Size_138_Eka.xlsx" />
+		<EmbeddedResource Include="Images\Size_138_Lautan.xlsx" />
+		<EmbeddedResource Include="Images\Size_138_Masami.xlsx" />
+		<EmbeddedResource Include="Images\Size_138_Metal.xlsx" />
+		<EmbeddedResource Include="Images\Size_138_Multi.xlsx" />
+		<EmbeddedResource Include="Images\Size_138_Prisma.xlsx" />
+		<EmbeddedResource Include="Images\Size_138__Cometa.xlsx" />
+		<EmbeddedResource Include="Images\Size_150_Avia.xlsx" />
+		<EmbeddedResource Include="Images\Size_150_Multi.xlsx" />
+		<EmbeddedResource Include="Images\Size_150__Cometa.xlsx" />
+		<EmbeddedResource Include="Images\Size_160_Indowire.xlsx" />
+		<EmbeddedResource Include="Images\Size_160_Magnakabel.xlsx" />
+		<EmbeddedResource Include="Images\Size_160_Metal.xlsx" />
+		<EmbeddedResource Include="Images\Size_180_ JJ.xlsx" />
+		<EmbeddedResource Include="Images\TEMPLATEE_COA_BUSBAR.xlsx" />
+		<EmbeddedResource Include="Images\TEMPLATEE_COA_SIMEN.xlsx" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Compile Update="Properties\Settings.Designer.cs">
-	    <DesignTimeSharedInput>True</DesignTimeSharedInput>
-	    <AutoGen>True</AutoGen>
-	    <DependentUpon>Settings.settings</DependentUpon>
-	  </Compile>
+		<Compile Update="Properties\Resources.Designer.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Resources.resx</DependentUpon>
+		</Compile>
+		<Compile Update="Properties\Settings.Designer.cs">
+			<DesignTimeSharedInput>True</DesignTimeSharedInput>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Settings.settings</DependentUpon>
+		</Compile>
 	</ItemGroup>
 
 	<ItemGroup>
-	  <None Update="Properties\Settings.settings">
-	    <Generator>SettingsSingleFileGenerator</Generator>
-	    <LastGenOutput>Settings.Designer.cs</LastGenOutput>
-	  </None>
+		<EmbeddedResource Update="Properties\Resources.resx">
+			<Generator>ResXFileCodeGenerator</Generator>
+			<LastGenOutput>Resources.Designer.cs</LastGenOutput>
+		</EmbeddedResource>
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Resource Update="Images\company_logo.png">
-	    <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-	  </Resource>
+		<None Update="Properties\Settings.settings">
+			<Generator>SettingsSingleFileGenerator</Generator>
+			<LastGenOutput>Settings.Designer.cs</LastGenOutput>
+		</None>
 	</ItemGroup>
 
 </Project>

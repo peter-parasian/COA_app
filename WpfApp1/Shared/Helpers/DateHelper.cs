@@ -1,13 +1,15 @@
-﻿namespace WpfApp1.Shared.Helpers
+﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Text;
+
+namespace WpfApp1.Shared.Helpers
 {
     public static class DateHelper
     {
-        public static System.String StandardizeDate(System.String rawDate, System.Int32 expectedMonth, System.Int32 expectedYear)
+        public static string StandardizeDate(string rawDate, int expectedMonth, int expectedYear)
         {
-            if (System.String.IsNullOrWhiteSpace(rawDate))
-            {
-                return System.String.Empty;
-            }
+            if (string.IsNullOrWhiteSpace(rawDate)) return string.Empty;
 
             if (System.DateTime.TryParse(rawDate, out System.DateTime parsedDate))
             {
@@ -20,8 +22,8 @@
                 {
                     if (parsedDate.Day <= 12)
                     {
-                        System.Int32 newMonth = parsedDate.Day;
-                        System.Int32 newDay = parsedDate.Month;
+                        int newMonth = parsedDate.Day;
+                        int newDay = parsedDate.Month;
 
                         if (newMonth == expectedMonth)
                         {
@@ -30,30 +32,25 @@
                     }
                 }
 
-                return parsedDate.ToString("dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture);
+                return parsedDate.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture);
             }
 
             return rawDate;
         }
 
-        private static readonly System.Collections.Generic.Dictionary<System.String, System.Int32> _monthCache =
-            new System.Collections.Generic.Dictionary<System.String, System.Int32>(System.StringComparer.OrdinalIgnoreCase);
+        private static readonly System.Collections.Generic.Dictionary<string, int> _monthCache =
+            new System.Collections.Generic.Dictionary<string, int>(System.StringComparer.OrdinalIgnoreCase);
 
-        public static System.Int32 GetMonthNumber(System.String monthName)
+        public static int GetMonthNumber(string monthName)
         {
-            if (System.String.IsNullOrWhiteSpace(monthName))
-            {
-                return 0;
-            }
+            if (string.IsNullOrWhiteSpace(monthName)) return 0;
 
-            if (_monthCache.TryGetValue(monthName, out System.Int32 cachedMonth))
-            {
+            if (_monthCache.TryGetValue(monthName, out int cachedMonth))
                 return cachedMonth;
-            }
 
             try
             {
-                System.Int32 month = System.DateTime.ParseExact(monthName, "MMMM",
+                int month = System.DateTime.ParseExact(monthName, "MMMM",
                     System.Globalization.CultureInfo.InvariantCulture).Month;
                 _monthCache[monthName] = month;
                 return month;
@@ -64,40 +61,20 @@
             }
         }
 
-        public static System.String NormalizeMonthFolder(System.String rawMonth)
+        public static string NormalizeMonthFolder(string rawMonth)
         {
-            if (System.String.IsNullOrWhiteSpace(rawMonth))
+            if (string.IsNullOrWhiteSpace(rawMonth)) return string.Empty;
+            for (int i = 0; i < rawMonth.Length; i++)
             {
-                return System.String.Empty;
+                if (!char.IsDigit(rawMonth[i])) continue;
+                int start = i;
+                while (i < rawMonth.Length && char.IsDigit(rawMonth[i])) i++;
+                string numberText = rawMonth.Substring(start, i - start);
+                if (!int.TryParse(numberText, out int monthNumber)) continue;
+                if (monthNumber < 1 || monthNumber > 12) continue;
+                return new DateTimeFormatInfo().GetMonthName(monthNumber);
             }
-
-            for (System.Int32 i = 0; i < rawMonth.Length; i++)
-            {
-                if (!System.Char.IsDigit(rawMonth[i]))
-                {
-                    continue;
-                }
-
-                System.Int32 start = i;
-                while (i < rawMonth.Length && System.Char.IsDigit(rawMonth[i]))
-                {
-                    i++;
-                }
-
-                System.String numberText = rawMonth.Substring(start, i - start);
-                if (!System.Int32.TryParse(numberText, out System.Int32 monthNumber))
-                {
-                    continue;
-                }
-
-                if (monthNumber < 1 || monthNumber > 12)
-                {
-                    continue;
-                }
-
-                return new System.Globalization.DateTimeFormatInfo().GetMonthName(monthNumber);
-            }
-            return System.String.Empty;
+            return string.Empty;
         }
     }
 }

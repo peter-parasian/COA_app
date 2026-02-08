@@ -1,53 +1,68 @@
-﻿namespace WpfApp1.ViewModels
+﻿using System;
+using System.Linq;
+using System.Windows.Input;
+using System.Windows.Threading;
+using WpfApp1.Core.Models;
+using WpfApp1.Core.Services;
+using WpfApp1.Data.Database;
+using WpfApp1.Data.Repositories;
+
+namespace WpfApp1.ViewModels
 {
-    public class MainViewModel : WpfApp1.ViewModels.BaseViewModel
+    public class MainViewModel : BaseViewModel
     {
-        private WpfApp1.Data.Database.SqliteContext _dbContext;
-        private WpfApp1.Data.Repositories.BusbarRepository _repository;
-        private WpfApp1.Core.Services.ExcelImportService _importService;
-        private WpfApp1.Core.Services.CoaPrintService _printService;
+        private SqliteContext _dbContext;
+        private BusbarRepository _repository;
+        private ExcelImportService _importService;
 
-        private System.Collections.Generic.Dictionary<System.String, System.Collections.Generic.List<WpfApp1.Core.Models.BusbarSearchItem>> _searchCache;
+        // Wire specific dependencies
+        private WireRepository _wireRepository;
+        private ImportServiceWire _importServiceWire;
 
-        private readonly System.Object _logLock = new System.Object();
+        private CoaPrintService _printService;
+        private CoaPrintService2 _printService2;
+
+        private System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<WpfApp1.Core.Models.BusbarSearchItem>> _searchCache;
+
+        private readonly object _logLock = new object();
         private System.Text.StringBuilder _logBuffer = new System.Text.StringBuilder();
         private System.Windows.Threading.DispatcherTimer _logTimer;
 
         #region Properties
 
-        private System.String _debugLog = System.String.Empty;
-        public System.String DebugLog
+        private string _debugLog = string.Empty;
+        public string DebugLog
         {
             get => _debugLog;
             set { _debugLog = value; OnPropertyChanged(); }
         }
 
-        private System.Int32 _progressValue = 0;
-        public System.Int32 ProgressValue
+        private int _progressValue = 0;
+        public int ProgressValue
         {
             get => _progressValue;
             set { _progressValue = value; OnPropertyChanged(); }
         }
 
-        private System.Int32 _progressMaximum = 100;
-        public System.Int32 ProgressMaximum
+        private int _progressMaximum = 100;
+        public int ProgressMaximum
         {
             get => _progressMaximum;
             set { _progressMaximum = value; OnPropertyChanged(); }
         }
 
-        private System.String _progressText = "Ready";
-        public System.String ProgressText
+        private string _progressText = "Ready";
+        public string ProgressText
         {
             get => _progressText;
             set { _progressText = value; OnPropertyChanged(); }
         }
 
-        public System.Int32 TotalFilesFound { get; private set; }
-        public System.Int32 TotalRowsInserted { get; private set; }
+        public int TotalFilesFound { get; private set; }
+        public int TotalRowsInserted { get; private set; }
 
-        private System.Boolean _isBusy = false;
-        public System.Boolean IsBusy
+        private bool _isBusy = false;
+        public bool IsBusy
         {
             get => _isBusy;
             set
@@ -56,126 +71,130 @@
                 {
                     _isBusy = value;
                     OnPropertyChanged();
-                    OnPropertyChanged("IsNotBusy");
-                    OnPropertyChanged("IsBusyVisibility");
+                    OnPropertyChanged(nameof(IsNotBusy));
+                    OnPropertyChanged(nameof(IsBusyVisibility));
 
-                    if (_isBusy)
-                    {
-                        StartLogTimer();
-                    }
-                    else
-                    {
-                        StopLogTimer();
-                    }
+                    if (_isBusy) StartLogTimer();
+                    else StopLogTimer();
                 }
             }
         }
 
-        public System.Boolean IsNotBusy => !IsBusy;
+        public bool IsNotBusy => !IsBusy;
 
         public System.Windows.Visibility IsBusyVisibility =>
             IsBusy ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
 
-        private System.String _busyMessage = "Processing...";
-        public System.String BusyMessage
+        private string _busyMessage = "Processing...";
+        public string BusyMessage
         {
             get => _busyMessage;
             set { _busyMessage = value; OnPropertyChanged(); }
         }
 
-        private System.Boolean _showBlankPage = false;
-        public System.Boolean ShowBlankPage
+        // Mode 1 Flag
+        private bool _showBlankPage = false;
+        public bool ShowBlankPage
         {
             get => _showBlankPage;
             set { _showBlankPage = value; OnPropertyChanged(); }
         }
 
-        private System.String _notificationMessage = System.String.Empty;
-        public System.String NotificationMessage
+        // Mode 2 Flag
+        private bool _showMode2Page = false;
+        public bool ShowMode2Page
+        {
+            get => _showMode2Page;
+            set { _showMode2Page = value; OnPropertyChanged(); }
+        }
+
+        // Mode 3 Flag
+        private bool _showMode3Page = false;
+        public bool ShowMode3Page
+        {
+            get => _showMode3Page;
+            set { _showMode3Page = value; OnPropertyChanged(); }
+        }
+
+        private string _notificationMessage = string.Empty;
+        public string NotificationMessage
         {
             get => _notificationMessage;
             set { _notificationMessage = value; OnPropertyChanged(); }
         }
 
-        private System.Boolean _isNotificationVisible = false;
-        public System.Boolean IsNotificationVisible
+        private bool _isNotificationVisible = false;
+        public bool IsNotificationVisible
         {
             get => _isNotificationVisible;
             set
             {
                 _isNotificationVisible = value;
                 OnPropertyChanged();
-                OnPropertyChanged("NotificationVisibility");
+                OnPropertyChanged(nameof(NotificationVisibility));
             }
         }
 
         public System.Windows.Visibility NotificationVisibility =>
             IsNotificationVisible ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
 
-        public System.Collections.ObjectModel.ObservableCollection<System.String> Years { get; set; } =
-            new System.Collections.ObjectModel.ObservableCollection<System.String>();
-        public System.Collections.ObjectModel.ObservableCollection<System.String> Months { get; set; } =
-            new System.Collections.ObjectModel.ObservableCollection<System.String>();
-        public System.Collections.ObjectModel.ObservableCollection<System.String> Standards { get; set; } =
-            new System.Collections.ObjectModel.ObservableCollection<System.String>();
+        public System.Collections.ObjectModel.ObservableCollection<string> Years { get; set; } = new System.Collections.ObjectModel.ObservableCollection<string>();
+        public System.Collections.ObjectModel.ObservableCollection<string> Months { get; set; } = new System.Collections.ObjectModel.ObservableCollection<string>();
+        public System.Collections.ObjectModel.ObservableCollection<string> Standards { get; set; } = new System.Collections.ObjectModel.ObservableCollection<string>();
 
-        public System.Collections.ObjectModel.ObservableCollection<System.String> TypeOptions { get; set; } =
-            new System.Collections.ObjectModel.ObservableCollection<System.String>
+        public System.Collections.ObjectModel.ObservableCollection<string> TypeOptions { get; set; } = new System.Collections.ObjectModel.ObservableCollection<string>
         {
             "Select", "RD", "FR", "TP", "NONE"
         };
 
-        private System.String? _selectedYear;
-        public System.String? SelectedYear
+        private string? _selectedYear;
+        public string? SelectedYear
         {
             get => _selectedYear;
-            set
-            {
-                if (_selectedYear != value)
-                {
-                    _selectedYear = value;
-                    OnPropertyChanged();
-                    SetDefaultProductionDate();
-                }
-            }
+            set { if (_selectedYear != value) { _selectedYear = value; OnPropertyChanged(); SetDefaultProductionDate(); } }
         }
 
-        private System.String? _selectedMonth;
-        public System.String? SelectedMonth
+        private string? _selectedMonth;
+        public string? SelectedMonth
         {
             get => _selectedMonth;
-            set
-            {
-                if (_selectedMonth != value)
-                {
-                    _selectedMonth = value;
-                    OnPropertyChanged();
-                    SetDefaultProductionDate();
-                }
-            }
+            set { if (_selectedMonth != value) { _selectedMonth = value; OnPropertyChanged(); SetDefaultProductionDate(); } }
         }
 
         private System.DateTime? _selectedDate;
         public System.DateTime? SelectedDate { get => _selectedDate; set { _selectedDate = value; OnPropertyChanged(); } }
 
-        private System.String? _selectedStandard;
-        public System.String? SelectedStandard { get => _selectedStandard; set { _selectedStandard = value; OnPropertyChanged(); } }
+        private string? _selectedStandard;
+        public string? SelectedStandard { get => _selectedStandard; set { _selectedStandard = value; OnPropertyChanged(); } }
 
-        private System.String _customerName = System.String.Empty;
-        public System.String CustomerName { get => _customerName; set { _customerName = value; OnPropertyChanged(); } }
+        private string _customerName = string.Empty;
+        public string CustomerName { get => _customerName; set { _customerName = value; OnPropertyChanged(); } }
 
-        private System.String _poNumber = System.String.Empty;
-        public System.String PoNumber { get => _poNumber; set { _poNumber = value; OnPropertyChanged(); } }
+        private string _poNumber = string.Empty;
+        public string PoNumber { get => _poNumber; set { _poNumber = value; OnPropertyChanged(); } }
 
-        private System.String _numberDO = System.String.Empty;
-        public System.String DoNumber { get => _numberDO; set { _numberDO = value; OnPropertyChanged(); } }
+        private string _numberDO = string.Empty;
+        public string DoNumber { get => _numberDO; set { _numberDO = value; OnPropertyChanged(); } }
 
-        private System.Collections.ObjectModel.ObservableCollection<WpfApp1.Core.Models.BusbarSearchItem> _searchResults =
-            new System.Collections.ObjectModel.ObservableCollection<WpfApp1.Core.Models.BusbarSearchItem>();
-        public System.Collections.ObjectModel.ObservableCollection<WpfApp1.Core.Models.BusbarSearchItem> SearchResults { get => _searchResults; set { _searchResults = value; OnPropertyChanged(); } }
+        private System.Collections.ObjectModel.ObservableCollection<BusbarSearchItem> _searchResults = new System.Collections.ObjectModel.ObservableCollection<BusbarSearchItem>();
+        public System.Collections.ObjectModel.ObservableCollection<BusbarSearchItem> SearchResults { get => _searchResults; set { _searchResults = value; OnPropertyChanged(); } }
 
-        public System.Collections.ObjectModel.ObservableCollection<WpfApp1.Core.Models.BusbarExportItem> ExportList { get; set; }
-            = new System.Collections.ObjectModel.ObservableCollection<WpfApp1.Core.Models.BusbarExportItem>();
+        public System.Collections.ObjectModel.ObservableCollection<SheetModel> Sheets { get; set; }
+            = new System.Collections.ObjectModel.ObservableCollection<SheetModel>();
+
+        private SheetModel? _selectedSheet;
+        public SheetModel? SelectedSheet
+        {
+            get => _selectedSheet;
+            set
+            {
+                if (_selectedSheet != value)
+                {
+                    _selectedSheet = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
 
         #endregion
 
@@ -184,23 +203,45 @@
         public System.Windows.Input.ICommand AddToExportCommand { get; }
         public System.Windows.Input.ICommand RemoveFromExportCommand { get; }
         public System.Windows.Input.ICommand PrintCoaCommand { get; }
+
+        public System.Windows.Input.ICommand AddSheetCommand { get; }
+        public System.Windows.Input.ICommand RemoveSheetCommand { get; }
         #endregion
 
-        public event System.Action<System.String>? OnShowMessage;
+        public event System.Action<string>? OnShowMessage;
 
         public MainViewModel()
         {
-            _dbContext = new WpfApp1.Data.Database.SqliteContext();
-            _repository = new WpfApp1.Data.Repositories.BusbarRepository(_dbContext);
-            _importService = new WpfApp1.Core.Services.ExcelImportService(_repository);
-            _printService = new WpfApp1.Core.Services.CoaPrintService();
+            _dbContext = new SqliteContext();
+            _repository = new BusbarRepository(_dbContext);
+            _importService = new ExcelImportService(_repository);
 
-            _searchCache = new System.Collections.Generic.Dictionary<System.String, System.Collections.Generic.List<WpfApp1.Core.Models.BusbarSearchItem>>();
+            // Initialize Wire services for Mode 3
+            _wireRepository = new WireRepository(_dbContext);
+            _importServiceWire = new ImportServiceWire(_wireRepository);
+
+            _printService = new CoaPrintService();
+            _printService2 = new CoaPrintService2();
+
+            _searchCache = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<WpfApp1.Core.Models.BusbarSearchItem>>();
 
             _logTimer = new System.Windows.Threading.DispatcherTimer();
             _logTimer.Interval = System.TimeSpan.FromMilliseconds(2000);
             _logTimer.Tick += LogTimer_Tick;
 
+            // Wire Service Event Subscriptions
+            _importServiceWire.OnDebugMessage += (msg) => {
+                lock (_logLock)
+                {
+                    _logBuffer.AppendLine(msg);
+                }
+            };
+
+            _importServiceWire.OnProgress += (current, total) => {
+                System.Windows.Application.Current.Dispatcher.InvokeAsync(() => UpdateProgress(current, total));
+            };
+
+            // Busbar Service Event Subscriptions
             _importService.OnDebugMessage += (msg) => {
                 lock (_logLock)
                 {
@@ -213,21 +254,87 @@
             };
 
             InitializeSearchData();
+            InitializeDefaultSheet();
 
             FindCommand = new RelayCommand(ExecuteFind);
             AddToExportCommand = new RelayCommand(ExecuteAddToExport);
             RemoveFromExportCommand = new RelayCommand(ExecuteRemoveFromExport);
             PrintCoaCommand = new RelayCommand(ExecutePrintCoa);
+
+            AddSheetCommand = new RelayCommand(ExecuteAddSheet);
+            RemoveSheetCommand = new RelayCommand(ExecuteRemoveSheet);
         }
+
+        #region Sheet Management Logic
+
+        private void InitializeDefaultSheet()
+        {
+            if (Sheets.Count == 0)
+            {
+                var defaultSheet = new SheetModel("Sheet 1");
+                Sheets.Add(defaultSheet);
+                SelectedSheet = defaultSheet;
+            }
+        }
+
+        private void ExecuteAddSheet(object? parameter)
+        {
+            var newSheet = new SheetModel("Temp");
+            Sheets.Add(newSheet);
+            RenumberSheets();
+            SelectedSheet = newSheet;
+        }
+
+        private void ExecuteRemoveSheet(object? parameter)
+        {
+            if (parameter is SheetModel sheetToRemove)
+            {
+                if (Sheets.Contains(sheetToRemove))
+                {
+                    if (Sheets.Count <= 1)
+                    {
+                        OnShowMessage?.Invoke("Minimal harus ada satu sheet.");
+                        return;
+                    }
+
+                    if (SelectedSheet == sheetToRemove)
+                    {
+                        int index = Sheets.IndexOf(sheetToRemove);
+                        Sheets.Remove(sheetToRemove);
+                        RenumberSheets();
+
+                        if (index < Sheets.Count)
+                            SelectedSheet = Sheets[index];
+                        else
+                            SelectedSheet = Sheets[Sheets.Count - 1];
+                    }
+                    else
+                    {
+                        Sheets.Remove(sheetToRemove);
+                        RenumberSheets();
+                    }
+                }
+            }
+        }
+
+        private void RenumberSheets()
+        {
+            for (int i = 0; i < Sheets.Count; i++)
+            {
+                Sheets[i].SheetName = $"Sheet {i + 1}";
+            }
+        }
+
+        #endregion
 
         #region Logging & Progress
 
-        private void LogTimer_Tick(System.Object? sender, System.EventArgs e)
+        private void LogTimer_Tick(object? sender, System.EventArgs e)
         {
             lock (_logLock)
             {
-                System.String newLogs = _logBuffer.ToString();
-                if (System.String.IsNullOrWhiteSpace(newLogs))
+                string newLogs = _logBuffer.ToString();
+                if (string.IsNullOrWhiteSpace(newLogs))
                 {
                     return;
                 }
@@ -244,10 +351,7 @@
 
         private void StartLogTimer()
         {
-            if (!_logTimer.IsEnabled)
-            {
-                _logTimer.Start();
-            }
+            if (!_logTimer.IsEnabled) _logTimer.Start();
         }
 
         private void StopLogTimer()
@@ -256,14 +360,14 @@
             LogTimer_Tick(null, System.EventArgs.Empty);
         }
 
-        private void UpdateProgress(System.Int32 current, System.Int32 total)
+        private void UpdateProgress(int current, int total)
         {
             ProgressValue = current;
             ProgressMaximum = total;
             ProgressText = total > 0 ? $"Processing file {current} of {total}" : "Scanning files...";
         }
 
-        private async void TriggerSuccessNotification(System.String message)
+        private async void TriggerSuccessNotification(string message)
         {
             NotificationMessage = message;
             IsNotificationVisible = true;
@@ -273,7 +377,7 @@
 
         #endregion
 
-        #region Import Logic
+        #region Import Logic (Busbar)
 
         public void ImportExcelToSQLite()
         {
@@ -282,55 +386,25 @@
                 _dbContext.EnsureDatabaseFolderExists();
                 ResetCounters();
 
-                Microsoft.Data.Sqlite.SqliteConnection? connection = null;
-                Microsoft.Data.Sqlite.SqliteTransaction? transaction = null;
+                using var connection = _dbContext.CreateConnection();
+                if (connection.State != System.Data.ConnectionState.Open) connection.Open();
 
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = "PRAGMA synchronous = OFF; PRAGMA journal_mode = MEMORY; PRAGMA temp_store = MEMORY;";
+                    command.ExecuteNonQuery();
+                }
+
+                using var transaction = connection.BeginTransaction();
                 try
                 {
-                    connection = _dbContext.CreateConnection();
-
-                    if (connection.State != System.Data.ConnectionState.Open)
-                    {
-                        connection.Open();
-                    }
-
-                    Microsoft.Data.Sqlite.SqliteCommand? pragmaCommand = null;
-                    try
-                    {
-                        pragmaCommand = connection.CreateCommand();
-                        pragmaCommand.CommandText = "PRAGMA synchronous = OFF; PRAGMA journal_mode = MEMORY; PRAGMA temp_store = MEMORY;";
-                        pragmaCommand.ExecuteNonQuery();
-                    }
-                    finally
-                    {
-                        if (pragmaCommand != null)
-                        {
-                            pragmaCommand.Dispose();
-                        }
-                    }
-
-                    transaction = connection.BeginTransaction();
-                    try
-                    {
-                        _importService.Import(connection, transaction);
-                        transaction.Commit();
-                    }
-                    catch
-                    {
-                        transaction.Rollback();
-                        throw;
-                    }
+                    _importService.Import(connection, transaction);
+                    transaction.Commit();
                 }
-                finally
+                catch
                 {
-                    if (transaction != null)
-                    {
-                        transaction.Dispose();
-                    }
-                    if (connection != null)
-                    {
-                        connection.Dispose();
-                    }
+                    transaction.Rollback();
+                    throw;
                 }
 
                 TotalFilesFound = _importService.TotalFilesFound;
@@ -342,6 +416,51 @@
             }
         }
 
+        #endregion
+
+        #region Import Logic (Wire - Mode 3)
+
+        public void ImportWireToSQLite()
+        {
+            try
+            {
+                _dbContext.EnsureDatabaseFolderExists();
+                ResetCounters();
+
+                using var connection = _dbContext.CreateConnection();
+                if (connection.State != System.Data.ConnectionState.Open) connection.Open();
+
+                // SQLite Performance Tuning for SSD
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = "PRAGMA synchronous = OFF; PRAGMA journal_mode = MEMORY; PRAGMA temp_store = MEMORY;";
+                    command.ExecuteNonQuery();
+                }
+
+                using var transaction = connection.BeginTransaction();
+                try
+                {
+                    // Call Wire Import Service
+                    _importServiceWire.Import(connection, transaction);
+                    transaction.Commit();
+                }
+                catch
+                {
+                    transaction.Rollback();
+                    throw;
+                }
+
+                TotalFilesFound = _importServiceWire.TotalFilesFound;
+                TotalRowsInserted = _importServiceWire.TotalRowsInserted;
+            }
+            catch (System.Exception)
+            {
+                throw;
+            }
+        }
+
+        #endregion
+
         private void ResetCounters()
         {
             TotalFilesFound = 0;
@@ -350,22 +469,30 @@
             _searchCache.Clear();
         }
 
-        #endregion
-
         #region Navigation & Menu
 
-        public void ButtonMode2_Click() { OnShowMessage?.Invoke("MODE 2 belum diimplementasikan"); }
-        public void ButtonMode3_Click() { OnShowMessage?.Invoke("MODE 3 belum diimplementasikan"); }
+        public void ButtonMode2_Click()
+        {
+            ShowMode2Page = true;
+        }
+
         public void ButtonMode4_Click() { OnShowMessage?.Invoke("MODE 4 belum diimplementasikan"); }
 
         public void BackToMenu()
         {
             ResetSearchData();
-            CustomerName = System.String.Empty;
-            PoNumber = System.String.Empty;
-            DoNumber = System.String.Empty;
-            ExportList.Clear();
+            CustomerName = string.Empty;
+            PoNumber = string.Empty;
+            DoNumber = string.Empty;
+
+            Sheets.Clear();
+            InitializeDefaultSheet();
+
+            // Reset all Mode flags to False
             ShowBlankPage = false;
+            ShowMode2Page = false;
+            ShowMode3Page = false;
+
             IsNotificationVisible = false;
             _searchCache.Clear();
         }
@@ -391,73 +518,50 @@
         {
             try
             {
-                System.Collections.Generic.List<System.String> dbYears =
-                    await System.Threading.Tasks.Task.Run(() => _repository.GetAvailableYears());
+                var dbYears = await System.Threading.Tasks.Task.Run(() => _repository.GetAvailableYears());
 
                 Years.Clear();
-                foreach (System.String year in dbYears)
-                {
-                    Years.Add(year);
-                }
+                foreach (var year in dbYears) Years.Add(year);
             }
             catch (System.Exception ex)
             {
-                System.Windows.Application.Current.Dispatcher.Invoke(() =>
-                {
-                    System.Windows.MessageBox.Show($"Error loading years: {ex.Message}");
-                });
+                System.Windows.Application.Current.Dispatcher.Invoke(() => { System.Windows.MessageBox.Show($"Error loading years: {ex.Message}"); });
             }
         }
 
         private void SetDefaultProductionDate()
         {
-            if (!System.String.IsNullOrWhiteSpace(SelectedYear) && !System.String.IsNullOrWhiteSpace(SelectedMonth))
+            if (!string.IsNullOrWhiteSpace(SelectedYear) && !string.IsNullOrWhiteSpace(SelectedMonth))
             {
-                if (System.Int32.TryParse(SelectedYear, out System.Int32 year))
+                if (int.TryParse(SelectedYear, out int year))
                 {
-                    System.String engMonth = ConvertMonthToEnglish(SelectedMonth);
-                    System.Int32 month = WpfApp1.Shared.Helpers.DateHelper.GetMonthNumber(engMonth);
-                    if (month > 0 && month <= 12)
-                    {
-                        SelectedDate = new System.DateTime(year, month, 1);
-                    }
+                    string engMonth = SelectedMonth;
+                    int month = WpfApp1.Shared.Helpers.DateHelper.GetMonthNumber(engMonth);
+                    if (month > 0 && month <= 12) SelectedDate = new System.DateTime(year, month, 1);
                 }
             }
         }
 
-        private async void ExecuteFind(System.Object? parameter)
+        private async void ExecuteFind(object? parameter)
         {
-            if (System.String.IsNullOrWhiteSpace(SelectedYear))
-            {
-                OnShowMessage?.Invoke("Harap memilih YEAR.");
-                return;
-            }
-            if (System.String.IsNullOrWhiteSpace(SelectedMonth))
-            {
-                OnShowMessage?.Invoke("Harap memilih MONTH.");
-                return;
-            }
-            if (SelectedDate == null)
-            {
-                OnShowMessage?.Invoke("Harap memilih PRODUCTION DATE.");
-                return;
-            }
+            if (string.IsNullOrWhiteSpace(SelectedYear)) { OnShowMessage?.Invoke("Harap memilih YEAR."); return; }
+            if (string.IsNullOrWhiteSpace(SelectedMonth)) { OnShowMessage?.Invoke("Harap memilih MONTH."); return; }
+            if (SelectedDate == null) { OnShowMessage?.Invoke("Harap memilih PRODUCTION DATE."); return; }
 
             try
             {
-                System.String dbMonth = ConvertMonthToEnglish(SelectedMonth);
+                string dbMonth = SelectedMonth;
+                string dateSql = SelectedDate.Value.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
+                string dateIndo = SelectedDate.Value.ToString("dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture);
 
-                System.String dateSql = SelectedDate.Value.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
-                System.String dateIndo = SelectedDate.Value.ToString("dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture);
-
-                System.String cacheKey = $"{SelectedYear}_{dbMonth}_{dateSql}";
+                string cacheKey = $"{SelectedYear}_{dbMonth}_{dateSql}";
 
                 if (_searchCache.ContainsKey(cacheKey))
                 {
-                    System.Collections.Generic.List<WpfApp1.Core.Models.BusbarSearchItem>? cachedList = _searchCache[cacheKey];
+                    var cachedList = _searchCache[cacheKey];
                     if (cachedList != null && cachedList.Count > 0)
                     {
-                        SearchResults = new System.Collections.ObjectModel.ObservableCollection<WpfApp1.Core.Models.BusbarSearchItem>(cachedList);
+                        SearchResults = new System.Collections.ObjectModel.ObservableCollection<BusbarSearchItem>(cachedList);
                         return;
                     }
                     else
@@ -466,22 +570,19 @@
                     }
                 }
 
-                System.Collections.Generic.List<WpfApp1.Core.Models.BusbarSearchItem> data =
-                    await System.Threading.Tasks.Task.Run(() => _repository.SearchBusbarRecords(SelectedYear, dbMonth, dateSql));
+                var data = await System.Threading.Tasks.Task.Run(() => _repository.SearchBusbarRecords(SelectedYear, dbMonth, dateSql));
 
-                if (data == null || data.Count == 0)
+                if (data == null || !data.Any())
                 {
                     data = await System.Threading.Tasks.Task.Run(() => _repository.SearchBusbarRecords(SelectedYear, dbMonth, dateIndo));
                 }
 
-                System.Collections.ObjectModel.ObservableCollection<WpfApp1.Core.Models.BusbarSearchItem> newResults =
-                    new System.Collections.ObjectModel.ObservableCollection<WpfApp1.Core.Models.BusbarSearchItem>();
-                System.Collections.Generic.List<WpfApp1.Core.Models.BusbarSearchItem> listForCache =
-                    new System.Collections.Generic.List<WpfApp1.Core.Models.BusbarSearchItem>();
+                var newResults = new System.Collections.ObjectModel.ObservableCollection<BusbarSearchItem>();
+                var listForCache = new System.Collections.Generic.List<BusbarSearchItem>();
 
                 if (data != null)
                 {
-                    foreach (WpfApp1.Core.Models.BusbarSearchItem item in data)
+                    foreach (var item in data)
                     {
                         newResults.Add(item);
                         listForCache.Add(item);
@@ -515,169 +616,138 @@
 
         #region Export & Print Logic
 
-        private void ExecuteAddToExport(System.Object? parameter)
+        private void ExecuteAddToExport(object? parameter)
         {
-            if (parameter is WpfApp1.Core.Models.BusbarSearchItem selectedItem)
+            if (SelectedSheet == null)
             {
-                System.Boolean exists = false;
-                foreach (WpfApp1.Core.Models.BusbarExportItem x in ExportList)
-                {
-                    if (x.RecordData.Id == selectedItem.FullRecord.Id)
-                    {
-                        exists = true;
-                        break;
-                    }
-                }
+                OnShowMessage?.Invoke("Silakan pilih atau buat Sheet terlebih dahulu.");
+                return;
+            }
 
+            if (parameter is BusbarSearchItem selectedItem)
+            {
+                bool exists = SelectedSheet.Items.Any(x => x.RecordData.Id == selectedItem.FullRecord.Id);
                 if (!exists)
                 {
-                    WpfApp1.Core.Models.BusbarExportItem exportItem = new WpfApp1.Core.Models.BusbarExportItem(selectedItem.FullRecord);
-                    ExportList.Add(exportItem);
+                    var exportItem = new WpfApp1.Core.Models.BusbarExportItem(selectedItem.FullRecord);
+                    SelectedSheet.Items.Add(exportItem);
                 }
                 else
                 {
-                    OnShowMessage?.Invoke("Data ini sudah ada dalam daftar Export.");
+                    OnShowMessage?.Invoke($"Data ini sudah ada dalam {SelectedSheet.SheetName}.");
                 }
             }
         }
 
-        private void ExecuteRemoveFromExport(System.Object? parameter)
+        private void ExecuteRemoveFromExport(object? parameter)
         {
+            if (SelectedSheet == null) return;
+
             if (parameter is WpfApp1.Core.Models.BusbarExportItem itemToRemove)
             {
-                ExportList.Remove(itemToRemove);
+                if (SelectedSheet.Items.Contains(itemToRemove))
+                {
+                    SelectedSheet.Items.Remove(itemToRemove);
+                }
             }
         }
 
-        private System.String FormatDoNumber(System.String doNumber)
+        private string FormatDoNumber(string doNumber)
         {
-            if (System.Int32.TryParse(doNumber, out System.Int32 doVal))
-            {
-                if (doVal < 10)
-                {
-                    return "0" + doVal.ToString();
-                }
-            }
+            if (int.TryParse(doNumber, out int doVal)) { if (doVal < 10) return "0" + doVal.ToString(); }
             return doNumber;
         }
 
-        private async void ExecutePrintCoa(System.Object? parameter)
+        private async void ExecutePrintCoa(object? parameter)
         {
-            System.Boolean hasUnselectedType = false;
-            foreach (WpfApp1.Core.Models.BusbarExportItem item in ExportList)
+            // 1. Validate Sheet State
+            if (Sheets.Count == 0)
             {
-                if (item.SelectedType == "Select")
+                System.Windows.MessageBox.Show("Tidak ada sheet untuk diproses.", "Peringatan", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                return;
+            }
+
+            foreach (var sheet in Sheets)
+            {
+                if (sheet.Items.Count == 0)
                 {
-                    hasUnselectedType = true;
-                    break;
+                    System.Windows.MessageBox.Show($"Sheet '{sheet.SheetName}' masih kosong. Harap isi data terlebih dahulu.", "Validasi Data", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                    return;
+                }
+
+                bool hasUnselectedType = sheet.Items.Any(x => x.SelectedType == "Select");
+                if (hasUnselectedType)
+                {
+                    System.Windows.MessageBox.Show($"Mohon lengkapi kolom 'Type' untuk semua data di '{sheet.SheetName}' sebelum melakukan Export COA.", "Validasi Data", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                    return;
                 }
             }
 
-            if (hasUnselectedType)
-            {
-                System.Windows.MessageBox.Show("Mohon lengkapi kolom 'Type' untuk semua data sebelum melakukan Export COA.", "Validasi Data", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
-                return;
-            }
+            bool isMode2 = ShowMode2Page;
+            bool isMode3 = ShowMode3Page;
 
-            if (ExportList.Count == 0)
-            {
-                System.Windows.MessageBox.Show("Export List kosong. Silakan pilih data terlebih dahulu.", "Peringatan", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
-                return;
-            }
+            // Check inputs based on Mode
+            bool isCustomerMissing = !isMode2 && string.IsNullOrWhiteSpace(CustomerName);
 
-            if (System.String.IsNullOrWhiteSpace(SelectedStandard) || System.String.IsNullOrWhiteSpace(CustomerName) ||
-                System.String.IsNullOrWhiteSpace(PoNumber) || System.String.IsNullOrWhiteSpace(DoNumber))
+            if (string.IsNullOrWhiteSpace(SelectedStandard) || isCustomerMissing ||
+                string.IsNullOrWhiteSpace(PoNumber) || string.IsNullOrWhiteSpace(DoNumber))
             {
-                System.Windows.MessageBox.Show("Silakan lengkapi data (Standard, Customer, PO, DO).", "Peringatan", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                string msg = isMode2 ? "Silakan lengkapi data (Standard, PO, DO)." : "Silakan lengkapi data (Standard, Customer, PO, DO).";
+                System.Windows.MessageBox.Show(msg, "Peringatan", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
                 return;
             }
 
             DoNumber = FormatDoNumber(DoNumber);
 
-            if (IsBusy)
-            {
-                return;
-            }
+            if (IsBusy) return;
 
             BusyMessage = "Generating COA Document...";
             IsBusy = true;
 
             try
             {
-                System.Collections.Generic.List<WpfApp1.Core.Models.BusbarExportItem> itemsToExport =
-                    new System.Collections.Generic.List<WpfApp1.Core.Models.BusbarExportItem>(ExportList);
+                string effectiveCustomer = isMode2 ? "PT. SIEMENS INDONESIA" : CustomerName;
+                string po = PoNumber;
+                string doNum = DoNumber;
+                string std = SelectedStandard ?? string.Empty;
 
-                System.String custName = CustomerName;
-                System.String po = PoNumber;
-                System.String doNum = DoNumber;
-                System.String std = SelectedStandard ?? System.String.Empty;
+                var allSheets = new System.Collections.Generic.List<SheetModel>(Sheets);
+                string savedExcelPath = string.Empty;
 
-                System.String savedExcelPath = await _printService.GenerateCoaExcel(custName, po, doNum, itemsToExport, std);
-
-                CustomerName = System.String.Empty;
-                PoNumber = System.String.Empty;
-                DoNumber = System.String.Empty;
-                SelectedStandard = null;
-                ExportList.Clear();
+                if (isMode2)
+                {
+                    savedExcelPath = await _printService2.GenerateCoaExcel(effectiveCustomer, po, doNum, allSheets, std);
+                }
+                else
+                {
+                    // Mode 1 and Mode 3 use the generic print service
+                    savedExcelPath = await _printService.GenerateCoaExcel(effectiveCustomer, po, doNum, allSheets, std);
+                }
 
                 TriggerSuccessNotification("COA Generated Successfully!");
+
+                CustomerName = string.Empty;
+                PoNumber = string.Empty;
+                DoNumber = string.Empty;
+                SelectedStandard = null;
+
+                Sheets.Clear();
+                InitializeDefaultSheet();
             }
             catch (System.Exception ex)
             {
-                System.Windows.MessageBox.Show($"Gagal membuat Dokumen:\n{ex.Message}", "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                System.Windows.Application.Current.Dispatcher.Invoke(() => {
+                    System.Windows.MessageBox.Show($"Gagal membuat Dokumen:\n{ex.Message}", "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                });
             }
             finally
             {
                 IsBusy = false;
                 _printService.ClearCache();
+                _printService2.ClearCache();
             }
         }
 
         #endregion
-
-        #region Helpers
-
-        private System.String ConvertMonthToEnglish(System.String indoMonth)
-        {
-            switch (indoMonth)
-            {
-                case "January": return "January";
-                case "February": return "February";
-                case "March": return "March";
-                case "April": return "April";
-                case "May": return "May";
-                case "June": return "June";
-                case "July": return "July";
-                case "August": return "August";
-                case "September": return "September";
-                case "October": return "October";
-                case "November": return "November";
-                case "December": return "December";
-                default: return indoMonth;
-            }
-        }
-
-        #endregion
-    }
-
-    public class RelayCommand : System.Windows.Input.ICommand
-    {
-        private readonly System.Action<System.Object?> _execute;
-        private readonly System.Func<System.Object?, System.Boolean>? _canExecute;
-
-        public RelayCommand(System.Action<System.Object?> execute, System.Func<System.Object?, System.Boolean>? canExecute = null)
-        {
-            _execute = execute;
-            _canExecute = canExecute;
-        }
-
-        public event System.EventHandler? CanExecuteChanged
-        {
-            add { System.Windows.Input.CommandManager.RequerySuggested += value; }
-            remove { System.Windows.Input.CommandManager.RequerySuggested -= value; }
-        }
-
-        public System.Boolean CanExecute(System.Object? parameter) => _canExecute == null || _canExecute(parameter);
-        public void Execute(System.Object? parameter) => _execute(parameter);
     }
 }

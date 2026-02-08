@@ -1,53 +1,26 @@
-﻿namespace WpfApp1.Core.Models
-{
-    public class BusbarExportItem : System.ComponentModel.INotifyPropertyChanged
-    {
-        private readonly WpfApp1.Core.Models.BusbarRecord _record;
-        private System.String _selectedType = "Select";
+﻿using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
-        public BusbarExportItem(WpfApp1.Core.Models.BusbarRecord record)
+namespace WpfApp1.Core.Models
+{
+    public class BusbarExportItem : INotifyPropertyChanged
+    {
+        private BusbarRecord _record;
+        private string _selectedType = "Select";
+
+        public BusbarExportItem(BusbarRecord record)
         {
             _record = record;
         }
 
-        public WpfApp1.Core.Models.BusbarRecord RecordData
-        {
-            get
-            {
-                return _record;
-            }
-        }
+        public BusbarRecord RecordData => _record;
+        public int Id => _record.Id;
+        public string Specification => _record.Size;
+        public string DateProd => _record.ProdDate;
 
-        public System.Int32 Id
+        public string SelectedType
         {
-            get
-            {
-                return _record.Id;
-            }
-        }
-
-        public System.String Specification
-        {
-            get
-            {
-                return _record.Size;
-            }
-        }
-
-        public System.String DateProd
-        {
-            get
-            {
-                return _record.ProdDate;
-            }
-        }
-
-        public System.String SelectedType
-        {
-            get
-            {
-                return _selectedType;
-            }
+            get => _selectedType;
             set
             {
                 if (_selectedType != value)
@@ -58,9 +31,8 @@
             }
         }
 
-        public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
-
-        protected void OnPropertyChanged([System.Runtime.CompilerServices.CallerMemberName] System.String propertyName = "")
+        public event PropertyChangedEventHandler? PropertyChanged;
+        protected void OnPropertyChanged([CallerMemberName] string propertyName = "")
         {
             PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(propertyName));
         }

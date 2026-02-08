@@ -1,85 +1,126 @@
-﻿namespace WpfApp1.Views
+﻿using System.ComponentModel;
+using System.Windows;
+using System.Windows.Controls;
+using MahApps.Metro.Controls;
+
+namespace WpfApp1.Views
 {
-    public partial class MainWindow : MahApps.Metro.Controls.MetroWindow
+    public partial class MainWindow : MetroWindow
     {
-        private WpfApp1.ViewModels.MainViewModel _viewModel;
+        private WpfApp1.ViewModels.MainViewModel? _viewModel;
 
         public MainWindow()
         {
             InitializeComponent();
+
             _viewModel = new WpfApp1.ViewModels.MainViewModel();
             this.DataContext = _viewModel;
-            _viewModel.OnShowMessage += (msg) => { System.Windows.MessageBox.Show(msg, "Informasi Sistem", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information); };
+
+            _viewModel.OnShowMessage += (msg) =>
+            {
+                System.Windows.MessageBox.Show(
+                    msg,
+                    "Informasi Sistem",
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Information);
+            };
+
             this.StateChanged += MainWindow_StateChanged;
+
+            // Initialize with Main Menu view
+            SetMainContent(new MainMenuView());
+
+            // Subscribe to navigation property changes
+            if (_viewModel != null)
+            {
+                _viewModel.PropertyChanged += ViewModel_PropertyChanged;
+            }
         }
 
-        private void MainWindow_StateChanged(System.Object sender, System.EventArgs e)
+        private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(WpfApp1.ViewModels.MainViewModel.ShowBlankPage))
+            {
+                if (_viewModel != null)
+                {
+                    if (_viewModel.ShowBlankPage)
+                    {
+                        // Navigate to Mode 1 (Copper Busbar)
+                        SetMainContent(new Mode1View());
+                    }
+                    else if (!_viewModel.ShowMode2Page && !_viewModel.ShowMode3Page)
+                    {
+                        // Navigate back to Main Menu if no other modes are active
+                        SetMainContent(new MainMenuView());
+                    }
+                }
+            }
+            else if (e.PropertyName == nameof(WpfApp1.ViewModels.MainViewModel.ShowMode2Page))
+            {
+                if (_viewModel != null)
+                {
+                    if (_viewModel.ShowMode2Page)
+                    {
+                        // Navigate to Mode 2
+                        SetMainContent(new Mode2View());
+                    }
+                    else if (!_viewModel.ShowBlankPage && !_viewModel.ShowMode3Page)
+                    {
+                        // Navigate back to Main Menu if no other modes are active
+                        SetMainContent(new MainMenuView());
+                    }
+                }
+            }
+            // NEW LOGIC FOR MODE 3
+            else if (e.PropertyName == nameof(WpfApp1.ViewModels.MainViewModel.ShowMode3Page))
+            {
+                if (_viewModel != null)
+                {
+                    if (_viewModel.ShowMode3Page)
+                    {
+                        // Navigate to Mode 3
+                        SetMainContent(new Mode3View());
+                    }
+                    else if (!_viewModel.ShowBlankPage && !_viewModel.ShowMode2Page)
+                    {
+                        // Navigate back to Main Menu if no other modes are active
+                        SetMainContent(new MainMenuView());
+                    }
+                }
+            }
+        }
+
+        private void SetMainContent(UserControl viewControl)
+        {
+            // Explicit assignment for clarity
+            MainContentRegion.Content = viewControl;
+        }
+
+        private void MainWindow_StateChanged(object? sender, System.EventArgs e)
         {
             if (this.WindowState == System.Windows.WindowState.Minimized)
             {
-                System.GC.Collect(2, System.GCCollectionMode.Forced, false);
+                // Aggressive garbage collection when minimized to save RAM
+                System.GC.Collect(2, System.GCCollectionMode.Optimized, false);
                 System.GC.WaitForPendingFinalizers();
             }
         }
 
-        private async void ButtonMode1_Click(System.Object sender, System.Windows.RoutedEventArgs e)
-        {
-            if (_viewModel.IsBusy)
-            {
-                return;
-            }
-
-            _viewModel.BusyMessage = "Importing Excel to Database...";
-            _viewModel.IsBusy = true;
-
-            try
-            {
-                await System.Threading.Tasks.Task.Run(() =>
-                {
-                    try
-                    {
-                        _viewModel.ImportExcelToSQLite();
-                    }
-                    catch (System.Exception ex)
-                    {
-                        this.Dispatcher.Invoke(() =>
-                        {
-                            System.Windows.MessageBox.Show(
-                                $"ERROR FATAL:\n{ex.Message}\n\nStack Trace:\n{ex.StackTrace}",
-                                "Import Gagal",
-                                System.Windows.MessageBoxButton.OK,
-                                System.Windows.MessageBoxImage.Error);
-                        });
-                        throw;
-                    }
-                });
-
-                this.Dispatcher.Invoke(() => { _viewModel.ShowBlankPage = true; });
-            }
-            catch (System.Exception ex)
-            {
-                System.Windows.MessageBox.Show(
-                    $"Error: {ex.Message}",
-                    "Error",
-                    System.Windows.MessageBoxButton.OK,
-                    System.Windows.MessageBoxImage.Error);
-            }
-            finally
-            {
-                _viewModel.IsBusy = false;
-            }
-        }
-
-        private void ButtonMode2_Click(System.Object sender, System.Windows.RoutedEventArgs e) { _viewModel.ButtonMode2_Click(); }
-        private void ButtonMode3_Click(System.Object sender, System.Windows.RoutedEventArgs e) { _viewModel.ButtonMode3_Click(); }
-        private void ButtonMode4_Click(System.Object sender, System.Windows.RoutedEventArgs e) { _viewModel.ButtonMode4_Click(); }
-        private void ButtonBack_Click(System.Object sender, System.Windows.RoutedEventArgs e) { _viewModel.BackToMenu(); }
-
         protected override void OnClosed(System.EventArgs e)
         {
+            // Unsubscribe from events to prevent memory leaks
+            if (_viewModel != null)
+            {
+                _viewModel.PropertyChanged -= ViewModel_PropertyChanged;
+            }
+
             base.OnClosed(e);
+
+            // Cleanup references
             _viewModel = null;
             this.DataContext = null;
+
+            // Force garbage collection on close
             System.GC.Collect();
             System.GC.WaitForPendingFinalizers();
         }
