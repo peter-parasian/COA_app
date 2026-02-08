@@ -318,113 +318,141 @@
 
                     <Border
                         DockPanel.Dock="Bottom"
-                        Padding="10"
-                        Background="#F8F9FA"
+                        Background="#F1F3F5"
                         BorderBrush="#DEE2E6"
                         BorderThickness="0,1,0,0"
-                        CornerRadius="0,0,4,4">
-
+                        Padding="5,2">
                         <Grid>
                             <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="15" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
 
-                            <Grid Grid.Column="0">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
+                            <Button
+                                Grid.Column="0"
+                                Height="38"
+                                Margin="0,0,2,0"
+                                Padding="8,0"
+                                VerticalAlignment="Center"
+                                Command="{Binding AddSheetCommand}"
+                                Cursor="Hand"
+                                Style="{StaticResource MahApps.Styles.Button.Flat}"
+                                ToolTip="Tambah Sheet Baru">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock
+                                        Margin="0,0,5,0"
+                                        VerticalAlignment="Center"
+                                        FontFamily="Segoe MDL2 Assets"
+                                        Foreground="#28A745"
+                                        Text="&#xE710;" />
+                                    <TextBlock
+                                        VerticalAlignment="Center"
+                                        FontSize="11"
+                                        FontWeight="SemiBold"
+                                        Text="Add Sheet" />
+                                </StackPanel>
+                            </Button>
 
-                                <Button
-                                    Grid.Column="0"
-                                    Margin="0,0,10,0"
-                                    Padding="8,5"
-                                    VerticalAlignment="Center"
-                                    Command="{Binding AddSheetCommand}"
-                                    Cursor="Hand"
-                                    Style="{StaticResource MahApps.Styles.Button.Flat}"
-                                    ToolTip="Tambah Sheet Baru">
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock
-                                            Margin="0,0,5,0"
-                                            VerticalAlignment="Center"
-                                            FontFamily="Segoe MDL2 Assets"
-                                            Foreground="#28A745"
-                                            Text="&#xE710;" />
-                                        <TextBlock
-                                            VerticalAlignment="Center"
-                                            FontSize="11"
-                                            FontWeight="SemiBold"
-                                            Text="Add Sheet" />
-                                    </StackPanel>
-                                </Button>
+                            <ScrollViewer
+                                Grid.Column="1"
+                                VerticalAlignment="Center"
+                                HorizontalScrollBarVisibility="Auto"
+                                VerticalScrollBarVisibility="Disabled">
+                                <ListBox
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    ItemsSource="{Binding Sheets}"
+                                    SelectedItem="{Binding SelectedSheet}">
+                                    <ListBox.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Orientation="Horizontal" />
+                                        </ItemsPanelTemplate>
+                                    </ListBox.ItemsPanel>
 
-                                <ScrollViewer
-                                    Grid.Column="1"
-                                    VerticalAlignment="Center"
-                                    HorizontalScrollBarVisibility="Auto"
-                                    VerticalScrollBarVisibility="Disabled">
-                                    <ListBox
-                                        Background="Transparent"
-                                        BorderThickness="0"
-                                        ItemsSource="{Binding Sheets}"
-                                        SelectedItem="{Binding SelectedSheet}">
-                                        <ListBox.ItemsPanel>
-                                            <ItemsPanelTemplate>
-                                                <StackPanel Orientation="Horizontal" />
-                                            </ItemsPanelTemplate>
-                                        </ListBox.ItemsPanel>
-                                        <ListBox.ItemContainerStyle>
-                                            <Style BasedOn="{StaticResource MahApps.Styles.ListBoxItem}" TargetType="ListBoxItem">
-                                                <Setter Property="Margin" Value="0,0,5,0" />
-                                                <Setter Property="Padding" Value="10,5" />
-                                                <Setter Property="Background" Value="#E9ECEF" />
-                                                <Setter Property="Template">
-                                                    <Setter.Value>
-                                                        <ControlTemplate TargetType="ListBoxItem">
-                                                            <Border
-                                                                Background="{TemplateBinding Background}"
-                                                                CornerRadius="4"
-                                                                Padding="{TemplateBinding Padding}">
-                                                                <ContentPresenter />
-                                                            </Border>
-                                                        </ControlTemplate>
-                                                    </Setter.Value>
-                                                </Setter>
-                                                <Style.Triggers>
-                                                    <Trigger Property="IsSelected" Value="True">
-                                                        <Setter Property="Background" Value="#28A745" />
-                                                        <Setter Property="Foreground" Value="White" />
-                                                        <Setter Property="FontWeight" Value="Bold" />
-                                                    </Trigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </ListBox.ItemContainerStyle>
-                                        <ListBox.ItemTemplate>
-                                            <DataTemplate>
-                                                <StackPanel Orientation="Horizontal">
-                                                    <TextBlock VerticalAlignment="Center" Text="{Binding SheetName}" />
-                                                    <Button
-                                                        Margin="5,0,0,0"
-                                                        Background="Transparent"
-                                                        BorderThickness="0"
-                                                        Command="{Binding DataContext.RemoveSheetCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                        CommandParameter="{Binding}"
-                                                        Content="×"
-                                                        Foreground="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=Foreground}" />
-                                                </StackPanel>
-                                            </DataTemplate>
-                                        </ListBox.ItemTemplate>
-                                    </ListBox>
-                                </ScrollViewer>
-                            </Grid>
+                                    <ListBox.ItemContainerStyle>
+                                        <Style BasedOn="{StaticResource MahApps.Styles.ListBoxItem}" TargetType="ListBoxItem">
+                                            <Setter Property="Margin" Value="0,0,2,0" />
+                                            <Setter Property="MinHeight" Value="38" />
+                                            <Setter Property="Padding" Value="15,0" />
+                                            <Setter Property="VerticalContentAlignment" Value="Center" />
+                                            <Setter Property="Background" Value="#E9ECEF" />
+                                            <Setter Property="Foreground" Value="#495057" />
+                                            <Setter Property="Cursor" Value="Hand" />
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="ListBoxItem">
+                                                        <Border
+                                                            Background="{TemplateBinding Background}"
+                                                            BorderBrush="#DEE2E6"
+                                                            BorderThickness="1,1,1,0"
+                                                            CornerRadius="0"
+                                                            Padding="{TemplateBinding Padding}">
+                                                            <ContentPresenter VerticalAlignment="Center" />
+                                                        </Border>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                            <Style.Triggers>
+                                                <Trigger Property="IsSelected" Value="True">
+                                                    <Setter Property="Background" Value="White" />
+                                                    <Setter Property="Foreground" Value="#28A745" />
+                                                    <Setter Property="FontWeight" Value="Bold" />
+                                                    <Setter Property="Panel.ZIndex" Value="1" />
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </ListBox.ItemContainerStyle>
+
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock VerticalAlignment="Center" Text="{Binding SheetName}" />
+
+                                                <Button
+                                                    Margin="10,0,0,0"
+                                                    Padding="5"
+                                                    Command="{Binding DataContext.RemoveSheetCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    CommandParameter="{Binding}"
+                                                    ToolTip="Hapus Sheet">
+                                                    <Button.Style>
+                                                        <Style TargetType="Button">
+                                                            <Setter Property="Background" Value="Transparent" />
+                                                            <Setter Property="BorderThickness" Value="0" />
+                                                            <Setter Property="Cursor" Value="Hand" />
+                                                            <Setter Property="Foreground" Value="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=Foreground}" />
+                                                            <Setter Property="Template">
+                                                                <Setter.Value>
+                                                                    <ControlTemplate TargetType="Button">
+                                                                        <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                                                                            <TextBlock
+                                                                                FontFamily="Segoe MDL2 Assets"
+                                                                                FontSize="12"
+                                                                                Foreground="{TemplateBinding Foreground}"
+                                                                                Text="&#xE74D;" />
+                                                                        </Border>
+                                                                    </ControlTemplate>
+                                                                </Setter.Value>
+                                                            </Setter>
+                                                            <Style.Triggers>
+                                                                <Trigger Property="IsMouseOver" Value="True">
+                                                                    <Setter Property="Foreground" Value="#DC3545" />
+                                                                </Trigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Button.Style>
+                                                </Button>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </ScrollViewer>
 
                             <Button
                                 Grid.Column="2"
                                 Width="150"
-                                Height="35"
+                                Height="38"
+                                Margin="10,0,0,0"
                                 Padding="10,0"
                                 Command="{Binding PrintCoaCommand}"
                                 Content="PRINT COA"
