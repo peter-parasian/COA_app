@@ -250,6 +250,15 @@ namespace WpfApp1.Core.Services
                     continue;
                 }
 
+                effectiveLot = effectiveLot.Replace("\r\n", " ").Replace("\n", " ").Replace("\r", " ").Trim();
+
+                string[] lotParts = effectiveLot.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                if (lotParts.Length >= 2)
+                {
+                    rowIndex += 2;
+                    continue;
+                }
+
                 string rawCust1 = GetStr(3, rowIndex);
                 string rawCust2 = GetStr(3, rowIndex + 1);
                 string effectiveCust = !string.IsNullOrEmpty(rawCust1) ? rawCust1 : rawCust2;
