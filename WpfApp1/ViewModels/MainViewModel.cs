@@ -112,7 +112,15 @@ namespace WpfApp1.ViewModels
         public bool ShowMode3Page
         {
             get => _showMode3Page;
-            set { _showMode3Page = value; OnPropertyChanged(); }
+            set
+            {
+                _showMode3Page = value;
+                OnPropertyChanged();
+                if (_showMode3Page)
+                {
+                    InitializeWireDefaultSheet();
+                }
+            }
         }
 
         private string _notificationMessage = string.Empty;
@@ -146,6 +154,16 @@ namespace WpfApp1.ViewModels
             "Select", "RD", "FR", "TP", "NONE"
         };
 
+        public System.Collections.ObjectModel.ObservableCollection<string> SizeOptions { get; set; } = new System.Collections.ObjectModel.ObservableCollection<string>
+        {
+            "1.20", "1.24", "1.38", "2.60", "1.50", "1.60"
+        };
+
+        public System.Collections.ObjectModel.ObservableCollection<string> CustomerOptions { get; set; } = new System.Collections.ObjectModel.ObservableCollection<string>
+        {
+            "Indowire", "Cometa", "Canning", "Indolakto", "Multi Colour", "Almicos", "Avia Avian", "Eka Timur", "Prisma Cable", "Energy Lautan", "Masami Pasifik", "Metal Manufacturing", "Magnakabel", "JJ-LAPP", "Nestle"
+        };
+
         private string? _selectedYear;
         public string? SelectedYear
         {
@@ -166,6 +184,12 @@ namespace WpfApp1.ViewModels
         private string? _selectedStandard;
         public string? SelectedStandard { get => _selectedStandard; set { _selectedStandard = value; OnPropertyChanged(); } }
 
+        private string? _selectedSize;
+        public string? SelectedSize { get => _selectedSize; set { _selectedSize = value; OnPropertyChanged(); } }
+
+        private string? _selectedCustomer;
+        public string? SelectedCustomer { get => _selectedCustomer; set { _selectedCustomer = value; OnPropertyChanged(); } }
+
         private string _customerName = string.Empty;
         public string CustomerName { get => _customerName; set { _customerName = value; OnPropertyChanged(); } }
 
@@ -178,8 +202,14 @@ namespace WpfApp1.ViewModels
         private System.Collections.ObjectModel.ObservableCollection<BusbarSearchItem> _searchResults = new System.Collections.ObjectModel.ObservableCollection<BusbarSearchItem>();
         public System.Collections.ObjectModel.ObservableCollection<BusbarSearchItem> SearchResults { get => _searchResults; set { _searchResults = value; OnPropertyChanged(); } }
 
+        private System.Collections.ObjectModel.ObservableCollection<WireSearchItem> _wireSearchResults = new System.Collections.ObjectModel.ObservableCollection<WireSearchItem>();
+        public System.Collections.ObjectModel.ObservableCollection<WireSearchItem> WireSearchResults { get => _wireSearchResults; set { _wireSearchResults = value; OnPropertyChanged(); } }
+
         public System.Collections.ObjectModel.ObservableCollection<SheetModel> Sheets { get; set; }
             = new System.Collections.ObjectModel.ObservableCollection<SheetModel>();
+
+        public System.Collections.ObjectModel.ObservableCollection<WireSheetModel> WireSheets { get; set; }
+            = new System.Collections.ObjectModel.ObservableCollection<WireSheetModel>();
 
         private SheetModel? _selectedSheet;
         public SheetModel? SelectedSheet
@@ -190,6 +220,20 @@ namespace WpfApp1.ViewModels
                 if (_selectedSheet != value)
                 {
                     _selectedSheet = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        private WireSheetModel? _selectedWireSheet;
+        public WireSheetModel? SelectedWireSheet
+        {
+            get => _selectedWireSheet;
+            set
+            {
+                if (_selectedWireSheet != value)
+                {
+                    _selectedWireSheet = value;
                     OnPropertyChanged();
                 }
             }
@@ -273,41 +317,95 @@ namespace WpfApp1.ViewModels
             }
         }
 
+        private void InitializeWireDefaultSheet()
+        {
+            if (WireSheets.Count == 0)
+            {
+                var defaultSheet = new WireSheetModel("Sheet 1");
+                WireSheets.Add(defaultSheet);
+                SelectedWireSheet = defaultSheet;
+            }
+        }
+
         private void ExecuteAddSheet(object? parameter)
         {
-            var newSheet = new SheetModel("Temp");
-            Sheets.Add(newSheet);
-            RenumberSheets();
-            SelectedSheet = newSheet;
+            if (ShowMode3Page)
+            {
+                var newSheet = new WireSheetModel("Temp");
+                WireSheets.Add(newSheet);
+                RenumberWireSheets();
+                SelectedWireSheet = newSheet;
+            }
+            else
+            {
+                var newSheet = new SheetModel("Temp");
+                Sheets.Add(newSheet);
+                RenumberSheets();
+                SelectedSheet = newSheet;
+            }
         }
 
         private void ExecuteRemoveSheet(object? parameter)
         {
-            if (parameter is SheetModel sheetToRemove)
+            if (ShowMode3Page)
             {
-                if (Sheets.Contains(sheetToRemove))
+                if (parameter is WireSheetModel sheetToRemove)
                 {
-                    if (Sheets.Count <= 1)
+                    if (WireSheets.Contains(sheetToRemove))
                     {
-                        OnShowMessage?.Invoke("Minimal harus ada satu sheet.");
-                        return;
-                    }
+                        if (WireSheets.Count <= 1)
+                        {
+                            OnShowMessage?.Invoke("Minimal harus ada satu sheet.");
+                            return;
+                        }
 
-                    if (SelectedSheet == sheetToRemove)
-                    {
-                        int index = Sheets.IndexOf(sheetToRemove);
-                        Sheets.Remove(sheetToRemove);
-                        RenumberSheets();
+                        if (SelectedWireSheet == sheetToRemove)
+                        {
+                            int index = WireSheets.IndexOf(sheetToRemove);
+                            WireSheets.Remove(sheetToRemove);
+                            RenumberWireSheets();
 
-                        if (index < Sheets.Count)
-                            SelectedSheet = Sheets[index];
+                            if (index < WireSheets.Count)
+                                SelectedWireSheet = WireSheets[index];
+                            else
+                                SelectedWireSheet = WireSheets[WireSheets.Count - 1];
+                        }
                         else
-                            SelectedSheet = Sheets[Sheets.Count - 1];
+                        {
+                            WireSheets.Remove(sheetToRemove);
+                            RenumberWireSheets();
+                        }
                     }
-                    else
+                }
+            }
+            else
+            {
+                if (parameter is SheetModel sheetToRemove)
+                {
+                    if (Sheets.Contains(sheetToRemove))
                     {
-                        Sheets.Remove(sheetToRemove);
-                        RenumberSheets();
+                        if (Sheets.Count <= 1)
+                        {
+                            OnShowMessage?.Invoke("Minimal harus ada satu sheet.");
+                            return;
+                        }
+
+                        if (SelectedSheet == sheetToRemove)
+                        {
+                            int index = Sheets.IndexOf(sheetToRemove);
+                            Sheets.Remove(sheetToRemove);
+                            RenumberSheets();
+
+                            if (index < Sheets.Count)
+                                SelectedSheet = Sheets[index];
+                            else
+                                SelectedSheet = Sheets[Sheets.Count - 1];
+                        }
+                        else
+                        {
+                            Sheets.Remove(sheetToRemove);
+                            RenumberSheets();
+                        }
                     }
                 }
             }
@@ -318,6 +416,14 @@ namespace WpfApp1.ViewModels
             for (int i = 0; i < Sheets.Count; i++)
             {
                 Sheets[i].SheetName = $"Sheet {i + 1}";
+            }
+        }
+
+        private void RenumberWireSheets()
+        {
+            for (int i = 0; i < WireSheets.Count; i++)
+            {
+                WireSheets[i].SheetName = $"Sheet {i + 1}";
             }
         }
 
@@ -465,11 +571,6 @@ namespace WpfApp1.ViewModels
 
         #region Navigation & Menu
 
-        public void ButtonMode2_Click()
-        {
-            ShowMode2Page = true;
-        }
-
         public void ButtonMode4_Click() { OnShowMessage?.Invoke("MODE 4 belum diimplementasikan"); }
 
         public void BackToMenu()
@@ -480,6 +581,7 @@ namespace WpfApp1.ViewModels
             DoNumber = string.Empty;
 
             Sheets.Clear();
+            WireSheets.Clear();
             InitializeDefaultSheet();
 
             ShowBlankPage = false;
@@ -504,6 +606,7 @@ namespace WpfApp1.ViewModels
             Standards.Add("JIS");
 
             SearchResults.Clear();
+            WireSearchResults.Clear();
             _ = LoadAvailableYears();
         }
 
@@ -537,72 +640,122 @@ namespace WpfApp1.ViewModels
 
         private async void ExecuteFind(object? parameter)
         {
-            if (string.IsNullOrWhiteSpace(SelectedYear)) { OnShowMessage?.Invoke("Harap memilih YEAR."); return; }
-            if (string.IsNullOrWhiteSpace(SelectedMonth)) { OnShowMessage?.Invoke("Harap memilih MONTH."); return; }
-            if (SelectedDate == null) { OnShowMessage?.Invoke("Harap memilih PRODUCTION DATE."); return; }
-
-            try
+            if (ShowMode3Page)
             {
-                string dbMonth = SelectedMonth;
-                string dateSql = SelectedDate.Value.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
-                string dateIndo = SelectedDate.Value.ToString("dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture);
-
-                string cacheKey = $"{SelectedYear}_{dbMonth}_{dateSql}";
-
-                if (_searchCache.ContainsKey(cacheKey))
+                if (string.IsNullOrWhiteSpace(SelectedSize))
                 {
-                    var cachedList = _searchCache[cacheKey];
-                    if (cachedList != null && cachedList.Count > 0)
+                    OnShowMessage?.Invoke("Harap memilih SIZE.");
+                    return;
+                }
+
+                if (string.IsNullOrWhiteSpace(SelectedCustomer))
+                {
+                    OnShowMessage?.Invoke("Harap memilih CUSTOMER.");
+                    return;
+                }
+
+                if (SelectedDate == null)
+                {
+                    OnShowMessage?.Invoke("Harap memilih PRODUCTION DATE.");
+                    return;
+                }
+
+                try
+                {
+                    string dateIndo = SelectedDate.Value.ToString("dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture);
+
+                    var data = await System.Threading.Tasks.Task.Run(() => _wireRepository.SearchWireRecords(SelectedSize, SelectedCustomer, dateIndo));
+
+                    WireSearchResults.Clear();
+
+                    if (data != null)
                     {
-                        SearchResults = new System.Collections.ObjectModel.ObservableCollection<BusbarSearchItem>(cachedList);
-                        return;
+                        foreach (var item in data)
+                        {
+                            WireSearchResults.Add(item);
+                        }
                     }
-                    else
+
+                    if (WireSearchResults.Count == 0)
                     {
-                        _searchCache.Remove(cacheKey);
+                        OnShowMessage?.Invoke("Data tidak ditemukan.");
                     }
                 }
-
-                var data = await System.Threading.Tasks.Task.Run(() => _repository.SearchBusbarRecords(SelectedYear, dbMonth, dateSql));
-
-                if (data == null || !data.Any())
+                catch (System.Exception ex)
                 {
-                    data = await System.Threading.Tasks.Task.Run(() => _repository.SearchBusbarRecords(SelectedYear, dbMonth, dateIndo));
-                }
-
-                var newResults = new System.Collections.ObjectModel.ObservableCollection<BusbarSearchItem>();
-                var listForCache = new System.Collections.Generic.List<BusbarSearchItem>();
-
-                if (data != null)
-                {
-                    foreach (var item in data)
-                    {
-                        newResults.Add(item);
-                        listForCache.Add(item);
-                    }
-                }
-
-                if (listForCache.Count > 0)
-                {
-                    _searchCache[cacheKey] = listForCache;
-                }
-
-                SearchResults = newResults;
-
-                if (SearchResults.Count == 0)
-                {
-                    OnShowMessage?.Invoke("Data tidak ditemukan.");
+                    OnShowMessage?.Invoke($"Terjadi kesalahan saat pencarian: {ex.Message}");
                 }
             }
-            catch (System.Exception ex)
+            else
             {
-                OnShowMessage?.Invoke($"Terjadi kesalahan saat pencarian: {ex.Message}");
+                if (string.IsNullOrWhiteSpace(SelectedYear)) { OnShowMessage?.Invoke("Harap memilih YEAR."); return; }
+                if (string.IsNullOrWhiteSpace(SelectedMonth)) { OnShowMessage?.Invoke("Harap memilih MONTH."); return; }
+                if (SelectedDate == null) { OnShowMessage?.Invoke("Harap memilih PRODUCTION DATE."); return; }
+
+                try
+                {
+                    string dbMonth = SelectedMonth;
+                    string dateSql = SelectedDate.Value.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
+                    string dateIndo = SelectedDate.Value.ToString("dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture);
+
+                    string cacheKey = $"{SelectedYear}_{dbMonth}_{dateSql}";
+
+                    if (_searchCache.ContainsKey(cacheKey))
+                    {
+                        var cachedList = _searchCache[cacheKey];
+                        if (cachedList != null && cachedList.Count > 0)
+                        {
+                            SearchResults = new System.Collections.ObjectModel.ObservableCollection<BusbarSearchItem>(cachedList);
+                            return;
+                        }
+                        else
+                        {
+                            _searchCache.Remove(cacheKey);
+                        }
+                    }
+
+                    var data = await System.Threading.Tasks.Task.Run(() => _repository.SearchBusbarRecords(SelectedYear, dbMonth, dateSql));
+
+                    if (data == null || !data.Any())
+                    {
+                        data = await System.Threading.Tasks.Task.Run(() => _repository.SearchBusbarRecords(SelectedYear, dbMonth, dateIndo));
+                    }
+
+                    var newResults = new System.Collections.ObjectModel.ObservableCollection<BusbarSearchItem>();
+                    var listForCache = new System.Collections.Generic.List<BusbarSearchItem>();
+
+                    if (data != null)
+                    {
+                        foreach (var item in data)
+                        {
+                            newResults.Add(item);
+                            listForCache.Add(item);
+                        }
+                    }
+
+                    if (listForCache.Count > 0)
+                    {
+                        _searchCache[cacheKey] = listForCache;
+                    }
+
+                    SearchResults = newResults;
+
+                    if (SearchResults.Count == 0)
+                    {
+                        OnShowMessage?.Invoke("Data tidak ditemukan.");
+                    }
+                }
+                catch (System.Exception ex)
+                {
+                    OnShowMessage?.Invoke($"Terjadi kesalahan saat pencarian: {ex.Message}");
+                }
             }
         }
 
         private void ResetSearchData()
         {
-            SelectedYear = null; SelectedMonth = null; SelectedDate = null; SelectedStandard = null; SearchResults.Clear();
+            SelectedYear = null; SelectedMonth = null; SelectedDate = null; SelectedStandard = null; SearchResults.Clear(); WireSearchResults.Clear();
+            SelectedSize = null; SelectedCustomer = null;
         }
 
         #endregion
@@ -611,36 +764,77 @@ namespace WpfApp1.ViewModels
 
         private void ExecuteAddToExport(object? parameter)
         {
-            if (SelectedSheet == null)
+            if (ShowMode3Page)
             {
-                OnShowMessage?.Invoke("Silakan pilih atau buat Sheet terlebih dahulu.");
-                return;
-            }
-
-            if (parameter is BusbarSearchItem selectedItem)
-            {
-                bool exists = SelectedSheet.Items.Any(x => x.RecordData.Id == selectedItem.FullRecord.Id);
-                if (!exists)
+                if (SelectedWireSheet == null)
                 {
-                    var exportItem = new WpfApp1.Core.Models.BusbarExportItem(selectedItem.FullRecord);
-                    SelectedSheet.Items.Add(exportItem);
+                    OnShowMessage?.Invoke("Silakan pilih atau buat Sheet terlebih dahulu.");
+                    return;
                 }
-                else
+
+                if (parameter is WireSearchItem selectedItem)
                 {
-                    OnShowMessage?.Invoke($"Data ini sudah ada dalam {SelectedSheet.SheetName}.");
+                    bool exists = SelectedWireSheet.Items.Any(x => x.RecordData.Lot == selectedItem.FullRecord.Lot);
+
+                    if (!exists)
+                    {
+                        var exportItem = new WireExportItem(selectedItem.FullRecord);
+                        SelectedWireSheet.Items.Add(exportItem);
+                    }
+                    else
+                    {
+                        OnShowMessage?.Invoke($"Data ini sudah ada dalam {SelectedWireSheet.SheetName}.");
+                    }
+                }
+            }
+            else
+            {
+                if (SelectedSheet == null)
+                {
+                    OnShowMessage?.Invoke("Silakan pilih atau buat Sheet terlebih dahulu.");
+                    return;
+                }
+
+                if (parameter is BusbarSearchItem selectedItem)
+                {
+                    bool exists = SelectedSheet.Items.Any(x => x.RecordData.Id == selectedItem.FullRecord.Id);
+                    if (!exists)
+                    {
+                        var exportItem = new WpfApp1.Core.Models.BusbarExportItem(selectedItem.FullRecord);
+                        SelectedSheet.Items.Add(exportItem);
+                    }
+                    else
+                    {
+                        OnShowMessage?.Invoke($"Data ini sudah ada dalam {SelectedSheet.SheetName}.");
+                    }
                 }
             }
         }
 
         private void ExecuteRemoveFromExport(object? parameter)
         {
-            if (SelectedSheet == null) return;
-
-            if (parameter is WpfApp1.Core.Models.BusbarExportItem itemToRemove)
+            if (ShowMode3Page)
             {
-                if (SelectedSheet.Items.Contains(itemToRemove))
+                if (SelectedWireSheet == null) return;
+
+                if (parameter is WireExportItem itemToRemove)
                 {
-                    SelectedSheet.Items.Remove(itemToRemove);
+                    if (SelectedWireSheet.Items.Contains(itemToRemove))
+                    {
+                        SelectedWireSheet.Items.Remove(itemToRemove);
+                    }
+                }
+            }
+            else
+            {
+                if (SelectedSheet == null) return;
+
+                if (parameter is WpfApp1.Core.Models.BusbarExportItem itemToRemove)
+                {
+                    if (SelectedSheet.Items.Contains(itemToRemove))
+                    {
+                        SelectedSheet.Items.Remove(itemToRemove);
+                    }
                 }
             }
         }
@@ -653,35 +847,55 @@ namespace WpfApp1.ViewModels
 
         private async void ExecutePrintCoa(object? parameter)
         {
-            if (Sheets.Count == 0)
-            {
-                System.Windows.MessageBox.Show("Tidak ada sheet untuk diproses.", "Peringatan", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
-                return;
-            }
-
-            foreach (var sheet in Sheets)
-            {
-                if (sheet.Items.Count == 0)
-                {
-                    System.Windows.MessageBox.Show($"Sheet '{sheet.SheetName}' masih kosong. Harap isi data terlebih dahulu.", "Validasi Data", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
-                    return;
-                }
-
-                bool hasUnselectedType = sheet.Items.Any(x => x.SelectedType == "Select");
-                if (hasUnselectedType)
-                {
-                    System.Windows.MessageBox.Show($"Mohon lengkapi kolom 'Type' untuk semua data di '{sheet.SheetName}' sebelum melakukan Export COA.", "Validasi Data", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
-                    return;
-                }
-            }
-
             bool isMode2 = ShowMode2Page;
             bool isMode3 = ShowMode3Page;
 
-            bool isCustomerMissing = !isMode2 && string.IsNullOrWhiteSpace(CustomerName);
+            if (isMode3)
+            {
+                if (WireSheets.Count == 0)
+                {
+                    System.Windows.MessageBox.Show("Tidak ada sheet untuk diproses.", "Peringatan", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                    return;
+                }
 
-            if (string.IsNullOrWhiteSpace(SelectedStandard) || isCustomerMissing ||
-                string.IsNullOrWhiteSpace(PoNumber) || string.IsNullOrWhiteSpace(DoNumber))
+                foreach (var sheet in WireSheets)
+                {
+                    if (sheet.Items.Count == 0)
+                    {
+                        System.Windows.MessageBox.Show($"Sheet '{sheet.SheetName}' masih kosong. Harap isi data terlebih dahulu.", "Validasi Data", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                        return;
+                    }
+                }
+            }
+            else
+            {
+                if (Sheets.Count == 0)
+                {
+                    System.Windows.MessageBox.Show("Tidak ada sheet untuk diproses.", "Peringatan", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                    return;
+                }
+
+                foreach (var sheet in Sheets)
+                {
+                    if (sheet.Items.Count == 0)
+                    {
+                        System.Windows.MessageBox.Show($"Sheet '{sheet.SheetName}' masih kosong. Harap isi data terlebih dahulu.", "Validasi Data", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                        return;
+                    }
+
+                    bool hasUnselectedType = sheet.Items.Any(x => x.SelectedType == "Select");
+                    if (hasUnselectedType)
+                    {
+                        System.Windows.MessageBox.Show($"Mohon lengkapi kolom 'Type' untuk semua data di '{sheet.SheetName}' sebelum melakukan Export COA.", "Validasi Data", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                        return;
+                    }
+                }
+            }
+
+            bool isCustomerMissing = !isMode2 && !isMode3 && string.IsNullOrWhiteSpace(CustomerName);
+
+            if (!isMode3 && (string.IsNullOrWhiteSpace(SelectedStandard) || isCustomerMissing ||
+                string.IsNullOrWhiteSpace(PoNumber) || string.IsNullOrWhiteSpace(DoNumber)))
             {
                 string msg = isMode2 ? "Silakan lengkapi data (Standard, PO, DO)." : "Silakan lengkapi data (Standard, Customer, PO, DO).";
                 System.Windows.MessageBox.Show(msg, "Peringatan", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
@@ -702,16 +916,26 @@ namespace WpfApp1.ViewModels
                 string doNum = DoNumber;
                 string std = SelectedStandard ?? string.Empty;
 
-                var allSheets = new System.Collections.Generic.List<SheetModel>(Sheets);
                 string savedExcelPath = string.Empty;
 
-                if (isMode2)
+                if (isMode3)
                 {
-                    savedExcelPath = await _printService2.GenerateCoaExcel(effectiveCustomer, po, doNum, allSheets, std);
+                    // TODO: Implement specific COA generation for wire using WireSheets
+                    // For now, display message as placeholder since no specific service is defined
+                    OnShowMessage?.Invoke("Fitur Print COA untuk Wire belum diimplementasikan sepenuhnya.");
                 }
                 else
                 {
-                    savedExcelPath = await _printService.GenerateCoaExcel(effectiveCustomer, po, doNum, allSheets, std);
+                    var allSheets = new System.Collections.Generic.List<SheetModel>(Sheets);
+
+                    if (isMode2)
+                    {
+                        savedExcelPath = await _printService2.GenerateCoaExcel(effectiveCustomer, po, doNum, allSheets, std);
+                    }
+                    else
+                    {
+                        savedExcelPath = await _printService.GenerateCoaExcel(effectiveCustomer, po, doNum, allSheets, std);
+                    }
                 }
 
                 TriggerSuccessNotification("COA Generated Successfully!");
@@ -719,10 +943,17 @@ namespace WpfApp1.ViewModels
                 CustomerName = string.Empty;
                 PoNumber = string.Empty;
                 DoNumber = string.Empty;
-                SelectedStandard = null;
 
-                Sheets.Clear();
-                InitializeDefaultSheet();
+                if (isMode3)
+                {
+                    WireSheets.Clear();
+                    InitializeWireDefaultSheet();
+                }
+                else
+                {
+                    Sheets.Clear();
+                    InitializeDefaultSheet();
+                }
             }
             catch (System.Exception ex)
             {

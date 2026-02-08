@@ -154,7 +154,7 @@ namespace WpfApp1.Data.Repositories
             }
             catch (SqliteException ex)
             {
-                if (ex.SqliteErrorCode != 19) 
+                if (ex.SqliteErrorCode != 19)
                 {
                     throw;
                 }
@@ -207,14 +207,80 @@ namespace WpfApp1.Data.Repositories
             }
             catch (SqliteException ex)
             {
-                // Handle unique constraint violation
-                if (ex.SqliteErrorCode != 19) // SQLITE_CONSTRAINT
+                if (ex.SqliteErrorCode != 19)
                 {
                     throw;
                 }
-                // TODO: Handle duplicate entry silently or log
             }
             _exportBuffer.Clear();
+        }
+
+        public List<WireSearchItem> SearchWireRecords(string size, string customer, string prodDate)
+        {
+            var results = new List<WireSearchItem>();
+
+            using var conn = _dbContext.CreateConnection();
+
+            using var command = conn.CreateCommand();
+
+            command.CommandText = @"
+                SELECT wc.*
+                FROM Wire_Current wc
+                WHERE wc.Size = @size 
+                  AND wc.Customer = @customer 
+                  AND wc.Date = @prodDate
+                  AND NOT EXISTS (
+                      SELECT 1 FROM Wire_Export we
+                      WHERE we.Size = wc.Size
+                        AND we.Date = wc.Date
+                        AND we.Lot = wc.Lot
+                        AND we.Customer = wc.Customer
+                  )
+                ORDER BY wc.Id ASC";
+
+            command.Parameters.AddWithValue("@size", size);
+            command.Parameters.AddWithValue("@customer", customer);
+            command.Parameters.AddWithValue("@prodDate", prodDate);
+
+            using var reader = command.ExecuteReader();
+            int no = 1;
+            while (reader.Read())
+            {
+                WireRecord fullRecord = new WireRecord
+                {
+                    Size = reader["Size"] as string ?? string.Empty,
+                    Date = reader["Date"] as string ?? string.Empty,
+                    Lot = reader["Lot"] as string ?? string.Empty,
+                    Customer = reader["Customer"] as string ?? string.Empty,
+                    Diameter = ParseDoubleSafe(reader["Diameter"]),
+                    Yield = ParseDoubleSafe(reader["Yield"]),
+                    Tensile = ParseDoubleSafe(reader["Tensile"]),
+                    Elongation = ParseDoubleSafe(reader["Elongation"]),
+                    IACS = ParseDoubleSafe(reader["IACS"])
+                };
+
+                results.Add(new WireSearchItem
+                {
+                    No = no++,
+                    Specification = fullRecord.Size,
+                    CustomerName = fullRecord.Customer,
+                    DateProd = fullRecord.Date,
+                    FullRecord = fullRecord
+                });
+            }
+
+            return results;
+        }
+
+        private double ParseDoubleSafe(object value)
+        {
+            if (value == null || value == DBNull.Value) return 0.0;
+            if (value is double d) return d;
+            if (value is float f) return (double)f;
+            if (value is int i) return (double)i;
+            if (value is long l) return (double)l;
+            if (value is string s && double.TryParse(s, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double result)) return result;
+            return 0.0;
         }
     }
 }

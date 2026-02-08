@@ -224,7 +224,7 @@
                         GridLinesVisibility="Horizontal"
                         HeadersVisibility="Column"
                         IsReadOnly="True"
-                        ItemsSource="{Binding SearchResults}"
+                        ItemsSource="{Binding WireSearchResults}"
                         Style="{StaticResource MahApps.Styles.DataGrid}"
                         VirtualizingPanel.IsVirtualizing="True"
                         VirtualizingPanel.VirtualizationMode="Recycling">
@@ -311,7 +311,7 @@
                                     FontSize="11"
                                     FontWeight="Bold"
                                     Foreground="White"
-                                    Text="{Binding SelectedSheet.Items.Count, StringFormat='{}{0} Items', FallbackValue='0 Items'}" />
+                                    Text="{Binding SelectedWireSheet.Items.Count, StringFormat='{}{0} Items', FallbackValue='0 Items'}" />
                             </Border>
                         </Grid>
                     </Border>
@@ -362,8 +362,8 @@
                                 <ListBox
                                     Background="Transparent"
                                     BorderThickness="0"
-                                    ItemsSource="{Binding Sheets}"
-                                    SelectedItem="{Binding SelectedSheet}">
+                                    ItemsSource="{Binding WireSheets}"
+                                    SelectedItem="{Binding SelectedWireSheet}">
                                     <ListBox.ItemsPanel>
                                         <ItemsPanelTemplate>
                                             <StackPanel Orientation="Horizontal" />
@@ -476,7 +476,7 @@
                         GridLinesVisibility="Horizontal"
                         HeadersVisibility="Column"
                         IsReadOnly="False"
-                        ItemsSource="{Binding SelectedSheet.Items}"
+                        ItemsSource="{Binding SelectedWireSheet.Items}"
                         Style="{StaticResource MahApps.Styles.DataGrid}"
                         VirtualizingPanel.IsVirtualizing="True"
                         VirtualizingPanel.VirtualizationMode="Recycling">
@@ -511,12 +511,6 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTextColumn
-                                Width="0.8*"
-                                Binding="{Binding Specification}"
-                                ElementStyle="{StaticResource CenteredCellStyle}"
-                                Header="SIZE"
-                                IsReadOnly="True" />
                         </DataGrid.Columns>
                     </DataGrid>
                 </DockPanel>
