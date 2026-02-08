@@ -196,6 +196,7 @@ namespace WpfApp1.Core.Services
             int rowIndex = 4;
             int rowCount = sheet.Rows.Count;
             string currentProdDate = string.Empty;
+            string currentCustomer = string.Empty;
             int folderMonthNum = DateHelper.GetMonthNumber(month);
             int.TryParse(year, out int folderYearNum);
 
@@ -253,11 +254,16 @@ namespace WpfApp1.Core.Services
                 string rawCust2 = GetStr(3, rowIndex + 1);
                 string effectiveCust = !string.IsNullOrEmpty(rawCust1) ? rawCust1 : rawCust2;
 
+                if (!string.IsNullOrEmpty(effectiveCust))
+                {
+                    currentCustomer = effectiveCust;
+                }
+
                 WireRecord record = new WireRecord();
                 record.Size = size;
                 record.Date = currentProdDate;
                 record.Lot = effectiveLot.Trim();
-                record.Customer = effectiveCust;
+                record.Customer = currentCustomer;
 
                 record.Diameter = System.Math.Round(GetDualValue(6), 2);
                 record.Yield = System.Math.Round(GetDualValue(7), 2);
