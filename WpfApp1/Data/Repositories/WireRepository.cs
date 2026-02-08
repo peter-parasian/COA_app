@@ -154,8 +154,7 @@ namespace WpfApp1.Data.Repositories
             }
             catch (SqliteException ex)
             {
-                // Handle unique constraint violation or other errors
-                if (ex.SqliteErrorCode != 19) // SQLITE_CONSTRAINT
+                if (ex.SqliteErrorCode != 19) 
                 {
                     throw;
                 }

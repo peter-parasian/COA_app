@@ -47,7 +47,7 @@ namespace WpfApp1.Core.Services
 
         private void AppendDebug(string message)
         {
-            if (OnDebugMessage != null) OnDebugMessage.Invoke(message);
+            OnDebugMessage?.Invoke(message);
         }
 
         private void CountTotalFiles()
@@ -72,6 +72,8 @@ namespace WpfApp1.Core.Services
                 }
             }
         }
+
+        private static readonly char[] PipeSeparator = { '|' };
 
         private void TraverseFoldersAndImport(
             Microsoft.Data.Sqlite.SqliteConnection connection,
@@ -108,7 +110,7 @@ namespace WpfApp1.Core.Services
             {
                 try
                 {
-                    string[] parts = fileItem.Split(new[] { '|' }, 3);
+                    string[] parts = fileItem.Split(PipeSeparator, 3);
                     string filePath = parts[0];
                     string year = parts[1];
                     string month = parts[2];
@@ -196,7 +198,9 @@ namespace WpfApp1.Core.Services
             int rowIndex = 4;
             int rowCount = sheet.Rows.Count;
             string currentProdDate = string.Empty;
-            string currentCustomer = string.Empty;
+
+            string cachedCustomer = string.Empty;
+
             int folderMonthNum = DateHelper.GetMonthNumber(month);
             int.TryParse(year, out int folderYearNum);
 
@@ -207,6 +211,15 @@ namespace WpfApp1.Core.Services
                     if (targetRowIndex >= rowCount || colIdx >= sheet.Columns.Count) return "";
                     object val = sheet.Rows[targetRowIndex][colIdx];
                     return val?.ToString()?.Trim() ?? "";
+                }
+
+                string rawCust1 = GetStr(3, rowIndex);
+                string rawCust2 = GetStr(3, rowIndex + 1);
+                string effectiveCustFromCell = !string.IsNullOrEmpty(rawCust1) ? rawCust1 : rawCust2;
+
+                if (!string.IsNullOrWhiteSpace(effectiveCustFromCell))
+                {
+                    cachedCustomer = effectiveCustFromCell.Trim();
                 }
 
                 double GetDualValue(int colIdx)
@@ -259,26 +272,18 @@ namespace WpfApp1.Core.Services
                     continue;
                 }
 
-                string rawCust1 = GetStr(3, rowIndex);
-                string rawCust2 = GetStr(3, rowIndex + 1);
-                string effectiveCust = !string.IsNullOrEmpty(rawCust1) ? rawCust1 : rawCust2;
-
-                if (!string.IsNullOrEmpty(effectiveCust))
+                WireRecord record = new WireRecord
                 {
-                    currentCustomer = effectiveCust;
-                }
-
-                WireRecord record = new WireRecord();
-                record.Size = size;
-                record.Date = currentProdDate;
-                record.Lot = effectiveLot.Trim();
-                record.Customer = currentCustomer;
-
-                record.Diameter = System.Math.Round(GetDualValue(6), 2);
-                record.Yield = System.Math.Round(GetDualValue(7), 2);
-                record.Tensile = System.Math.Round(GetDualValue(8), 2);
-                record.Elongation = System.Math.Round(GetDualValue(9), 2);
-                record.IACS = System.Math.Round(GetDualValue(10), 2);
+                    Size = size,
+                    Date = currentProdDate,
+                    Lot = effectiveLot.Trim(),
+                    Customer = cachedCustomer, 
+                    Diameter = System.Math.Round(GetDualValue(6), 2),
+                    Yield = System.Math.Round(GetDualValue(7), 2),
+                    Tensile = System.Math.Round(GetDualValue(8), 2),
+                    Elongation = System.Math.Round(GetDualValue(9), 2),
+                    IACS = System.Math.Round(GetDualValue(10), 2)
+                };
 
                 list.Add(record);
 

@@ -15,7 +15,6 @@ namespace WpfApp1.ViewModels
         private BusbarRepository _repository;
         private ExcelImportService _importService;
 
-        // Wire specific dependencies
         private WireRepository _wireRepository;
         private ImportServiceWire _importServiceWire;
 
@@ -216,7 +215,6 @@ namespace WpfApp1.ViewModels
             _repository = new BusbarRepository(_dbContext);
             _importService = new ExcelImportService(_repository);
 
-            // Initialize Wire services for Mode 3
             _wireRepository = new WireRepository(_dbContext);
             _importServiceWire = new ImportServiceWire(_wireRepository);
 
@@ -229,7 +227,6 @@ namespace WpfApp1.ViewModels
             _logTimer.Interval = System.TimeSpan.FromMilliseconds(2000);
             _logTimer.Tick += LogTimer_Tick;
 
-            // Wire Service Event Subscriptions
             _importServiceWire.OnDebugMessage += (msg) => {
                 lock (_logLock)
                 {
@@ -241,7 +238,6 @@ namespace WpfApp1.ViewModels
                 System.Windows.Application.Current.Dispatcher.InvokeAsync(() => UpdateProgress(current, total));
             };
 
-            // Busbar Service Event Subscriptions
             _importService.OnDebugMessage += (msg) => {
                 lock (_logLock)
                 {
@@ -430,7 +426,6 @@ namespace WpfApp1.ViewModels
                 using var connection = _dbContext.CreateConnection();
                 if (connection.State != System.Data.ConnectionState.Open) connection.Open();
 
-                // SQLite Performance Tuning for SSD
                 using (var command = connection.CreateCommand())
                 {
                     command.CommandText = "PRAGMA synchronous = OFF; PRAGMA journal_mode = MEMORY; PRAGMA temp_store = MEMORY;";
@@ -440,7 +435,6 @@ namespace WpfApp1.ViewModels
                 using var transaction = connection.BeginTransaction();
                 try
                 {
-                    // Call Wire Import Service
                     _importServiceWire.Import(connection, transaction);
                     transaction.Commit();
                 }
@@ -488,7 +482,6 @@ namespace WpfApp1.ViewModels
             Sheets.Clear();
             InitializeDefaultSheet();
 
-            // Reset all Mode flags to False
             ShowBlankPage = false;
             ShowMode2Page = false;
             ShowMode3Page = false;
@@ -660,7 +653,6 @@ namespace WpfApp1.ViewModels
 
         private async void ExecutePrintCoa(object? parameter)
         {
-            // 1. Validate Sheet State
             if (Sheets.Count == 0)
             {
                 System.Windows.MessageBox.Show("Tidak ada sheet untuk diproses.", "Peringatan", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
@@ -686,7 +678,6 @@ namespace WpfApp1.ViewModels
             bool isMode2 = ShowMode2Page;
             bool isMode3 = ShowMode3Page;
 
-            // Check inputs based on Mode
             bool isCustomerMissing = !isMode2 && string.IsNullOrWhiteSpace(CustomerName);
 
             if (string.IsNullOrWhiteSpace(SelectedStandard) || isCustomerMissing ||
@@ -720,7 +711,6 @@ namespace WpfApp1.ViewModels
                 }
                 else
                 {
-                    // Mode 1 and Mode 3 use the generic print service
                     savedExcelPath = await _printService.GenerateCoaExcel(effectiveCustomer, po, doNum, allSheets, std);
                 }
 
