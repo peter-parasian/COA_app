@@ -1,9 +1,11 @@
-﻿using System;
+﻿using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Spreadsheet;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using ClosedXML.Excel;
+using WpfApp1.Shared.Helpers; 
 using WpfApp1.ViewModels;
 
 namespace WpfApp1.Core.Services
@@ -28,11 +30,11 @@ namespace WpfApp1.Core.Services
 
                 Assembly assembly = Assembly.GetExecutingAssembly();
 
-                string resourceTemplate = "WpfApp1.Images.TEMPLATEE_COA_BUSBAR.xlsx";
-                string resourceImg1 = "WpfApp1.Images.approved_IMG_v2.png";
-                string resourceImg2 = "WpfApp1.Images.profile_SNI.png";
-                string resourceImg3 = "WpfApp1.Images.document_no.png";
-                string resourceImg4 = "WpfApp1.Images.logo_COA.png";
+                string resourceTemplate = "WpfApp1.Shared.Images.TEMPLATEE_COA_BUSBAR.xlsx";
+                string resourceImg1 = "WpfApp1.Shared.Images.approved_IMG_v2.png";
+                string resourceImg2 = "WpfApp1.Shared.Images.profile_SNI.png";  
+                string resourceImg3 = "WpfApp1.Shared.Images.document_no_comp.jpg";  
+                string resourceImg4 = "WpfApp1.Shared.Images.logo_COA-comp.png";
 
                 if (_img1Data == null)
                 {
@@ -43,7 +45,7 @@ namespace WpfApp1.Core.Services
                             using (MemoryStream ms = new MemoryStream())
                             {
                                 stream.CopyTo(ms);
-                                _img1Data = ms.ToArray();
+                                _img1Data = ImageHelper.CompressImage(ms.ToArray(), 19.91, 7.21);
                             }
                         }
                     }
@@ -58,7 +60,7 @@ namespace WpfApp1.Core.Services
                             using (MemoryStream ms = new MemoryStream())
                             {
                                 stream.CopyTo(ms);
-                                _img2Data = ms.ToArray();
+                                _img2Data = ImageHelper.CompressImage(ms.ToArray(), 22.17, 11.48);
                             }
                         }
                     }
@@ -73,7 +75,7 @@ namespace WpfApp1.Core.Services
                             using (MemoryStream ms = new MemoryStream())
                             {
                                 stream.CopyTo(ms);
-                                _img3Data = ms.ToArray();
+                                _img3Data = ImageHelper.CompressImage(ms.ToArray(), 9.37, 3.89);
                             }
                         }
                     }
@@ -88,7 +90,7 @@ namespace WpfApp1.Core.Services
                             using (MemoryStream ms = new MemoryStream())
                             {
                                 stream.CopyTo(ms);
-                                _img4Data = ms.ToArray();
+                                _img4Data = ImageHelper.CompressImage(ms.ToArray(), 9.55, 3.68);
                             }
                         }
                     }
@@ -546,9 +548,6 @@ namespace WpfApp1.Core.Services
                 {
                     var pic4 = worksheet.AddPicture(ms4);
                     pic4.MoveTo(worksheet.Cell(2, 2));
-
-                    //pic4.Height = (int)((3.90 / 2.54) * dpi);
-                   // pic4.Width = (int)((9.39 / 2.54) * dpi);
                 }
             }
 
@@ -582,6 +581,7 @@ namespace WpfApp1.Core.Services
             _img1Data = null;
             _img2Data = null;
             _img3Data = null;
+            _img4Data = null;
         }
 
         private string GetRomanMonth(int month)

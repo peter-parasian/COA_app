@@ -132,7 +132,6 @@ namespace WpfApp1.Views
 
         private async void ButtonMode3_Click(object sender, RoutedEventArgs e)
         {
-            // Cast DataContext to specific type explicitly (no var)
             MainViewModel? viewModel = this.DataContext as MainViewModel;
 
             if (viewModel == null || viewModel.IsBusy)
@@ -149,12 +148,10 @@ namespace WpfApp1.Views
                 {
                     try
                     {
-                        // CHANGED: Call ImportWireToSQLite for Mode 3 instead of generic Import
                         viewModel?.ImportWireToSQLite();
                     }
                     catch (System.Exception ex)
                     {
-                        // Use Application.Current.Dispatcher for UI access from background thread
                         Application.Current.Dispatcher.Invoke(() =>
                         {
                             System.Windows.MessageBox.Show(
@@ -167,7 +164,6 @@ namespace WpfApp1.Views
                     }
                 });
 
-                // Switch to Mode 3 view via property change
                 Application.Current.Dispatcher.Invoke(() =>
                 {
                     if (viewModel != null)

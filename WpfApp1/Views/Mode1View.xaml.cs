@@ -13,7 +13,6 @@ namespace WpfApp1.Views
 
         private void ButtonBack_Click(object sender, RoutedEventArgs e)
         {
-            // Explicit cast without var
             MainViewModel? viewModel = this.DataContext as MainViewModel;
 
             if (viewModel != null)

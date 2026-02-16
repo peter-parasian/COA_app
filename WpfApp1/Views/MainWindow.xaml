@@ -6,13 +6,13 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:WpfApp1"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    Title="Indowire Plant 2 - Quality Control System Version 5.0"
+    Title="Indowire Plant 2 - Quality Control System Version 7.0"
     MinWidth="1100"
     MinHeight="700"
     Background="#F4F7F6"
     FontFamily="Segoe UI"
     GlowBrush="{DynamicResource MahApps.Brushes.Accent}"
-    Icon="pack://application:,,,/Images/app_logo.ico"
+    Icon="pack://application:,,,/Shared/Images/app_logo.ico"
     NonActiveGlowBrush="Gray"
     NonActiveWindowTitleBrush="Gray"
     SaveWindowPosition="True"
@@ -22,10 +22,8 @@
     mc:Ignorable="d">
 
     <Grid>
-        <!-- Dynamic Content Container -->
         <ContentControl x:Name="MainContentRegion" />
 
-        <!-- Global Progress Overlay -->
         <Grid
             x:Name="ProgressOverlay"
             d:Visibility="Visible"

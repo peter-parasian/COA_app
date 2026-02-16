@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Input;
 using System.Windows.Threading;
@@ -20,12 +21,13 @@ namespace WpfApp1.ViewModels
 
         private CoaPrintService _printService;
         private CoaPrintService2 _printService2;
+        private CoaPrintService3 _printService3;
 
-        private System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<WpfApp1.Core.Models.BusbarSearchItem>> _searchCache;
+        private Dictionary<string, List<BusbarSearchItem>> _searchCache;
 
         private readonly object _logLock = new object();
         private System.Text.StringBuilder _logBuffer = new System.Text.StringBuilder();
-        private System.Windows.Threading.DispatcherTimer _logTimer;
+        private DispatcherTimer _logTimer;
 
         #region Properties
 
@@ -91,7 +93,6 @@ namespace WpfApp1.ViewModels
             set { _busyMessage = value; OnPropertyChanged(); }
         }
 
-        // Mode 1 Flag
         private bool _showBlankPage = false;
         public bool ShowBlankPage
         {
@@ -99,7 +100,6 @@ namespace WpfApp1.ViewModels
             set { _showBlankPage = value; OnPropertyChanged(); }
         }
 
-        // Mode 2 Flag
         private bool _showMode2Page = false;
         public bool ShowMode2Page
         {
@@ -107,7 +107,6 @@ namespace WpfApp1.ViewModels
             set { _showMode2Page = value; OnPropertyChanged(); }
         }
 
-        // Mode 3 Flag
         private bool _showMode3Page = false;
         public bool ShowMode3Page
         {
@@ -156,12 +155,12 @@ namespace WpfApp1.ViewModels
 
         public System.Collections.ObjectModel.ObservableCollection<string> SizeOptions { get; set; } = new System.Collections.ObjectModel.ObservableCollection<string>
         {
-            "1.20", "1.24", "1.38", "2.60", "1.50", "1.60"
+            "1.20", "1.24", "1.38", "1.50", "1.60"
         };
 
         public System.Collections.ObjectModel.ObservableCollection<string> CustomerOptions { get; set; } = new System.Collections.ObjectModel.ObservableCollection<string>
         {
-            "Indowire", "Cometa", "Canning", "Indolakto", "Multi Colour", "Almicos", "Avia Avian", "Eka Timur", "Prisma Cable", "Energy Lautan", "Masami Pasifik", "Metal Manufacturing", "Magnakabel", "JJ-LAPP", "Nestle"
+            "Indowire (Soft)", "Indowire (Hard)", "Cometa", "Canning", "Indolakto", "Multi Colour", "Almicos", "Avia Avian", "Eka Timur", "Prisma Cable", "Energy Lautan", "Masami Pasifik", "Metal Manufacturing", "Magnakabel", "JJ-LAPP", "Nestle"
         };
 
         private string? _selectedYear;
@@ -178,8 +177,8 @@ namespace WpfApp1.ViewModels
             set { if (_selectedMonth != value) { _selectedMonth = value; OnPropertyChanged(); SetDefaultProductionDate(); } }
         }
 
-        private System.DateTime? _selectedDate;
-        public System.DateTime? SelectedDate { get => _selectedDate; set { _selectedDate = value; OnPropertyChanged(); } }
+        private DateTime? _selectedDate;
+        public DateTime? SelectedDate { get => _selectedDate; set { _selectedDate = value; OnPropertyChanged(); } }
 
         private string? _selectedStandard;
         public string? SelectedStandard { get => _selectedStandard; set { _selectedStandard = value; OnPropertyChanged(); } }
@@ -242,16 +241,16 @@ namespace WpfApp1.ViewModels
         #endregion
 
         #region Commands
-        public System.Windows.Input.ICommand FindCommand { get; }
-        public System.Windows.Input.ICommand AddToExportCommand { get; }
-        public System.Windows.Input.ICommand RemoveFromExportCommand { get; }
-        public System.Windows.Input.ICommand PrintCoaCommand { get; }
+        public ICommand FindCommand { get; }
+        public ICommand AddToExportCommand { get; }
+        public ICommand RemoveFromExportCommand { get; }
+        public ICommand PrintCoaCommand { get; }
 
-        public System.Windows.Input.ICommand AddSheetCommand { get; }
-        public System.Windows.Input.ICommand RemoveSheetCommand { get; }
+        public ICommand AddSheetCommand { get; }
+        public ICommand RemoveSheetCommand { get; }
         #endregion
 
-        public event System.Action<string>? OnShowMessage;
+        public event Action<string>? OnShowMessage;
 
         public MainViewModel()
         {
@@ -264,18 +263,16 @@ namespace WpfApp1.ViewModels
 
             _printService = new CoaPrintService();
             _printService2 = new CoaPrintService2();
+            _printService3 = new CoaPrintService3();
 
-            _searchCache = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<WpfApp1.Core.Models.BusbarSearchItem>>();
+            _searchCache = new Dictionary<string, List<BusbarSearchItem>>();
 
-            _logTimer = new System.Windows.Threading.DispatcherTimer();
-            _logTimer.Interval = System.TimeSpan.FromMilliseconds(2000);
+            _logTimer = new DispatcherTimer();
+            _logTimer.Interval = TimeSpan.FromMilliseconds(2000);
             _logTimer.Tick += LogTimer_Tick;
 
             _importServiceWire.OnDebugMessage += (msg) => {
-                lock (_logLock)
-                {
-                    _logBuffer.AppendLine(msg);
-                }
+                lock (_logLock) { _logBuffer.AppendLine(msg); }
             };
 
             _importServiceWire.OnProgress += (current, total) => {
@@ -283,10 +280,7 @@ namespace WpfApp1.ViewModels
             };
 
             _importService.OnDebugMessage += (msg) => {
-                lock (_logLock)
-                {
-                    _logBuffer.AppendLine(msg);
-                }
+                lock (_logLock) { _logBuffer.AppendLine(msg); }
             };
 
             _importService.OnProgress += (current, total) => {
@@ -431,7 +425,7 @@ namespace WpfApp1.ViewModels
 
         #region Logging & Progress
 
-        private void LogTimer_Tick(object? sender, System.EventArgs e)
+        private void LogTimer_Tick(object? sender, EventArgs e)
         {
             lock (_logLock)
             {
@@ -445,7 +439,7 @@ namespace WpfApp1.ViewModels
 
                 if (DebugLog.Length > 3000)
                 {
-                    DebugLog = "...[Log truncated]..." + System.Environment.NewLine;
+                    DebugLog = "...[Log truncated]..." + Environment.NewLine;
                 }
                 DebugLog += newLogs;
             }
@@ -459,7 +453,7 @@ namespace WpfApp1.ViewModels
         private void StopLogTimer()
         {
             _logTimer.Stop();
-            LogTimer_Tick(null, System.EventArgs.Empty);
+            LogTimer_Tick(null, EventArgs.Empty);
         }
 
         private void UpdateProgress(int current, int total)
@@ -479,7 +473,7 @@ namespace WpfApp1.ViewModels
 
         #endregion
 
-        #region Import Logic (Busbar)
+        #region Import Logic
 
         public void ImportExcelToSQLite()
         {
@@ -512,15 +506,11 @@ namespace WpfApp1.ViewModels
                 TotalFilesFound = _importService.TotalFilesFound;
                 TotalRowsInserted = _importService.TotalRowsInserted;
             }
-            catch (System.Exception)
+            catch (Exception)
             {
                 throw;
             }
         }
-
-        #endregion
-
-        #region Import Logic (Wire - Mode 3)
 
         public void ImportWireToSQLite()
         {
@@ -553,7 +543,7 @@ namespace WpfApp1.ViewModels
                 TotalFilesFound = _importServiceWire.TotalFilesFound;
                 TotalRowsInserted = _importServiceWire.TotalRowsInserted;
             }
-            catch (System.Exception)
+            catch (Exception)
             {
                 throw;
             }
@@ -619,7 +609,7 @@ namespace WpfApp1.ViewModels
                 Years.Clear();
                 foreach (var year in dbYears) Years.Add(year);
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 System.Windows.Application.Current.Dispatcher.Invoke(() => { System.Windows.MessageBox.Show($"Error loading years: {ex.Message}"); });
             }
@@ -633,7 +623,7 @@ namespace WpfApp1.ViewModels
                 {
                     string engMonth = SelectedMonth;
                     int month = WpfApp1.Shared.Helpers.DateHelper.GetMonthNumber(engMonth);
-                    if (month > 0 && month <= 12) SelectedDate = new System.DateTime(year, month, 1);
+                    if (month > 0 && month <= 12) SelectedDate = new DateTime(year, month, 1);
                 }
             }
         }
@@ -681,7 +671,7 @@ namespace WpfApp1.ViewModels
                         OnShowMessage?.Invoke("Data tidak ditemukan.");
                     }
                 }
-                catch (System.Exception ex)
+                catch (Exception ex)
                 {
                     OnShowMessage?.Invoke($"Terjadi kesalahan saat pencarian: {ex.Message}");
                 }
@@ -722,7 +712,7 @@ namespace WpfApp1.ViewModels
                     }
 
                     var newResults = new System.Collections.ObjectModel.ObservableCollection<BusbarSearchItem>();
-                    var listForCache = new System.Collections.Generic.List<BusbarSearchItem>();
+                    var listForCache = new List<BusbarSearchItem>();
 
                     if (data != null)
                     {
@@ -745,7 +735,7 @@ namespace WpfApp1.ViewModels
                         OnShowMessage?.Invoke("Data tidak ditemukan.");
                     }
                 }
-                catch (System.Exception ex)
+                catch (Exception ex)
                 {
                     OnShowMessage?.Invoke($"Terjadi kesalahan saat pencarian: {ex.Message}");
                 }
@@ -800,7 +790,7 @@ namespace WpfApp1.ViewModels
                     bool exists = SelectedSheet.Items.Any(x => x.RecordData.Id == selectedItem.FullRecord.Id);
                     if (!exists)
                     {
-                        var exportItem = new WpfApp1.Core.Models.BusbarExportItem(selectedItem.FullRecord);
+                        var exportItem = new BusbarExportItem(selectedItem.FullRecord);
                         SelectedSheet.Items.Add(exportItem);
                     }
                     else
@@ -829,7 +819,7 @@ namespace WpfApp1.ViewModels
             {
                 if (SelectedSheet == null) return;
 
-                if (parameter is WpfApp1.Core.Models.BusbarExportItem itemToRemove)
+                if (parameter is BusbarExportItem itemToRemove)
                 {
                     if (SelectedSheet.Items.Contains(itemToRemove))
                     {
@@ -850,6 +840,8 @@ namespace WpfApp1.ViewModels
             bool isMode2 = ShowMode2Page;
             bool isMode3 = ShowMode3Page;
 
+            if (IsBusy) return;
+
             if (isMode3)
             {
                 if (WireSheets.Count == 0)
@@ -865,6 +857,12 @@ namespace WpfApp1.ViewModels
                         System.Windows.MessageBox.Show($"Sheet '{sheet.SheetName}' masih kosong. Harap isi data terlebih dahulu.", "Validasi Data", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
                         return;
                     }
+                }
+
+                if (string.IsNullOrWhiteSpace(SelectedCustomer) || string.IsNullOrWhiteSpace(SelectedSize))
+                {
+                    System.Windows.MessageBox.Show("Harap memilih Customer dan Size sebelum print.", "Peringatan", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                    return;
                 }
             }
             else
@@ -894,43 +892,56 @@ namespace WpfApp1.ViewModels
 
             bool isCustomerMissing = !isMode2 && !isMode3 && string.IsNullOrWhiteSpace(CustomerName);
 
-            if (!isMode3 && (string.IsNullOrWhiteSpace(SelectedStandard) || isCustomerMissing ||
+            bool isStandardMissing = !isMode2 && !isMode3 && string.IsNullOrWhiteSpace(SelectedStandard);
+
+            if (!isMode3 && (isStandardMissing || isCustomerMissing ||
                 string.IsNullOrWhiteSpace(PoNumber) || string.IsNullOrWhiteSpace(DoNumber)))
             {
-                string msg = isMode2 ? "Silakan lengkapi data (Standard, PO, DO)." : "Silakan lengkapi data (Standard, Customer, PO, DO).";
+                string msg = isMode2 ? "Silakan lengkapi data (PO, DO)." : "Silakan lengkapi data (Standard, Customer, PO, DO).";
                 System.Windows.MessageBox.Show(msg, "Peringatan", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
                 return;
             }
 
             DoNumber = FormatDoNumber(DoNumber);
 
-            if (IsBusy) return;
-
             BusyMessage = "Generating COA Document...";
             IsBusy = true;
 
             try
             {
-                string effectiveCustomer = isMode2 ? "PT. SIEMENS INDONESIA" : CustomerName;
-                string po = PoNumber;
-                string doNum = DoNumber;
-                string std = SelectedStandard ?? string.Empty;
-
                 string savedExcelPath = string.Empty;
 
                 if (isMode3)
                 {
-                    // TODO: Implement specific COA generation for wire using WireSheets
-                    // For now, display message as placeholder since no specific service is defined
-                    OnShowMessage?.Invoke("Fitur Print COA untuk Wire belum diimplementasikan sepenuhnya.");
+
+                    savedExcelPath = await _printService3.GenerateCoaExcel(WireSheets);
+
+                    await System.Threading.Tasks.Task.Run(() =>
+                    {
+                        var recordsToArchive = new List<WireRecord>();
+                        foreach (var sheet in WireSheets)
+                        {
+                            foreach (var item in sheet.Items)
+                            {
+                                recordsToArchive.Add(item.RecordData);
+                            }
+                        }
+
+                        _wireRepository.SaveToExportHistory(recordsToArchive);
+                    });
                 }
                 else
                 {
-                    var allSheets = new System.Collections.Generic.List<SheetModel>(Sheets);
+                    string effectiveCustomer = isMode2 ? "PT. SIEMENS INDONESIA" : CustomerName;
+                    string po = PoNumber;
+                    string doNum = DoNumber;
+                    string std = SelectedStandard ?? string.Empty;
+
+                    var allSheets = new List<SheetModel>(Sheets);
 
                     if (isMode2)
                     {
-                        savedExcelPath = await _printService2.GenerateCoaExcel(effectiveCustomer, po, doNum, allSheets, std);
+                        savedExcelPath = await _printService2.GenerateCoaExcel(effectiveCustomer, po, doNum, allSheets, "");
                     }
                     else
                     {
@@ -940,22 +951,22 @@ namespace WpfApp1.ViewModels
 
                 TriggerSuccessNotification("COA Generated Successfully!");
 
-                CustomerName = string.Empty;
-                PoNumber = string.Empty;
-                DoNumber = string.Empty;
-
                 if (isMode3)
                 {
                     WireSheets.Clear();
                     InitializeWireDefaultSheet();
+                    WireSearchResults.Clear();
                 }
                 else
                 {
+                    CustomerName = string.Empty;
+                    PoNumber = string.Empty;
+                    DoNumber = string.Empty;
                     Sheets.Clear();
                     InitializeDefaultSheet();
                 }
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 System.Windows.Application.Current.Dispatcher.Invoke(() => {
                     System.Windows.MessageBox.Show($"Gagal membuat Dokumen:\n{ex.Message}", "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
@@ -966,6 +977,7 @@ namespace WpfApp1.ViewModels
                 IsBusy = false;
                 _printService.ClearCache();
                 _printService2.ClearCache();
+                _printService3.ClearCache();
             }
         }
 

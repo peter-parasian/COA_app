@@ -47,5 +47,49 @@ namespace WpfApp1.Shared.Helpers
             }
             return (System.Math.Round(finalTensile, 2), System.Math.Round(finalElongation, 2));
         }
+
+        public static double CalculateTensileStrengthKgmm2(double tensileNmm2)
+        {
+            if (tensileNmm2 < 0)
+            {
+                return 0.0;
+            }
+
+            double tensileStrengthKgmm2 = tensileNmm2 * 0.101972;
+            return tensileStrengthKgmm2;
+        }
+
+        public static double CalculateElectricalResistivity(double iacs)
+        {
+            if (iacs <= 0)
+            {
+                return 0.0;
+            }
+
+            double electricalResistivity = 1.7241 / iacs;
+            return electricalResistivity;
+        }
+
+        public static double CalculateElectricalConductivity(double iacs)
+        {
+            if (iacs <= 0)
+            {
+                return 0.0;
+            }
+
+            double electricalConductivity = iacs / 1.7241;
+            return electricalConductivity; 
+        }
+
+        public static double CalculateConductorResisten(double iacs, double diameter)
+        {
+            if (iacs <= 0 || diameter <= 0)
+            {
+                return 0.0;
+            }
+
+            double conductorResisten = (1.7241 * 4.0) / (System.Math.PI * System.Math.Pow(diameter, 2) * iacs);
+            return conductorResisten;
+        }
     }
 }

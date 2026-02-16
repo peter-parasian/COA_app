@@ -526,10 +526,6 @@
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="10" />
-                        <ColumnDefinition Width="1.2*" />
-                        <ColumnDefinition Width="20" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="10" />
                         <ColumnDefinition Width="1.5*" />
                         <ColumnDefinition Width="20" />
                         <ColumnDefinition Width="Auto" />
@@ -543,14 +539,13 @@
                         FontSize="12"
                         FontWeight="Bold"
                         Foreground="#6C757D"
-                        Text="Standard:" />
-                    <ComboBox
+                        Text="DO Number:" />
+                    <TextBox
                         Grid.Column="2"
                         VerticalAlignment="Center"
-                        Controls:TextBoxHelper.Watermark="Select Standard"
-                        ItemsSource="{Binding Standards}"
-                        SelectedItem="{Binding SelectedStandard}"
-                        Template="{StaticResource UpComboBoxControlTemplate}" />
+                        Controls:TextBoxHelper.ClearTextButton="True"
+                        Controls:TextBoxHelper.Watermark="Input DO Number"
+                        Text="{Binding DoNumber, UpdateSourceTrigger=PropertyChanged}" />
 
                     <TextBlock
                         Grid.Column="4"
@@ -558,23 +553,9 @@
                         FontSize="12"
                         FontWeight="Bold"
                         Foreground="#6C757D"
-                        Text="DO Number:" />
-                    <TextBox
-                        Grid.Column="6"
-                        VerticalAlignment="Center"
-                        Controls:TextBoxHelper.ClearTextButton="True"
-                        Controls:TextBoxHelper.Watermark="Input DO Number"
-                        Text="{Binding DoNumber, UpdateSourceTrigger=PropertyChanged}" />
-
-                    <TextBlock
-                        Grid.Column="8"
-                        VerticalAlignment="Center"
-                        FontSize="12"
-                        FontWeight="Bold"
-                        Foreground="#6C757D"
                         Text="PO Number:" />
                     <TextBox
-                        Grid.Column="10"
+                        Grid.Column="6"
                         VerticalAlignment="Center"
                         Controls:TextBoxHelper.ClearTextButton="True"
                         Controls:TextBoxHelper.Watermark="Input PO Number"

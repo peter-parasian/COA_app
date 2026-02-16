@@ -10,6 +10,7 @@ using System.Windows;
 
 //"C:\Users\HP\Documents\Custom Office Templates\H\COA"
 //"C:\Users\HP\Documents\Custom Office Templates\H\OPERATOR\COPPER BUSBAR & STRIP\NEW"
+//"C:\Users\HP\Documents\Custom Office Templates\H\OPERATOR\WIRE"
 
 //  string basePath = @"H:\PUBLIC\01 COA\03 Busbar";
 //        private const string ExcelRootFolder = @"H:\OPERATOR\COPPER BUSBAR & STRIP";

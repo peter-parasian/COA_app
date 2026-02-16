@@ -56,7 +56,6 @@ namespace WpfApp1.Data.Repositories
             cmd.ExecuteNonQuery();
 
             cmd.CommandText = @"
-                DROP TABLE IF EXISTS Wire_Export;
                 CREATE TABLE IF NOT EXISTS Wire_Export (
                     Id INTEGER PRIMARY KEY AUTOINCREMENT,
                     Size TEXT,
@@ -97,7 +96,7 @@ namespace WpfApp1.Data.Repositories
             }
         }
 
-        public void InsertIntoExport(SqliteConnection connection, SqliteTransaction transaction, WireRecord record)
+        private void InsertIntoExportBuffer(SqliteConnection connection, SqliteTransaction transaction, WireRecord record)
         {
             _exportBuffer.Add(record);
             if (_exportBuffer.Count >= BATCH_SIZE)
@@ -110,6 +109,36 @@ namespace WpfApp1.Data.Repositories
         {
             FlushCurrentBatch(connection, transaction);
             FlushExportBatch(connection, transaction);
+        }
+
+        public void SaveToExportHistory(IEnumerable<WireRecord> records)
+        {
+            if (records == null) return;
+
+            using var conn = _dbContext.CreateConnection();
+            using var transaction = conn.BeginTransaction();
+
+            try
+            {
+                _exportBuffer.Clear(); 
+
+                foreach (var record in records)
+                {
+                    InsertIntoExportBuffer(conn, transaction, record);
+                }
+
+                FlushExportBatch(conn, transaction); 
+                transaction.Commit();
+            }
+            catch
+            {
+                transaction.Rollback();
+                throw;
+            }
+            finally
+            {
+                _exportBuffer.Clear();
+            }
         }
 
         private void FlushCurrentBatch(SqliteConnection connection, SqliteTransaction transaction)
@@ -154,7 +183,7 @@ namespace WpfApp1.Data.Repositories
             }
             catch (SqliteException ex)
             {
-                if (ex.SqliteErrorCode != 19)
+                if (ex.SqliteErrorCode != 19) 
                 {
                     throw;
                 }

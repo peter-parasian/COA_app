@@ -24,7 +24,7 @@
                 <Image
                     Height="60"
                     Margin="0,0,15,0"
-                    Source="pack://application:,,,/Images/company_logo.png" />
+                    Source="pack://application:,,,/Shared/Images/company_logo.png" />
                 <TextBlock
                     VerticalAlignment="Center"
                     FontSize="28"
@@ -62,7 +62,7 @@
                 Style="{StaticResource IndowireMetroBtnAccent}">
                 <Viewbox Stretch="Uniform">
                     <StackPanel HorizontalAlignment="Center" Orientation="Vertical">
-                        <Image Height="80" Source="pack://application:,,,/Images/logo1.jpg" />
+                        <Image Height="80" Source="pack://application:,,,/Shared/Images/logo1.jpg" />
                         <TextBlock
                             Margin="0,5,0,0"
                             HorizontalAlignment="Center"
@@ -83,7 +83,7 @@
                 Style="{StaticResource IndowireMetroBtnAccent}">
                 <Viewbox Stretch="Uniform">
                     <StackPanel Orientation="Vertical">
-                        <Image Height="80" Source="pack://application:,,,/Images/logo2.jpg" />
+                        <Image Height="80" Source="pack://application:,,,/Shared/Images/logo2.jpg" />
                         <TextBlock
                             Margin="0,5,0,0"
                             HorizontalAlignment="Center"
@@ -104,7 +104,7 @@
                 Style="{StaticResource IndowireMetroBtnAccent}">
                 <Viewbox Stretch="Uniform">
                     <StackPanel Orientation="Vertical">
-                        <Image Height="80" Source="pack://application:,,,/Images/logo3.jpg" />
+                        <Image Height="80" Source="pack://application:,,,/Shared/Images/logo3.jpg" />
                         <TextBlock
                             Margin="0,5,0,0"
                             HorizontalAlignment="Center"
@@ -125,7 +125,7 @@
                 Style="{StaticResource IndowireMetroBtnAccent}">
                 <Viewbox Stretch="Uniform">
                     <StackPanel Orientation="Vertical">
-                        <Image Height="80" Source="pack://application:,,,/Images/logo4.jpg" />
+                        <Image Height="80" Source="pack://application:,,,/Shared/Images/logo4.jpg" />
                         <TextBlock
                             Margin="0,5,0,0"
                             HorizontalAlignment="Center"

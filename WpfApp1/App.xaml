@@ -12,7 +12,6 @@
                 <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Themes/Light.Green.xaml" />
             </ResourceDictionary.MergedDictionaries>
 
-            <!-- Application Branding Colors -->
             <SolidColorBrush x:Key="MahApps.Brushes.Accent" Color="#28A745"/>
             <SolidColorBrush x:Key="MahApps.Brushes.Accent2" Color="#218838"/>
             <SolidColorBrush x:Key="MahApps.Brushes.Accent3" Color="#1E7E34"/>
@@ -23,7 +22,6 @@
             <SolidColorBrush x:Key="MahApps.Brushes.Highlight" Color="#E8F5E9"/>
             <SolidColorBrush x:Key="MahApps.Brushes.HighlightForeground" Color="#1E7E34"/>
 
-            <!-- Global Styles Moved from MainWindow for Shared Access -->
             <Style
                 x:Key="IndowireMetroBtn"
                 BasedOn="{StaticResource MahApps.Styles.Button.Square}"

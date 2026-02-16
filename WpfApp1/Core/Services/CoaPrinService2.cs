@@ -1,10 +1,12 @@
-﻿using ClosedXML.Excel;
+﻿
+using ClosedXML.Excel;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using WpfApp1.ViewModels;
+using WpfApp1.Shared.Helpers; 
 
 namespace WpfApp1.Core.Services
 {
@@ -48,11 +50,11 @@ namespace WpfApp1.Core.Services
 
                 Assembly assembly = Assembly.GetExecutingAssembly();
 
-                string resourceTemplate = "WpfApp1.Images.TEMPLATEE_COA_SIMEN.xlsx";
-                string resourceImg1 = "WpfApp1.Images.approved_IMG_v2.png";
-                string resourceImg2 = "WpfApp1.Images.profile_SNI.png";
-                string resourceImg3 = "WpfApp1.Images.document_no_simens.png";
-                string resourceImg4 = "WpfApp1.Images.logo_COA.png";
+                string resourceTemplate = "WpfApp1.Shared.Images.TEMPLATEE_COA_SIMEN.xlsx";
+                string resourceImg1 = "WpfApp1.Shared.Images.approved_IMG_v2.png";
+                string resourceImg2 = "WpfApp1.Shared.Images.profile_SNI.png";
+                string resourceImg3 = "WpfApp1.Shared.Images.document_no_simens_comp.png";
+                string resourceImg4 = "WpfApp1.Shared.Images.logo_COA-comp.png";
 
                 if (_img1Data == null)
                 {
@@ -63,7 +65,7 @@ namespace WpfApp1.Core.Services
                             using (MemoryStream ms = new MemoryStream())
                             {
                                 stream.CopyTo(ms);
-                                _img1Data = ms.ToArray();
+                                _img1Data = ImageHelper.CompressImage(ms.ToArray(), 19.91, 7.21);
                             }
                         }
                     }
@@ -78,7 +80,7 @@ namespace WpfApp1.Core.Services
                             using (MemoryStream ms = new MemoryStream())
                             {
                                 stream.CopyTo(ms);
-                                _img2Data = ms.ToArray();
+                                _img2Data = ImageHelper.CompressImage(ms.ToArray(), 22.17, 11.48);
                             }
                         }
                     }
@@ -93,7 +95,7 @@ namespace WpfApp1.Core.Services
                             using (MemoryStream ms = new MemoryStream())
                             {
                                 stream.CopyTo(ms);
-                                _img3Data = ms.ToArray();
+                                _img3Data = ImageHelper.CompressImage(ms.ToArray(), 9.37, 3.89);
                             }
                         }
                     }
@@ -108,7 +110,7 @@ namespace WpfApp1.Core.Services
                             using (MemoryStream ms = new MemoryStream())
                             {
                                 stream.CopyTo(ms);
-                                _img4Data = ms.ToArray();
+                                _img4Data = ImageHelper.CompressImage(ms.ToArray(), 9.55, 3.68);
                             }
                         }
                     }
@@ -420,7 +422,7 @@ namespace WpfApp1.Core.Services
                 if (rec.Spectro > 0)
                 {
                     string spectroVal = rec.Spectro.ToString("0.000", cultureInvariant);
-                    cellSpectro.Value = "'" + spectroVal; 
+                    cellSpectro.Value = "'" + spectroVal;
                 }
                 worksheet.Range(rTop, 11, rBottom, 11).Merge();
 
